@@ -17,6 +17,7 @@ window.electronAPI.sendMessage('Hello from App.vue!');
     </a>
   </div>
   <HelloWorld msg="Vite + Vue" />
+  <el-button />
 </template>
 
 <style scoped>
