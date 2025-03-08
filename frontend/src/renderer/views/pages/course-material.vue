@@ -1,11 +1,12 @@
 <template>
-  <div class="pdf-container">
-    <div v-for="(page, index) in pages" :key="index" class="pdf-page">
-      <canvas :ref="(el) => setCanvasRef(el, index)"></canvas>
+  <el-scrollbar class="pdf-scroll-container">
+    <div class="pdf-container">
+      <div v-for="(page, index) in pages" :key="index" class="pdf-page">
+        <canvas :ref="(el) => setCanvasRef(el, index)"></canvas>
+      </div>
+      <div ref="bottomObserver" class="observer"></div>
     </div>
-    <!-- 这个 div 负责监听滚动到底部 -->
-    <div ref="bottomObserver" class="observer"></div>
-  </div>
+  </el-scrollbar>
 </template>
 
 <script setup>
@@ -30,13 +31,9 @@ const setCanvasRef = (el, index) => {
 };
 
 const renderPage = async (pageNumber) => {
-  if (!pdfInstance.value) {
-    console.error("PDF instance is not available.");
-    return;
-  }
+  if (!pdfInstance.value) return;
 
   const rawPdfInstance = toRaw(pdfInstance.value);
-
   try {
     const page = await rawPdfInstance.getPage(pageNumber);
     const scale = 1.5;
@@ -48,17 +45,13 @@ const renderPage = async (pageNumber) => {
     const context = canvas.getContext("2d");
 
     await page.render({ canvasContext: context, viewport }).promise;
-    console.log(`Page ${pageNumber} rendered.`);
   } catch (error) {
-    console.error(`Error rendering page ${pageNumber}:, error`);
+    console.error(`Error rendering page ${pageNumber}:`, error);
   }
 };
 
 const loadMorePages = async () => {
-  if (!pdfInstance.value) {
-    console.error("PDF is not loaded yet.");
-    return;
-  }
+  if (!pdfInstance.value) return;
 
   const startPage = pages.value.length + 1;
   const endPage = Math.min(startPage + PAGE_BATCH_SIZE - 1, totalPages);
@@ -78,26 +71,20 @@ const loadPDF = async () => {
   try {
     const loadingTask = pdfjsLib.getDocument(pdfUrl);
     pdfInstance.value = await loadingTask.promise;
-
-    console.log("Loaded PDF document:", pdfInstance.value);
-
     totalPages = pdfInstance.value.numPages;
-    console.log(`Total pages: ${totalPages}`);
-
     await loadMorePages();
   } catch (error) {
     console.error("Error loading PDF:", error);
   }
 };
 
-const observeBottom = () => {  // 监听滚动到底部
+const observeBottom = () => {
   if (!bottomObserver.value) return;
 
   const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
         if (entry.isIntersecting && pages.value.length < totalPages) {
-          console.log("Loading more pages");
           loadMorePages();
         }
       },
@@ -114,8 +101,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.pdf-scroll-container {
+  height: 85vh;
+  overflow: auto;
+}
+
 .pdf-container {
-  padding: 20px;
+  padding: 0px;
 }
 
 .pdf-page {
