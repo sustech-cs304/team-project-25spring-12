@@ -28,6 +28,7 @@
     "axios": "^1.8.0",
     "element-plus": "^2.9.5",
     "nprogress": "^0.2.0",
+    "pdfjs-dist": "^4.10.38",
     "pinia": "^3.0.1",
     "vue": "^3.3.8",
     "vue-router": "^4.5.0"
