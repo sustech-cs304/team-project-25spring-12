@@ -6,7 +6,7 @@ import 'nprogress/nprogress.css';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/user-center',  // kl: 之后可以设计一个更适合的默认界面。
+    redirect: '/user-center',  // kl: 之后可以设计一个更适合的默认界面 ckr: 感觉挺合理的
   },
   {
     path: '/',
@@ -20,6 +20,14 @@ const routes: RouteRecordRaw[] = [
           title: '个人中心',
         },
         component: () => import('../views/pages/user-center.vue'),
+      },
+      {
+        path: '/argue',
+        name: 'argue',
+        meta: {
+          title: '争辩',
+        },
+        component: () => import('../views/pages/argue.vue'),
       },
     ]
   },

@@ -6,4 +6,9 @@ export const menuData: Menus[] = [
         title: '个人中心',
         icon: 'HomeFilled'
     },
+    {
+        index: '/argue',
+        title: '争辩',
+        icon: 'Opportunity'
+    },
 ]
