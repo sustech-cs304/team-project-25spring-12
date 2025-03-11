@@ -65,30 +65,33 @@
 
 <script setup>
 import { Download } from '@element-plus/icons-vue'
-import { onMounted, ref, nextTick, toRaw } from "vue";
+import { onMounted, ref, nextTick, toRaw, defineProps } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
 import widgetCard from "./widget-card.vue"
 
-const pdfUrl = "/assets/sample-long.pdf";
+pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
+
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true,
+  },
+})
+
+// pdf渲染
 const pages = ref([]);
 const canvasRefs = ref([]);
 const pdfInstance = ref(null);
 const bottomObserver = ref(null);
 const pdfContainer = ref(null);
-const contextMenuRef = ref(null);
 let totalPages = 0;
 const PAGE_BATCH_SIZE = 5;
 
-pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
-
-const notes = ref([
-  { page: 1, x: 390, y: 540, text: "王琦老师" },
-  { page: 1, x: 430, y: 200, text: "密码学" },
-]);
-
+// 笔记
+const notes = ref(JSON.parse(JSON.stringify(props.data.notes)));
+const contextMenuRef = ref(null);
 const activeNote = ref(null);
-
 const contextMenu = ref({ visible: false, x: 0, y: 0, page: 1 });
 const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref("");
@@ -138,8 +141,11 @@ const loadMorePages = async () => {
 
 const loadPDF = async () => {
   try {
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    // 从给定的 URL 读取一个pdf文件
+    // 下载并没有采用流式传输：pdf文件的下载速度远大于加载（渲染）速度
+    const loadingTask = pdfjsLib.getDocument(props.data.pdf_file);
     pdfInstance.value = await loadingTask.promise;
+
     totalPages = pdfInstance.value.numPages;
     await loadMorePages();
   } catch (error) {
@@ -188,6 +194,8 @@ const addNote = () => {
     y: contextMenu.value.y,
     text: newNoteText.value
   });
+
+  // TODO: 上传到后端
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
