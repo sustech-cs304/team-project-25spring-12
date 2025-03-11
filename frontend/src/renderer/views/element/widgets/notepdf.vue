@@ -46,6 +46,10 @@
         v-model:visible="contextMenu.visible"
         trigger="manual"
         placement="bottom-start"
+        teleported
+        popper-class="custom-popover"
+        :popper-style="{ top: `${popoverPosition.y}px`, left: `${popoverPosition.x}px`,
+            'max-height': '90px', 'overflow': 'hidden' }"
     >
       <template #reference>
         <div v-if="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"></div>
@@ -86,6 +90,7 @@ const notes = ref([
 const activeNote = ref(null);
 
 const contextMenu = ref({ visible: false, x: 0, y: 0, page: 1 });
+const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref("");
 
 const setCanvasRef = (el, index) => {
@@ -159,7 +164,7 @@ const openContextMenu = (event, page) => {
   const relativeX = event.clientX - targetRect.left;
   const relativeY = event.clientY - targetRect.top;
 
-  // 设置菜单位置
+  // 存储笔记的位置信息
   contextMenu.value = {
     visible: true,
     x: relativeX,
@@ -167,14 +172,10 @@ const openContextMenu = (event, page) => {
     page
   };
 
+  // 设置弹窗位置
   nextTick(() => {
-    if (contextMenuRef.value) {
-      contextMenuRef.value.style.position = "absolute";
-      contextMenuRef.value.style.left = `${relativeX + 15}px`;     // left padding = 15
-      contextMenuRef.value.style.top = `${event.clientY - 70}px`;  // height of header = 70
-      // 这里的绝对坐标计算不会影响保存的数据，只是微调视觉效果。
-      // 事实上 targetRect.left 只有两种取值，分别对应根据左侧快捷栏[是/否]展开，因此这两行的计算其实是类似的。
-    }
+    popoverPosition.value.x = event.clientX
+    popoverPosition.value.y = event.clientY
   });
 };
 
@@ -187,12 +188,6 @@ const addNote = () => {
     y: contextMenu.value.y,
     text: newNoteText.value
   });
-  console.log({
-    page: contextMenu.value.page,
-    x: contextMenu.value.x,
-    y: contextMenu.value.y,
-    text: newNoteText.value
-  })
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
@@ -265,5 +260,10 @@ onMounted(async () => {
   display: flex;
   flex-direction: column;
   gap: 5px;
+}
+
+.custom-popover {
+  padding: 0 !important;
+  position: absolute !important;
 }
 </style>
