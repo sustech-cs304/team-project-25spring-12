@@ -1,5 +1,5 @@
 <template>
-  <widget-card title="互动式课件" icon="DataAnalysis" color="blue">
+  <widget-card :title="computedTitle" icon="DataAnalysis" color="blue">
     <div class="card-content">
       <el-text>
         提示：在课件任意位置右键，创建一条笔记！
@@ -65,7 +65,7 @@
 
 <script setup>
 import { Download } from '@element-plus/icons-vue';
-import { onMounted, ref, nextTick, toRaw, defineProps } from "vue";
+import { onMounted, ref, nextTick, toRaw, defineProps, computed } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
 import widgetCard from "./widget-card.vue";
@@ -77,6 +77,10 @@ const props = defineProps({
     type: Object,
     required: true,
   },
+});
+
+const computedTitle = computed(() => {
+  return props.data?.title || "互动式课件";
 });
 
 // pdf渲染
