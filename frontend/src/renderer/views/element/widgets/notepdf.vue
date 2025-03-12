@@ -64,11 +64,11 @@
 </template>
 
 <script setup>
-import { Download } from '@element-plus/icons-vue'
+import { Download } from '@element-plus/icons-vue';
 import { onMounted, ref, nextTick, toRaw, defineProps } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
-import widgetCard from "./widget-card.vue"
+import widgetCard from "./widget-card.vue";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -77,7 +77,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-})
+});
 
 // pdf渲染
 const pages = ref([]);
@@ -175,13 +175,13 @@ const openContextMenu = (event, page) => {
     visible: true,
     x: relativeX,
     y: relativeY,
-    page
+    page,
   };
 
   // 设置弹窗位置
   nextTick(() => {
-    popoverPosition.value.x = event.clientX
-    popoverPosition.value.y = event.clientY
+    popoverPosition.value.x = event.clientX;
+    popoverPosition.value.y = event.clientY;
   });
 };
 
@@ -192,7 +192,7 @@ const addNote = () => {
     page: contextMenu.value.page,
     x: contextMenu.value.x,
     y: contextMenu.value.y,
-    text: newNoteText.value
+    text: newNoteText.value,
   });
 
   // TODO: 上传到后端
