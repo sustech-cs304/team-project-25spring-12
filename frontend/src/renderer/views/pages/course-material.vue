@@ -19,7 +19,7 @@
 
   const docData = {
     title: '富文本文档 [自定义title]',
-    content: '# 本项目 UI 组件为<img src=\"https://element-plus.org/images/element-plus-logo.svg\" width="75"\>\n\n## 以下课件来自视频<br><iframe src="//player.bilibili.com/player.html?isOutside=true&aid=1052014157&bvid=BV1GH4y1p7vE&cid=1477792306&p=1" scrolling="no" border="0" frameborder="no" framespacing="0" allowfullscreen="true"></iframe>',
+    content: '# 本项目 UI 组件为\n\n<img src=\"https://element-plus.org/images/element-plus-logo.svg\" width="75"\>',
     attachments: [
       {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
       {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
