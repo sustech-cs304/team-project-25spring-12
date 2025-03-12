@@ -238,14 +238,21 @@ onMounted(async () => {
 .pdf-scroll-container {
   height: calc(100vh - 145px);
   overflow: auto;
+  display: flex;
+  justify-content: center;
 }
 
 .pdf-container {
   position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .pdf-page {
   position: relative;
+  margin: 0 auto;
+  width: 100%;
 }
 
 .note-button {
@@ -257,6 +264,7 @@ onMounted(async () => {
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+
 
 .note-button:hover {
   transform: scale(1.2);
