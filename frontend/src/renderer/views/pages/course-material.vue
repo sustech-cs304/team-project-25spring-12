@@ -2,12 +2,19 @@
   <div class="page">
     <doc :data="docData"></doc>
     <note-pdf :data="notePdfData"></note-pdf>
+    <assignment :data="assignmentData"></assignment>
   </div>
 </template>
+
+<!--
+  实现一个多功能的 Page ，可以以多种方式分享课程资料、上传作业、发放评分等。
+  组件详见 @/views/widgets
+-->
 
 <script setup lang="ts">
   import notePdf from "../element/widgets/notepdf.vue"
   import doc from "../element/widgets/doc.vue"
+  import assignment from "../element/widgets/assignment.vue"
 
   const notePdfData = {
     title: '互动式课件 [自定义title]',
@@ -29,6 +36,16 @@
       {file_name: '伪7zip.zip', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
       {file_name: '伪7zip.tff', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
     ],
+  }
+
+  const assignmentData = {
+    title: '作业 [自定义title]',
+    content: '# 我是作业\n\n请完成作业',
+    attachments: [
+      {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+      {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    ],
+
   }
 </script>
 
