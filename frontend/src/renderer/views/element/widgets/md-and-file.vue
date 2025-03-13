@@ -43,7 +43,6 @@
 import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import {Box, Document, Download, Folder, Headset, Picture, Tools, VideoCamera} from "@element-plus/icons-vue";
-import {defineProps} from "vue";
 
 const props = defineProps({
   data: {
