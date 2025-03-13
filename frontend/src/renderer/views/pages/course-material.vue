@@ -3,6 +3,7 @@
     <doc :data="docData"></doc>
     <note-pdf :data="notePdfData"></note-pdf>
     <assignment :data="assignmentData"></assignment>
+    <assignment :data="assignmentData2"></assignment>
   </div>
 </template>
 
@@ -45,7 +46,21 @@
       {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
       {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
     ],
+    status: 'pending',
+    submit_types: ['file', 'code'],
+  }
 
+  const assignmentData2 = {
+    title: '已完成的作业',
+    content: '# 我是作业\n\n请完成作业',
+    attachments: [
+      {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+      {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    ],
+    status: 'returned',
+    submit_types: ['file', 'code'],
+    score: 90,
+    max_score: 100,
   }
 </script>
 
