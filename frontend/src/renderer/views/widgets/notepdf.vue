@@ -68,7 +68,7 @@ import { Download } from '@element-plus/icons-vue';
 import { onMounted, ref, nextTick, toRaw, computed } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
-import widgetCard from "./widget-card.vue";
+import widgetCard from "./utils/widget-card.vue";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 

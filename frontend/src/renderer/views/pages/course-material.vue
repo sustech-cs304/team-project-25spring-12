@@ -12,9 +12,9 @@
 -->
 
 <script setup lang="ts">
-  import notePdf from "../element/widgets/notepdf.vue"
-  import doc from "../element/widgets/doc.vue"
-  import assignment from "../element/widgets/assignment.vue"
+  import notePdf from "../widgets/notepdf.vue"
+  import doc from "../widgets/doc.vue"
+  import assignment from "../widgets/assignment.vue"
 
   const notePdfData = {
     title: '互动式课件 [自定义title]',

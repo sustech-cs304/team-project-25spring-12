@@ -6,8 +6,8 @@
 
 <script setup lang="ts">
 import {computed, ref} from "vue";
-import widgetCard from "./widget-card.vue";
-import MdAndFile from "./md-and-file.vue";
+import widgetCard from "./utils/widget-card.vue";
+import MdAndFile from "./utils/md-and-file.vue";
 
 const props = defineProps({
   data: {
