@@ -4,7 +4,7 @@
       <el-text>
         提示：在课件任意位置右键，创建一条笔记！
       </el-text>
-      <el-button type="primary" size="large" round :icon="Download" @click="downloadPdf">
+      <el-button type="primary" :icon="Download">
         下载原课件
       </el-button>
     </div>
@@ -52,7 +52,7 @@
             'max-height': '90px', 'overflow': 'hidden' }"
     >
       <template #reference>
-        <div v-if="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"></div>
+        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"></div>
       </template>
 
       <div class="context-menu-content">
@@ -265,7 +265,6 @@ onMounted(async () => {
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-
 .note-button:hover {
   transform: scale(1.2);
   box-shadow: 0px 0px 5px rgba(50, 50, 50, 0.5);
@@ -285,5 +284,26 @@ onMounted(async () => {
 .custom-popover {
   padding: 0 !important;
   position: absolute !important;
+}
+
+.el-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #409eff;
+  color: #fff;
+}
+
+.el-button:hover {
+  background-color: #66b1ff;
+}
+
+.el-text {
+  font-size: 14px;
+  color: #666;
+}
+
+.el-icon {
+  color: #409eff;
 }
 </style>
