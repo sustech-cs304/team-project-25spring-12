@@ -26,7 +26,7 @@
 -->
 
 <script setup>
-import { defineProps, computed, resolveComponent } from 'vue'
+import { computed, resolveComponent } from 'vue'
 
 const props = defineProps({
   title: String,
