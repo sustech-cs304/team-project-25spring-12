@@ -32,6 +32,7 @@
 <script setup lang="ts">
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
+import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import {computed, ref} from "vue";
 import {Upload} from "@element-plus/icons-vue";
 import Codemirror from "codemirror-editor-vue3";
@@ -40,8 +41,7 @@ import "codemirror/theme/dracula.css";
 
 import "codemirror/mode/javascript/javascript.js";
 import "codemirror/mode/python/python.js";
-import "codemirror/mode/clike/clike.js";
-import MdAndFileEditor from "@/views/widgets/utils/md-and-file-editor.vue";  // Java, C++, C
+import "codemirror/mode/clike/clike.js";  // Java, C++, C
 
 const props = defineProps({
   data: {
