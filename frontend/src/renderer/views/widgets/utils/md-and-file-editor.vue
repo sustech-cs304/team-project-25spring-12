@@ -6,7 +6,7 @@
     </div>
 
     <!-- 附加文件列表 -->
-    <download-upload-file-list title="已上传文件" :upload="true"/>
+    <download-upload-file-list title="已上传文件" :upload="true" :file_list="file_list"/>
 
     <el-button
         type="primary"
@@ -22,18 +22,22 @@
 <script setup lang="ts">
 import 'md-editor-v3/lib/style.css';
 import {MdEditor} from "md-editor-v3";
-import {ref} from "vue";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
 import {Upload} from "@element-plus/icons-vue";
 
 const props = defineProps({
-  data: {
+  text: {
+    type: String,
+    required: true,
+  },
+  file_list: {
     type: Object,
     required: true,
   },
 });
 
-const text = ref('')
+const text = JSON.parse(JSON.stringify(props.text));
+const file_list = JSON.parse(JSON.stringify(props.file_list));
 
 const submit = {
 

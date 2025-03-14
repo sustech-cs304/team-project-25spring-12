@@ -25,8 +25,41 @@
       <!--   作业信息   -->
       <md-and-file :data="props.data"/>
 
+      <!--   作业信息   -->
+      <div class="submit-record" v-if="props.data.status === 'submitted'">
+        <el-row justify="space-between">
+          <el-text size="large" class="submit-record-title"> 提交记录</el-text>
+        </el-row>
+        <el-divider></el-divider>
+        <el-row
+            v-for="record in props.data.submitted_assignment"
+            :key="record.submitted_time"
+            class="submit-record-item"
+            justify="space-between"
+        >
+          <el-col :span="1">
+            <el-icon :size="20">
+              <component :is="Memo"/>
+            </el-icon>
+          </el-col>
+          <el-col :span="16">
+            <el-text truncated> 提交时间：{{ record.submitted_time }}</el-text>
+          </el-col>
+          <el-col :span="6" class="edit-button">
+            <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                @click="editSubmittedAssignment(record?.content, record?.code, record?.attachments)"
+            >
+              编辑
+            </el-button>
+          </el-col>
+        </el-row>
+      </div>
+
       <!--   提交作业区   -->
-      <div class="homework-submit" v-if="props.data.status === 'pending'">
+      <div class="homework-submit" v-if="props.data.status === 'pending' || isEditing">
         <div class="code-editor" v-if="props.data.submit_types.includes('code')">
           <div class="toolbar">
             <span class="el-text">选择语言：</span>
@@ -42,11 +75,12 @@
             <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>
           </div>
 
-          <codemirror v-model="code" :options="options"/>
+          <div id="code-editor" style="height: 100%"></div>
+
         </div>
 
         <div class="homework-editor" v-if="props.data.submit_types.includes('file')">
-          <md-and-file-editor :data="props.data"/>
+          <md-and-file-editor :text="editingText" :file_list="editingFileList"/>
         </div>
       </div>
 
@@ -59,13 +93,7 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import {computed, ref} from "vue";
-import {Upload} from "@element-plus/icons-vue";
-import Codemirror from "codemirror-editor-vue3";
-import "codemirror/lib/codemirror.css";
-import "codemirror/theme/dracula.css";
-import "codemirror/mode/javascript/javascript.js";
-import "codemirror/mode/python/python.js";
-import "codemirror/mode/clike/clike.js";  // Java, C++, C
+import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
 
 const props = defineProps({
   data: {
@@ -73,6 +101,18 @@ const props = defineProps({
     required: true,
   },
 });
+
+const value = /* set from `myEditor.getModel()`: */ `function hello() {
+	alert('Hello world!');
+}`;
+
+// Hover on each property to see its docs!
+const myEditor = monaco.editor.create(document.getElementById("code-editor"), {
+  value,
+  language: "javascript",
+  automaticLayout: true,
+});
+
 
 const languages = [
   {label: "C++", value: "text/x-c++src"},
@@ -106,8 +146,6 @@ const submitCode = () => {
   // TODO: 上传到后端
 };
 
-import {Timer, Finished, Checked} from "@element-plus/icons-vue";
-
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
@@ -116,7 +154,7 @@ const statusIcon = computed(() => {
 
 const statusColor = computed(() => {
   if (props.data.status === "pending") return "red";
-  if (props.data.status === "submitted") return "yellow";
+  if (props.data.status === "submitted") return "orange";
   if (props.data.status === "returned") return "green";
 });
 
@@ -136,6 +174,20 @@ const statusText = computed(() => {
 
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
+
+const isEditing = ref(false);
+const editingText = ref('');
+const editingFileList = ref([]);
+
+const editSubmittedAssignment = (content, editing_code, attachments) => {
+  editingText.value = JSON.parse(JSON.stringify(content));
+  editingFileList.value = JSON.parse(JSON.stringify(attachments));
+  code.value = "123";
+  selectedLanguage.value = JSON.parse(JSON.stringify(editing_code.language));
+  updateMode();
+  isEditing.value = true;
+}
+
 </script>
 
 <style scoped>
@@ -237,5 +289,37 @@ const displayTotalScore = computed(() => (props.data.status === "returned" ? pro
 .total-score {
   font-size: 16px;
   color: #666;
+}
+
+.submit-record {
+  min-width: 350px;
+  background: #f9fafb;
+  padding: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.submit-record-title {
+  font-weight: bold;
+  font-size: 18px;
+  color: #333;
+}
+
+.submit-record-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.submit-record-item:hover {
+  background: #f1f1f1;
+}
+
+.edit-button {
+  text-align: right;
 }
 </style>
