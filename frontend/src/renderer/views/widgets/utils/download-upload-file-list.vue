@@ -16,7 +16,6 @@
         v-for="file in file_list"
         :key="file.URL"
         class="attachment-item"
-        align="middle"
         justify="space-between"
     >
       <el-col :span="2">
