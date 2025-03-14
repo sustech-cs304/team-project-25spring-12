@@ -6,15 +6,17 @@
         <el-row class="status-row">
           <!-- 状态信息 -->
           <el-col :span="12" class="status-text">
-            <el-icon :size="28" class="status-icon">
+            <el-icon :size="28" class="status-icon" :color="statusColor">
               <component :is="statusIcon"/>
             </el-icon>
-            {{ statusText }}
+            <el-text>
+              {{ statusText }}
+            </el-text>
           </el-col>
 
           <!-- 得分展示 -->
           <el-col :span="12" class="score-display">
-            <span class="score">{{ displayScore }}</span>
+            <span class="score" :style="{ color: scoreColor }">{{ displayScore }}</span>
             <span class="total-score"> / {{ displayTotalScore }}</span>
           </el-col>
         </el-row>
@@ -104,23 +106,34 @@ const submitCode = () => {
   // TODO: 上传到后端
 };
 
-import {Timer, Finished, Medal} from "@element-plus/icons-vue"; // 使用不同状态的图标
+import {Timer, Finished, Checked} from "@element-plus/icons-vue";
 
-// 根据状态选择对应的图标
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
-  if (props.data.status === "returned") return Medal;
+  if (props.data.status === "returned") return Checked;
 });
 
-// 映射状态文本
+const statusColor = computed(() => {
+  if (props.data.status === "pending") return "red";
+  if (props.data.status === "submitted") return "yellow";
+  if (props.data.status === "returned") return "green";
+});
+
+const scoreColor = computed(() => {
+  if (props.data.status !== "returned") return "#666"; // 默认灰色
+  const ratio = props.data.score / props.data.max_score;
+  const red = Math.round(255 * (1 - ratio));
+  const green = Math.round(255 * ratio);
+  return `rgb(${red}, ${green}, 0)`;
+});
+
 const statusText = computed(() => {
   if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
 
-// 处理得分显示（不是 "returned" 状态时，显示 "-- / --"）
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
 </script>
