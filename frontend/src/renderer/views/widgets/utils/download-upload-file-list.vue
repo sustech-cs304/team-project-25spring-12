@@ -1,6 +1,6 @@
 <template>
   <div class="attachments">
-    <el-row justify="space-between" align="middle">
+    <el-row justify="space-between">
       <el-text size="large" class="attachment-title">{{ title }}</el-text>
       <el-button
           v-if="props.upload"
