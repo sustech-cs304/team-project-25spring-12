@@ -1,5 +1,9 @@
-fastapi
+fastapi~=0.115.11
+pydantic
 uvicorn[standard]
 sqlmodel
-passlib
-python-jose
+passlib~=1.7.4
+python-jose~=3.4.0
+fastapi-cache2[redis]
+redis~=4.6.0
+psycopg2
