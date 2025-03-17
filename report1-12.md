@@ -7,7 +7,7 @@ Our project aims to design and implement an improved Assignment Grading System t
 ### Functional Requirements
 
 **1. Integrated Coursework Management**
-   
+
    All-in-one resource management for coursework, including resource releasing, assignment creation, submission, grading, and feedback.
 
 **2.Study with Classmates**
@@ -22,9 +22,9 @@ Students can review the grading results of their assignments, and argue with the
 
 Powered by Deepseek-R1 API, The system will provide AI marking for the assignments, enabling the teachers configure the marking rules and the system will automatically mark the assignments according to the rules.
 
-**5.Multi-platform**
+**5. Online Judge Integration**
 
-Use with ease on web browser, Windows, Linux and MacOS.
+The system will integrate with online judges like LeetCode, Codeforces, etc., to provide a platform for students to practice coding and get instant feedback.
 
 ### Non-functional Requirements
 
