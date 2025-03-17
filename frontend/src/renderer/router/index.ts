@@ -30,6 +30,14 @@ const routes: RouteRecordRaw[] = [
         },
         component: () => import('../views/pages/course-material.vue'),
       },
+      {
+        path: '/argue',
+        name: 'argue',
+        meta: {
+          title: '争辩',
+        },
+        component: () => import('../views/pages/argue.vue'),
+      },
     ]
   },
   {

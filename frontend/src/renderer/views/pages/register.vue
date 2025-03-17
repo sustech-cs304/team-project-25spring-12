@@ -3,7 +3,7 @@
         <div class="login-container">
             <div class="login-header">
                 <img class="logo mr10" src="../../assets/img/logo.svg" alt="" />
-                <div class="login-title">后台管理系统</div>
+                <div class="login-title">母鸡黑板</div>
             </div>
             <el-form :model="param" :rules="rules" ref="register" size="large">
                 <el-form-item prop="username">
