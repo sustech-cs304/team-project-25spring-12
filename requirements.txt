@@ -7,3 +7,5 @@ python-jose~=3.4.0
 fastapi-cache2[redis]
 redis~=4.6.0
 psycopg2
+python-multipart
+bcrypt
