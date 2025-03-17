@@ -4,7 +4,7 @@
   title: "CS304 Project Proposal", // Required
   subtitle: "Intelligent Coursework Grading System: MujiCLASS",
   date: "01.07.2024",
-  authors: ("Chen Kangrui", "Gong Linghu", "Kuang Liang", "Yu Siyao", "Xue Zhe"),
+  authors: ("Team 12", "Chen Kangrui", "Gong Linghu", "Kuang Liang", "Yu Siyao", "Xue Zhe"),
 
   // Optional Styling (for more / explanation see in the typst universe)
   ratio: 16/9,
