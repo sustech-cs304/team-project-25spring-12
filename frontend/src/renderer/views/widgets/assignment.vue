@@ -32,8 +32,8 @@
         </el-row>
         <el-divider></el-divider>
         <el-row
-            v-for="record in props.data.submitted_assignment"
-            :key="record.submitted_time"
+            v-for="record in props.data.submittedAssignment"
+            :key="record.submittedTime"
             class="submit-record-item"
             justify="space-between"
         >
@@ -43,14 +43,14 @@
             </el-icon>
           </el-col>
           <el-col :span="16">
-            <el-text truncated> 提交时间：{{ record.submitted_time }}</el-text>
+            <el-text truncated> 提交时间：{{ record.submittedTime }}</el-text>
           </el-col>
           <el-col :span="6" class="edit-button">
             <el-button
                 type="primary"
                 link
                 :icon="Edit"
-                @click="editSubmittedAssignment(record?.content, record?.code, record?.attachments)"
+                @click="editSubmittedAssignment(record)"
             >
               编辑
             </el-button>
@@ -60,7 +60,7 @@
 
       <!--   提交作业区   -->
       <div class="homework-submit" v-if="props.data.status === 'pending' || isEditing">
-        <div class="code-editor" v-if="props.data.submit_types.includes('code')">
+        <div class="code-editor" v-if="props.data.submitTypes.includes('code')">
           <div class="toolbar">
             <span class="el-text">选择语言：</span>
             <el-select v-model="selectedLanguage" size="small" @change="updateMode">
@@ -75,8 +75,8 @@
           </div>
         </div>
 
-        <div class="homework-editor" v-if="props.data.submit_types.includes('file')">
-          <md-and-file-editor :content="content" :file_list="fileList"/>
+        <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+          <md-and-file-editor :content="content" :fileList="fileList"/>
         </div>
 
         <el-button
@@ -144,7 +144,7 @@ const statusColor = computed(() => {
 });
 const scoreColor = computed(() => {
   if (props.data.status !== "returned") return "#666";
-  const ratio = props.data.score / props.data.max_score;
+  const ratio = props.data.score / props.data.maxScore;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
@@ -155,17 +155,17 @@ const statusText = computed(() => {
   if (props.data.status === "returned") return "已公布分数";
 });
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
-const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
+const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.maxScore : "--"));
 
 // 编辑提交记录
 const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
 const content = ref('');
 const fileList = ref([]);
-const editSubmittedAssignment = (editing_content, editing_code, attachments) => {
-  content.value = JSON.parse(JSON.stringify(editing_content));
-  code.value = JSON.parse(JSON.stringify(editing_code.content));
-  selectedLanguage.value = JSON.parse(JSON.stringify(editing_code.language));
-  fileList.value = JSON.parse(JSON.stringify(attachments));
+const editSubmittedAssignment = (record: Object) => {
+  content.value = JSON.parse(JSON.stringify(record.content));
+  code.value = JSON.parse(JSON.stringify(record.code.content));
+  selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
+  fileList.value = JSON.parse(JSON.stringify(record.attachments));
   // updateMode();
   isEditing.value = true;
 }

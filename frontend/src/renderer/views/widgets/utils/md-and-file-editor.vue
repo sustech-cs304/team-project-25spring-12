@@ -28,7 +28,7 @@ const props = defineProps({
 });
 
 const content = JSON.parse(JSON.stringify(props.content));
-const file_list = JSON.parse(JSON.stringify(props.fileList));
+const fileList = JSON.parse(JSON.stringify(props.fileList));
 
 const fileUploader = ref<HTMLDivElement | null>(null);
 

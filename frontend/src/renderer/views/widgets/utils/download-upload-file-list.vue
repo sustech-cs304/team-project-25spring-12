@@ -20,18 +20,18 @@
     >
       <el-col :span="2">
         <el-icon :size="20">
-          <component :is="getFileIcon(file.file_name)"/>
+          <component :is="getFileIcon(file.fileName)"/>
         </el-icon>
       </el-col>
       <el-col :span="16">
-        <el-text truncated>{{ file.file_name }}</el-text>
+        <el-text truncated>{{ file.fileName }}</el-text>
       </el-col>
       <el-col :span="6" class="download-btn">
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click="downloadFile(file.URL, file.file_name)"
+            @click="downloadFile(file.URL, file.fileName)"
         >
           下载
         </el-button>
