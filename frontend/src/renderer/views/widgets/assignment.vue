@@ -67,16 +67,12 @@
               <el-option v-for="lang in languages" :key="lang.value" :label="lang.label" :value="lang.value"/>
             </el-select>
 
-            <span class="el-text">Tab 长度：</span>
-            <el-select v-model="tabSize" placeholder="Tab 长度" size="small">
-              <el-option v-for="size in tabSizes" :key="size" :label="`${size} 空格`" :value="size"/>
-            </el-select>
-
-            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>
+<!--            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>-->
           </div>
 
-          <div id="code-editor" style="height: 100%"></div>
-
+          <div style="width: 100%; height: 100%; background-color: red">
+            <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
+          </div>
         </div>
 
         <div class="homework-editor" v-if="props.data.submit_types.includes('file')">
@@ -92,6 +88,7 @@
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
+import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
 
@@ -102,49 +99,30 @@ const props = defineProps({
   },
 });
 
-const value = /* set from `myEditor.getModel()`: */ `function hello() {
-	alert('Hello world!');
-}`;
-
-// Hover on each property to see its docs!
-const myEditor = monaco.editor.create(document.getElementById("code-editor"), {
-  value,
-  language: "javascript",
-  automaticLayout: true,
-});
-
-
 const languages = [
-  {label: "C++", value: "text/x-c++src"},
-  {label: "Java", value: "text/x-java"},
+  {label: "C++", value: "cpp"},
+  {label: "C", value: "c"},
+  {label: "Java", value: "java"},
   {label: "Python", value: "python"},
 ];
 
-const computedTitle = computed(() => props.data?.title || "作业");
-
-const code = ref("");
-const selectedLanguage = ref("text/x-c++src");
-const tabSizes = [2, 4, 8];
-const tabSize = ref(4);
-
-const options = computed(() => ({
-  mode: selectedLanguage.value,
-  theme: "dracula",
-  lineNumbers: true,
-  tabSize: tabSize.value,
-  indentUnit: tabSize.value,
-  indentWithTabs: true,
-  autoCloseBrackets: true,
-}));
+const selectedLanguage = ref("cpp");
+const code = ref('');
 
 const updateMode = () => {
-  options.value.mode = selectedLanguage.value;
+  // Nothing
 };
 
+const codeEditor = ref<InstanceType<typeof CodeEditor> | null>(null);
+
 const submitCode = () => {
-  console.log(code.value);
-  // TODO: 上传到后端
+  if (codeEditor.value) {
+    const code = codeEditor.value.getCode();
+    console.log(code);
+  }
 };
+
+const computedTitle = computed(() => props.data?.title || "作业");
 
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
@@ -159,7 +137,7 @@ const statusColor = computed(() => {
 });
 
 const scoreColor = computed(() => {
-  if (props.data.status !== "returned") return "#666"; // 默认灰色
+  if (props.data.status !== "returned") return "#666";
   const ratio = props.data.score / props.data.max_score;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
@@ -175,16 +153,16 @@ const statusText = computed(() => {
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
 
-const isEditing = ref(false);
+const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
 const editingText = ref('');
 const editingFileList = ref([]);
 
 const editSubmittedAssignment = (content, editing_code, attachments) => {
   editingText.value = JSON.parse(JSON.stringify(content));
   editingFileList.value = JSON.parse(JSON.stringify(attachments));
-  code.value = "123";
+  code.value = JSON.parse(JSON.stringify(editing_code.content));
   selectedLanguage.value = JSON.parse(JSON.stringify(editing_code.language));
-  updateMode();
+  // updateMode();
   isEditing.value = true;
 }
 
@@ -233,6 +211,7 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
   margin-right: 20px;
 }
 
+/*
 .submit-btn {
   margin-left: auto;
   margin-right: 20px;
@@ -246,6 +225,7 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
 .submit-btn:hover {
   background-color: #66b1ff;
 }
+ */
 
 .assignment-status {
   height: 60px;
