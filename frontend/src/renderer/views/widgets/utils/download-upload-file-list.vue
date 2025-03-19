@@ -13,7 +13,7 @@
     </el-row>
     <el-divider></el-divider>
     <el-row
-        v-for="file in file_list"
+        v-for="file in fileList"
         :key="file.URL"
         class="attachment-item"
         justify="space-between"
@@ -44,7 +44,7 @@
 import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
 
 const props = defineProps({
-  file_list: {
+  fileList: {
     type: Object,
     required: false,
     default: [],
@@ -60,7 +60,7 @@ const props = defineProps({
   },
 });
 
-const file_list = JSON.parse(JSON.stringify(props.file_list));
+const fileList = JSON.parse(JSON.stringify(props.fileList));
 
 // 根据文件后缀返回对应的 Element Plus 图标
 const getFileIcon = (fileName: string) => {

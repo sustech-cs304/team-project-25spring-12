@@ -76,10 +76,18 @@
         </div>
 
         <div class="homework-editor" v-if="props.data.submit_types.includes('file')">
-          <md-and-file-editor :text="editingText" :file_list="editingFileList"/>
+          <md-and-file-editor :content="content" :file_list="fileList"/>
         </div>
-      </div>
 
+        <el-button
+            type="primary"
+            :icon="Upload"
+            @click="submit"
+            style="width: 120px; margin-left: auto"
+        >
+          提交作业
+        </el-button>
+      </div>
     </div>
   </widget-card>
 </template>
@@ -99,43 +107,41 @@ const props = defineProps({
   },
 });
 
+/*
+* 代码编辑器的所有常量和方法：
+* languages：可选的语言（label），以及monaco切换高亮模式需要的名字（value）
+* selectedLanguage：已选的语言（value）
+* code：代码编辑器的内容
+* updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
+* */
 const languages = [
   {label: "C++", value: "cpp"},
   {label: "C", value: "c"},
   {label: "Java", value: "java"},
   {label: "Python", value: "python"},
 ];
-
 const selectedLanguage = ref("cpp");
 const code = ref('');
-
 const updateMode = () => {
   // Nothing
 };
 
 const codeEditor = ref<InstanceType<typeof CodeEditor> | null>(null);
 
-const submitCode = () => {
-  if (codeEditor.value) {
-    const code = codeEditor.value.getCode();
-    console.log(code);
-  }
-};
-
+// 本卡片的标题
 const computedTitle = computed(() => props.data?.title || "作业");
 
+// 状态区的所有方法，都是外观特效
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
   if (props.data.status === "returned") return Checked;
 });
-
 const statusColor = computed(() => {
   if (props.data.status === "pending") return "red";
   if (props.data.status === "submitted") return "orange";
   if (props.data.status === "returned") return "green";
 });
-
 const scoreColor = computed(() => {
   if (props.data.status !== "returned") return "#666";
   const ratio = props.data.score / props.data.max_score;
@@ -143,29 +149,35 @@ const scoreColor = computed(() => {
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
 });
-
 const statusText = computed(() => {
   if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
-
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
 
+// 编辑提交记录
 const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-const editingText = ref('');
-const editingFileList = ref([]);
-
-const editSubmittedAssignment = (content, editing_code, attachments) => {
-  editingText.value = JSON.parse(JSON.stringify(content));
-  editingFileList.value = JSON.parse(JSON.stringify(attachments));
+const content = ref('');
+const fileList = ref([]);
+const editSubmittedAssignment = (editing_content, editing_code, attachments) => {
+  content.value = JSON.parse(JSON.stringify(editing_content));
   code.value = JSON.parse(JSON.stringify(editing_code.content));
   selectedLanguage.value = JSON.parse(JSON.stringify(editing_code.language));
+  fileList.value = JSON.parse(JSON.stringify(attachments));
   // updateMode();
   isEditing.value = true;
 }
 
+// 提交作业
+const submit = () => {
+  // TODO
+  if (codeEditor.value) {
+    const code = codeEditor.value.getCode();
+    console.log(code);
+  }
+}
 </script>
 
 <style scoped>
@@ -301,5 +313,17 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
 
 .edit-button {
   text-align: right;
+}
+
+.el-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #409eff;
+  color: #fff;
+}
+
+.el-button:hover {
+  background-color: #66b1ff;
 }
 </style>
