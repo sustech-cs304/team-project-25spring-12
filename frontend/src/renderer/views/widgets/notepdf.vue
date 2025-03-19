@@ -90,7 +90,7 @@ const pdfInstance = ref(null);
 const bottomObserver = ref(null);
 const pdfContainer = ref(null);
 let totalPages = 0;
-const PAGE_BATCH_SIZE = 5;
+const pageBatchSize = 5;
 
 // 笔记
 const notes = ref(JSON.parse(JSON.stringify(props.data.notes)));
@@ -130,7 +130,7 @@ const loadMorePages = async () => {
   if (!pdfInstance.value) return;
 
   const startPage = pages.value.length + 1;
-  const endPage = Math.min(startPage + PAGE_BATCH_SIZE - 1, totalPages);
+  const endPage = Math.min(startPage + pageBatchSize - 1, totalPages);
 
   for (let i = startPage; i <= endPage; i++) {
     pages.value.push(i);
@@ -147,7 +147,7 @@ const loadPDF = async () => {
   try {
     // 从给定的 URL 读取一个pdf文件
     // 下载并没有采用流式传输：pdf文件的下载速度远大于加载（渲染）速度
-    const loadingTask = pdfjsLib.getDocument(props.data.pdf_file);
+    const loadingTask = pdfjsLib.getDocument(props.data.pdfFile);
     pdfInstance.value = await loadingTask.promise;
 
     totalPages = pdfInstance.value.numPages;
