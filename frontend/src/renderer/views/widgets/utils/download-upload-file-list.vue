@@ -14,7 +14,7 @@
     <el-divider></el-divider>
     <el-row
         v-for="file in fileList"
-        :key="file.URL"
+        :key="file.url"
         class="attachment-item"
         justify="space-between"
     >
@@ -31,7 +31,7 @@
             type="primary"
             link
             :icon="Download"
-            @click="downloadFile(file.URL, file.fileName)"
+            @click="downloadFile(file.url, file.fileName)"
         >
           下载
         </el-button>
@@ -42,6 +42,7 @@
 
 <script setup lang="ts">
 import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
+import {ref} from "vue";
 
 const props = defineProps({
   fileList: {
@@ -60,7 +61,7 @@ const props = defineProps({
   },
 });
 
-const fileList = JSON.parse(JSON.stringify(props.fileList));
+const fileList = ref(JSON.parse(JSON.stringify(props.fileList)));
 
 // 根据文件后缀返回对应的 Element Plus 图标
 const getFileIcon = (fileName: string) => {
@@ -77,12 +78,24 @@ const getFileIcon = (fileName: string) => {
 // 下载文件
 const downloadFile = (url: string, fileName: string) => {
   // TODO
+  // 判断当前平台（web/desktop），将url对应的文件下载到本地，与后端无关。
 };
 
 // 上传文件
 const uploadFile = () => {
   // TODO
+  // 判断当前平台，弹出上传文件窗口，然后将文件上传到服务器，得到服务器返回的url，然后将url和文件名加入fileList。
+  // 仅测试：
+  fileList.value.append({
+    url: "example.com",
+    fileName: "upload.txt",
+  })
 };
+
+// 返回文件列表
+defineExpose({
+  getFileList: () => fileList,
+})
 </script>
 
 <style scoped>
