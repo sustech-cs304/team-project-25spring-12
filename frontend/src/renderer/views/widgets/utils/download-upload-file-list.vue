@@ -86,7 +86,7 @@ const uploadFile = () => {
   // TODO
   // 判断当前平台，弹出上传文件窗口，然后将文件上传到服务器，得到服务器返回的url，然后将url和文件名加入fileList。
   // 仅测试：
-  fileList.value.append({
+  fileList.value.push({
     url: "example.com",
     fileName: "upload.txt",
   })
@@ -94,7 +94,7 @@ const uploadFile = () => {
 
 // 返回文件列表
 defineExpose({
-  getFileList: () => fileList,
+  getFileList: () => JSON.parse(JSON.stringify(fileList.value)),
 })
 </script>
 

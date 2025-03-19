@@ -70,13 +70,13 @@
 <!--            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>-->
           </div>
 
-          <div style="width: 100%; height: 100%; background-color: red">
+          <div style="width: 100%; height: 100%;">
             <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
           </div>
         </div>
 
         <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
-          <md-and-file-editor :content="content" :fileList="fileList"/>
+          <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
         </div>
 
         <el-button
@@ -127,6 +127,7 @@ const updateMode = () => {
 };
 
 const codeEditor = ref<InstanceType<typeof CodeEditor> | null>(null);
+const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
 
 // 本卡片的标题
 const computedTitle = computed(() => props.data?.title || "作业");
@@ -159,9 +160,9 @@ const displayTotalScore = computed(() => (props.data.status === "returned" ? pro
 
 // 编辑提交记录
 const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-const content = ref('');
+const content = ref("");
 const fileList = ref([]);
-const editSubmittedAssignment = (record: Object) => {
+const editSubmittedAssignment = (record: any) => {
   content.value = JSON.parse(JSON.stringify(record.content));
   code.value = JSON.parse(JSON.stringify(record.code.content));
   selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
@@ -176,6 +177,12 @@ const submit = () => {
   if (codeEditor.value) {
     const code = codeEditor.value.getCode();
     console.log(code);
+  }
+  if (contentEditor.value) {
+    const content = contentEditor.value.getContent();
+    console.log(content);
+    const fileList = contentEditor.value.getFileList();
+    console.log(fileList);
   }
 }
 </script>

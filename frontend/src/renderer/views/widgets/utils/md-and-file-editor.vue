@@ -2,7 +2,7 @@
   <div class="content">
     <!-- Markdown 编辑 -->
     <div class="markdown-container">
-      <md-editor v-model="content" ref="contentEditor"/>
+      <md-editor v-model="content"/>
     </div>
 
     <!-- 附加文件列表 -->
@@ -27,14 +27,14 @@ const props = defineProps({
   },
 });
 
-const content = JSON.parse(JSON.stringify(props.content));
+const content = ref<String>(JSON.parse(JSON.stringify(props.content)));
 const fileList = JSON.parse(JSON.stringify(props.fileList));
 
-const fileUploader = ref<HTMLDivElement | null>(null);
+const fileUploader = ref<InstanceType<typeof DownloadUploadFileList> | null>(null);
 
 defineExpose({
-  getContent: () => content,
-  getFileList: () => fileUploader?.getFileList() || [],
+  getContent: () => content.value,
+  getFileList: () => fileUploader?.value?.getFileList() || [],
 })
 </script>
 
