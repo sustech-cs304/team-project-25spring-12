@@ -19,6 +19,21 @@ class User(SQLModel, table=True):
     profile: "Profile" = Relationship(back_populates="user")
 
 
+class ClassTeacherLink(SQLModel, table=True):
+    class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
+    username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
+
+
+class ClassTeachingAssistantLink(SQLModel, table=True):
+    class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
+    username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
+
+
+class ClassStudentLink(SQLModel, table=True):
+    class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
+    username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
+
+
 class Profile(SQLModel, table=True):
     """
     用户个人资料
@@ -30,6 +45,9 @@ class Profile(SQLModel, table=True):
 
     username: str = Field(nullable=False, foreign_key="mjc_user.username", unique=True)
     user: User = Relationship(back_populates="profile")
+    teacher_classes: list["Class"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
+    teaching_assistant_classes: list["Class"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
+    student_classes: list["Class"] = Relationship(back_populates="student_classes", link_model=ClassStudentLink)
 
 
 class SyllabusFile(SQLModel, table=True):
@@ -56,15 +74,24 @@ class Class(SQLModel, table=True):
     # TODO: 教师、学生、助教 关系
     # TODO: 文件夹、页面 关系
 
+    teachers: list["Profile"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
+    teaching_assistants: list["Profile"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
+    students: list["Profile"] = Relationship(back_populates="student_classes", link_model=ClassStudentLink)
+    folders: list["Folder"] = Relationship()
+    pages: list["Page"] = Relationship()
+
 
 class Folder(SQLModel, table=True):
     """
     课程页面集合
     """
     id: int | None = Field(default=None, primary_key=True)
-    folder_name: str = Field(nullable=False, index=True)
+    folder_name: str
+    index: int
+    class_id: int = Field(foreign_key="class.id")
 
     pages: list["Page"] = Relationship(back_populates="folder")
+    class_: "Class" = Relationship(back_populates="folders")
 
 
 class Page(SQLModel, table=True):
@@ -75,8 +102,11 @@ class Page(SQLModel, table=True):
     name: str = Field(nullable=False, index=True)
     widgets: list["Widget"] = Relationship(back_populates="page")
     folder_id: int | None = Field(default=None, foreign_key="folder.id")
+    class_id: int = Field(foreign_key="class.id")
+    index: int
 
     folder: Folder = Relationship(back_populates="pages")
+    class_: "Class" = Relationship(back_populates="pages")
 
 
 class WidgetType(str, Enum):
