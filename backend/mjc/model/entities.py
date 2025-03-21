@@ -1,7 +1,7 @@
 from datetime import datetime
 from enum import Enum
 
-from sqlmodel import Field, SQLModel, Relationship, Enum as SQLEnum
+from sqlmodel import Column, Field, SQLModel, Relationship, Enum as SQLEnum
 
 
 class User(SQLModel, table=True):
@@ -28,7 +28,7 @@ class Profile(SQLModel, table=True):
     department: str
     email: str
 
-    username: str = Field(nullable=False, foreign_key="mjc_user.username")
+    username: str = Field(nullable=False, foreign_key="mjc_user.username", unique=True)
     user: User = Relationship(back_populates="profile")
 
 
@@ -74,7 +74,7 @@ class Page(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(nullable=False, index=True)
     widgets: list["Widget"] = Relationship(back_populates="page")
-    folder_id: int | None = Field(default=None, foreign_key="mjc_folder.id")
+    folder_id: int | None = Field(default=None, foreign_key="folder.id")
 
     folder: Folder = Relationship(back_populates="pages")
 
@@ -107,7 +107,7 @@ class Widget(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     title: str | None
     index: int = Field(nullable=False)
-    type: SQLEnum[WidgetType] = Field(nullable=False)
+    type: WidgetType = Field(sa_column=Column(SQLEnum(WidgetType)))
     create_time: datetime | None
     update_time: datetime | None
     editor_username: str = Field(nullable=True, foreign_key="profile.username")
@@ -141,6 +141,8 @@ class NotePDFWidget(SQLModel, table=True):
     """
     NotePDF Widget 存储的数据
     """
+    __tablename__ = 'note_pdf_widget'
+
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
     pdf_file: str
@@ -149,7 +151,7 @@ class NotePDFWidget(SQLModel, table=True):
     notes: list[Note] = Relationship(back_populates="note_pdf_widget")
 
 
-class SubmitTypes(str, Enum):
+class SubmitType(str, Enum):
     """
     作业可选的提交类型
     """
@@ -162,9 +164,11 @@ class AssignmentWidget(SQLModel, table=True):
     """
     Assignment Widget 存储的数据
     """
+    __tablename__ = 'assignment_widget'
+
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
-    submit_types: list[SQLEnum[SubmitTypes]] = Relationship(back_populates="widget")
+    submit_types: list[SubmitType] = Field(sa_column=Column(SQLEnum(SubmitType)))
     ddl: datetime
     max_score: int
 
