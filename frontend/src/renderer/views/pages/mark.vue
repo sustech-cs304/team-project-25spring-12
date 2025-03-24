@@ -13,7 +13,11 @@
       <el-button @click="freeTextMode" :type="mode == 3 ? 'primary' : ''">
         文字
       </el-button>
-      <div ref="host"></div>
+      <div class="pdfHost">
+        <div class="viewerContainer" ref="viewerContainer">
+          <div class="pdfViewer"></div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -23,7 +27,6 @@ import { onMounted, onUnmounted, ref } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
-import cssUrl from "pdfjs-dist/web/pdf_viewer.css?url";
 import "pdfjs-dist/web/pdf_viewer.css";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
@@ -35,60 +38,30 @@ const props = {
 };
 
 const mode = ref(0);
-const host = ref();
+const viewerContainer = ref();
 var pdfViewer: pdfjsViewer.PDFViewer;
-var resizeObserver: ResizeObserver;
-
-const getShadow = () => {
-  if (!host.value) {
-    console.error("host div is not mounted");
+var resizeObserver = new ResizeObserver((entries) => {
+  if (entries.length > 0) {
+    pdfViewer.currentScaleValue = "page-width";
   }
-
-  const root = host.value.attachShadow({ mode: "open" });
-
-  const link = document.createElement("link");
-  link.href = cssUrl;
-  link.rel = "stylesheet";
-  root.appendChild(link);
-
-  const container = document.createElement("div");
-  container.style.position = "absolute";
-  container.style.overflow = "auto";
-  container.style.height = "calc(100vh - 145px)";
-  container.style.width = "100%";
-  root.appendChild(container);
-
-  const viewer = document.createElement("div");
-  viewer.id = "viewer";
-  viewer.classList.add("pdfViewer");
-  container.appendChild(viewer);
-
-  return container;
-};
+});
 
 const loadPDF = async () => {
   try {
-    const container = getShadow();
+    const container = viewerContainer.value;
     const eventBus = new pdfjsViewer.EventBus();
-    const viewer = new pdfjsViewer.PDFViewer({
+    pdfViewer = new pdfjsViewer.PDFViewer({
       container,
       eventBus,
-      annotationEditorHighlightColors: '#ffff98',
+      annotationEditorHighlightColors: "yellow=#FFFF98,green=#53FFBC,blue=#80EBFF,pink=#FFCBE6,red=#FF4F5F",
     });
     eventBus.on("pagesinit", function () {
-      viewer.currentScaleValue = "page-width";
+      pdfViewer.currentScaleValue = "page-width";
     })
     const loadingTask = pdfjsLib.getDocument(props.data.pdfFile);
     const pdfDocument = await loadingTask.promise;
-    viewer.setDocument(pdfDocument);
-    const observer = new ResizeObserver((entries) => {
-      if (entries) {
-        viewer.currentScaleValue = "page-width";
-      }
-    });
-    observer.observe(container);
-    pdfViewer = viewer;
-    resizeObserver = observer;
+    pdfViewer.setDocument(pdfDocument);
+    resizeObserver.observe(container);
   } catch (e) {
     console.error(`Error rendering pdf:`, e);
   }
@@ -122,3 +95,31 @@ onUnmounted(() => {
   resizeObserver.disconnect();
 });
 </script>
+
+<style>
+/* patch to pdf.js */
+.hidden,
+[hidden] {
+  display: none !important;
+}
+</style>
+
+<style scoped>
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+.pdfHost {
+  position: relative;
+  width: 100%;
+  height: calc(100vh - 145px);
+}
+.viewerContainer {
+  position: absolute;
+  overflow: auto;
+  width: 100%;
+  height: 100%;
+}
+</style>
