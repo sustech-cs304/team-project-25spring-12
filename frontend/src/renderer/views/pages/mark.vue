@@ -51,14 +51,10 @@
         </div>
       </template>
       <el-scrollbar
+          ref="scrollbar"
           class="pdfScrollbar"
           style="z-index: 0;"
-          :view-style="{ 'position': 'relative', 'height': viewHeight + 'px' }"
-      >
-        <div class="viewerContainer" ref="viewerContainer">
-          <div class="pdfViewer"></div>
-        </div>
-      </el-scrollbar>
+      ></el-scrollbar>
     </el-card>
   </div>
 </template>
@@ -89,13 +85,12 @@ const highlightColors = {
 const textSizes = [8, 10, 12, 14, 18, 24, 36, 72];
 
 const mode = ref(pdfjsLib.AnnotationEditorType.NONE);
-const viewerContainer = ref();
+const scrollbar = ref();
 const inkColor = ref("#000000");
 const inkSize = ref(1);
 const highlightDefaultColor = ref(highlightColors.yellow);
 const textColor = ref("#000000");
 const textSize = ref(textSizes[2]);
-const viewHeight = ref(1);
 
 let pdfViewer: pdfjsViewer.PDFViewer;
 const eventBus = new pdfjsViewer.EventBus();
@@ -107,9 +102,13 @@ const resizeObserver = new ResizeObserver((entries) => {
 
 const loadPDF = async () => {
   try {
-    const container = viewerContainer.value;
+    const container = scrollbar.value.wrapRef;
+    container.classList.add("viewerContainer");
+    const viewer = container.childNodes[0];
+    viewer.classList.add("pdfViewer");
     pdfViewer = new pdfjsViewer.PDFViewer({
       container,
+      viewer,
       eventBus,
       annotationEditorHighlightColors: Object.entries(highlightColors).map(([name, color]) => `${name}=${color}`).join(','),
     });
@@ -120,7 +119,6 @@ const loadPDF = async () => {
     const pdfDocument = await loadingTask.promise;
     pdfViewer.setDocument(pdfDocument);
     resizeObserver.observe(container);
-    viewHeight.value = viewerContainer.value.offsetHeight;
   } catch (e) {
     console.error(`Error rendering pdf:`, e);
   }
@@ -218,7 +216,7 @@ onUnmounted(() => {
   height: calc(100vh - 145px);
 }
 
-.viewerContainer {
+:deep(.viewerContainer) {
   position: absolute;
   width: 100%;
 }
