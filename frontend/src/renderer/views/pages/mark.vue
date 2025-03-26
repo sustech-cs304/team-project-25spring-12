@@ -50,11 +50,15 @@
           </el-select>
         </div>
       </template>
-      <div class="pdfHost" style="z-index: 0;">
+      <el-scrollbar
+          class="pdfScrollbar"
+          style="z-index: 0;"
+          :view-style="{ 'position': 'relative', 'height': viewHeight + 'px' }"
+      >
         <div class="viewerContainer" ref="viewerContainer">
           <div class="pdfViewer"></div>
         </div>
-      </div>
+      </el-scrollbar>
     </el-card>
   </div>
 </template>
@@ -91,6 +95,7 @@ const inkSize = ref(1);
 const highlightDefaultColor = ref(highlightColors.yellow);
 const textColor = ref("#000000");
 const textSize = ref(textSizes[2]);
+const viewHeight = ref(1);
 
 let pdfViewer: pdfjsViewer.PDFViewer;
 const eventBus = new pdfjsViewer.EventBus();
@@ -115,6 +120,7 @@ const loadPDF = async () => {
     const pdfDocument = await loadingTask.promise;
     pdfViewer.setDocument(pdfDocument);
     resizeObserver.observe(container);
+    viewHeight.value = viewerContainer.value.offsetHeight;
   } catch (e) {
     console.error(`Error rendering pdf:`, e);
   }
@@ -207,16 +213,13 @@ onUnmounted(() => {
   border-color: #409eff;
 }
 
-.pdfHost {
-  position: relative;
+.pdfScrollbar {
   width: 100%;
   height: calc(100vh - 145px);
 }
 
 .viewerContainer {
   position: absolute;
-  overflow: auto;
   width: 100%;
-  height: 100%;
 }
 </style>
