@@ -71,8 +71,6 @@ class Class(SQLModel, table=True):
     location: str
     time: datetime
     syllabus: str  # URL
-    # TODO: 教师、学生、助教 关系
-    # TODO: 文件夹、页面 关系
 
     teachers: list["Profile"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
     teaching_assistants: list["Profile"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
