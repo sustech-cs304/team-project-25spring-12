@@ -8,7 +8,7 @@ from .common import File
 class ClassBase(BaseModel):
     name: str
     course_code: str
-    semester: str
+    semester: str | None
     lecturer: str | None
     location: str | None
     time: str | None
@@ -25,6 +25,7 @@ class Class(ClassBase):
 
 
 class ClassCreate(ClassBase):
+    semester_id: int
     pass
 
 

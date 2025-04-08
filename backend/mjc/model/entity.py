@@ -59,6 +59,18 @@ class SyllabusFile(SQLModel, table=True):
     url: str = Field(nullable=False)
 
 
+class Semester(SQLModel, table=True):
+    """
+    学期
+    """
+    id: int | None = Field(default=None, primary_key=True)
+    name: str = Field(nullable=False)
+    start_time: datetime = Field(nullable=False)
+    end_time: datetime = Field(nullable=False)
+
+    classes: list["Class"] = Relationship(back_populates="semester")
+
+
 class Class(SQLModel, table=True):
     """
     课程
@@ -66,7 +78,7 @@ class Class(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     name: str = Field(nullable=False)
     course_code: str = Field(nullable=False)
-    semester: str
+    semester_id: int = Field(default=None, foreign_key="semester.id")
     lecturer: str
     location: str
     time: datetime
@@ -77,6 +89,7 @@ class Class(SQLModel, table=True):
     students: list["Profile"] = Relationship(back_populates="student_classes", link_model=ClassStudentLink)
     folders: list["Folder"] = Relationship()
     pages: list["Page"] = Relationship()
+    semester: "Semester" = Relationship(back_populates="classes")
 
 
 class Folder(SQLModel, table=True):
