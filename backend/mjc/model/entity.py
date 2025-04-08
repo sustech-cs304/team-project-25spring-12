@@ -1,5 +1,6 @@
 from datetime import datetime
 from enum import Enum
+import uuid
 
 from sqlmodel import Column, Field, SQLModel, Relationship, Enum as SQLEnum
 
@@ -215,3 +216,19 @@ class AssignmentWidget(SQLModel, table=True):
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
     # TODO: 跟已提交的作业的关系
+
+
+class Visibility(str, Enum):
+    public = 'public'
+    in_class = 'in_class'
+
+
+class LocalResourceFile(SQLModel, table=True):
+    """
+    课程资源
+    """
+    __tablename__ = 'resource_file'
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    filename: str = Field(nullable=False)
+    system_path: str = Field(nullable=False)
+    visibility: Visibility = Field(default=Visibility.in_class, sa_column=Column(SQLEnum(WidgetType)))
