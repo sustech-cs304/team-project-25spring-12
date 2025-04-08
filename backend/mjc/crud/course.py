@@ -1,25 +1,44 @@
 from sqlmodel import Session, select
 
 from ..model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from ..model.entity import Class, Semester
+from ..model.entity import Class, Semester, Profile, ClassStudentLink
 from ..model.schema.user import UserInDB
 
 
-def get_class(db: Session, class_id: int) -> list[Class]:
-    pass
+def get_class(db: Session, class_id: int) -> Class:
+    stmt = select(Class).where(Class.id == class_id).where(Class.is_deleted == False)
+    cls_entity = db.exec(stmt).first()
+    return cls_entity
 
 
 def get_student_classes(db: Session, user: UserInDB) -> list[Class]:
-    pass
+    stmt = select(Profile).where(Profile.username == user.username)
+    student: Profile = db.exec(stmt).first()
+    return [cls for cls in student.student_classes if cls.is_deleted == False]
+
+
+def get_teacher_classes(db: Session, user: UserInDB) -> list[Class]:
+    stmt = select(Profile).where(Profile.username == user.username)
+    teacher: Profile = db.exec(stmt).first()
+    return [cls for cls in teacher.teacher_classes if cls.is_deleted == False]
+
+
+def get_ta_classes(db: Session, user: UserInDB) -> list[Class]:
+    stmt = select(Class).where(Profile.username == user.username)
+    ta: Profile = db.exec(stmt).first()
+    return [cls for cls in ta.teaching_assistant_classes if cls.is_deleted == False]
 
 
 def get_semester_classes(db: Session, semester_id: int) -> list[Class]:
-    pass
+    stmt = select(Class).where(Class.semester_id == semester_id).where(Class.is_deleted == False)
+    cls_entities = db.exec(stmt).all()
+    return cls_entities
 
 
 def get_semesters(db: Session) -> list[Semester]:
-    pass
-
+    stmt = select(Semester).where(Semester.is_deleted == False)
+    sem_entities = db.exec(stmt).all()
+    return sem_entities
 
 
 def create_class(db: Session, cls: ClassCreate) -> Class:
