@@ -4,12 +4,12 @@ from sqlmodel import Session
 
 import backend.mjc.model.schema.user
 from ..crud import user as crud
-from ..model import entities
+from ..model import entity
 from ..utils import security, database
 from .. import config
 
 
-def pack_profile(user: entities.User) -> backend.mjc.model.schema.user.Profile:
+def pack_profile(user: entity.User) -> backend.mjc.model.schema.user.Profile:
     return backend.mjc.model.schema.user.Profile(
         username=user.username,
         name=user.profile.name,

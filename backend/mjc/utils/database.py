@@ -4,7 +4,7 @@ from fastapi.params import Depends
 from sqlmodel import Session, SQLModel
 
 from ..model.database import engine
-from ..model import entities  # 通过引用 entities.py 中定义的数据库实体来初始化 metadata
+from ..model import entity  # 通过引用 entities.py 中定义的数据库实体来初始化 metadata
 
 
 def get_session() -> Generator[Session, None, None]:
