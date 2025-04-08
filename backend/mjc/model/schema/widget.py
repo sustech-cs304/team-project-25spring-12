@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.common import File
+from backend.mjc.model.schema.common import File, FileUploaded
 from backend.mjc.model.schema.user import Profile
 
 
@@ -24,7 +24,7 @@ class DocWidget(WidgetBase):
 class DocWidgetCreate(WidgetBase):
     index: int
     content: str | None
-    attachments: list[File] | None
+    attachments: list[FileUploaded] | None
 
 
 class DocWidgetUpdate(DocWidget):
