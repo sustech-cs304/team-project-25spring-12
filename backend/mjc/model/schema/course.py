@@ -37,6 +37,24 @@ class ClassUpdate(ClassBase):
     syllabus: File | None
 
 
+class SemesterBase(BaseModel):
+    name: str
+    start_time: datetime
+    end_time: datetime
+
+
+class Semester(SemesterBase):
+    id: int
+
+
+class SemesterCreate(SemesterBase):
+    pass
+
+
+class SemesterUpdate(SemesterBase):
+    id: int
+
+
 class Announcement(BaseModel):
     class_id: int
     class_name: str
