@@ -26,11 +26,15 @@ class Class(ClassBase):
 
 class ClassCreate(ClassBase):
     semester_id: int
+    syllabus: File | None
+    template_id: int | None
     pass
 
 
 class ClassUpdate(ClassBase):
     id: int
+    semester_id: int
+    syllabus: File | None
 
 
 class Announcement(BaseModel):

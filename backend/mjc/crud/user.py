@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from ..model.entities import User, Profile
+from ..model.entity import User, Profile
 from ..model.schema.user import UserCreate, ChangePassword
 from ..utils import security
 

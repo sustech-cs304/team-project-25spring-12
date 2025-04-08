@@ -68,6 +68,7 @@ class Semester(SQLModel, table=True):
     name: str = Field(nullable=False)
     start_time: datetime = Field(nullable=False)
     end_time: datetime = Field(nullable=False)
+    is_deleted: bool = Field(default=False, nullable=False)
 
     classes: list["Class"] = Relationship(back_populates="semester")
 
@@ -82,8 +83,9 @@ class Class(SQLModel, table=True):
     semester_id: int = Field(default=None, foreign_key="semester.id")
     lecturer: str
     location: str
-    time: datetime
-    syllabus: str  # URL
+    time: str
+    syllabus_id: uuid.UUID = Field(default=None, foreign_key="local_resource_file.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     teachers: list["Profile"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
     teaching_assistants: list["Profile"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
@@ -91,6 +93,7 @@ class Class(SQLModel, table=True):
     folders: list["Folder"] = Relationship()
     pages: list["Page"] = Relationship()
     semester: "Semester" = Relationship(back_populates="classes")
+    syllabus: "LocalResourceFile" = Relationship()
 
 
 class Folder(SQLModel, table=True):
@@ -101,6 +104,7 @@ class Folder(SQLModel, table=True):
     folder_name: str
     index: int
     class_id: int = Field(foreign_key="class.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     pages: list["Page"] = Relationship(back_populates="folder")
     class_: "Class" = Relationship(back_populates="folders")
@@ -116,6 +120,7 @@ class Page(SQLModel, table=True):
     folder_id: int | None = Field(default=None, foreign_key="folder.id")
     class_id: int = Field(foreign_key="class.id")
     index: int
+    is_deleted: bool = Field(default=False, nullable=False)
 
     folder: Folder = Relationship(back_populates="pages")
     class_: "Class" = Relationship(back_populates="pages")
@@ -132,14 +137,12 @@ class WidgetAttachment(SQLModel, table=True):
     用于管理系统中 Widget 使用的文件
     """
     id: int | None = Field(default=None, primary_key=True)
-    file_name: str | None
-    url: str = Field(nullable=False)
-    upload_time: datetime | None
-    uploader_username: str | None = Field(nullable=False, foreign_key="profile.username")
+    file_id: uuid.UUID = Field(default=None, foreign_key="local_resource_file.id")
     widget_id: int = Field(foreign_key="widget.id")
 
     uploader: "Profile" = Relationship()
     widget: "Widget" = Relationship(back_populates="attachments")
+    file: "LocalResourceFile" = Relationship()
 
 
 class Widget(SQLModel, table=True):
@@ -155,6 +158,7 @@ class Widget(SQLModel, table=True):
     editor_username: str = Field(nullable=True, foreign_key="profile.username")
     content: str | None
     page_id: int = Field(foreign_key="page.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     editor: "Profile" = Relationship()  # 此处通过 widget 不应能改变 profile，不加 back_populates
     attachments: list[WidgetAttachment] = Relationship(back_populates="widget")
@@ -174,6 +178,7 @@ class Note(SQLModel, table=True):
     text: str
     editor_username: str = Field(nullable=True, foreign_key="profile.username")
     note_pdf_widget_id: int = Field(foreign_key="note_pdf_widget.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     editor: "Profile" = Relationship()  # 此处通过 note 不应能改变 profile，不加 back_populates
     note_pdf_widget: "NotePDFWidget" = Relationship(back_populates="notes")
@@ -187,10 +192,11 @@ class NotePDFWidget(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
-    pdf_file: str
+    pdf_file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
 
     widget: "Widget" = Relationship(back_populates="note_pdf_widget")
     notes: list[Note] = Relationship(back_populates="note_pdf_widget")
+    pdf_file: "LocalResourceFile" = Relationship()
 
 
 class SubmitType(str, Enum):
@@ -227,8 +233,14 @@ class LocalResourceFile(SQLModel, table=True):
     """
     课程资源
     """
-    __tablename__ = 'resource_file'
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    __tablename__ = 'local_resource_file'
+
+    id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
+    upload_time: datetime | None = Field(default=None, nullable=True)
+    upload_username: str | None = Field(foreign_key="mjc_user.username")
     filename: str = Field(nullable=False)
     system_path: str = Field(nullable=False)
     visibility: Visibility = Field(default=Visibility.in_class, sa_column=Column(SQLEnum(WidgetType)))
+
+    uploader: "Profile" = Relationship()
+
