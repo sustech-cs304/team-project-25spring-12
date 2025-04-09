@@ -6,8 +6,7 @@ import 'nprogress/nprogress.css';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/course/material?id=123',
-    // redirect: '/user-center',  // kl: 之后可以设计一个更适合的默认界面。
+    redirect: '/homepage'
   },
   {
     path: '/',
@@ -21,6 +20,14 @@ const routes: RouteRecordRaw[] = [
           title: '个人中心',
         },
         component: () => import('../views/pages/user-center.vue'),
+      },
+      {
+        path: '/homepage',
+        name: 'homepage',
+        meta: {
+          title: '首页',
+        },
+        component: () => import('../views/pages/homepage.vue'),
       },
       {
         path: '/course/material',
