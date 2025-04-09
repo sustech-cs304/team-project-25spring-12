@@ -101,7 +101,7 @@ class Folder(SQLModel, table=True):
     课程页面集合
     """
     id: int | None = Field(default=None, primary_key=True)
-    folder_name: str
+    name: str
     index: int
     class_id: int = Field(foreign_key="class.id")
     is_deleted: bool = Field(default=False, nullable=False)
