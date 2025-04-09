@@ -7,6 +7,7 @@ class PageWidgetItem(BaseModel):
 
 class PageBase(BaseModel):
     name: str
+    visible: bool
 
 
 class Page(PageBase):
