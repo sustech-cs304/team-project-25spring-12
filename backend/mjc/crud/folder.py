@@ -8,7 +8,7 @@ def update_page_order(db: Session, order: list[int], folder: Folder):
     """
     将页面按顺序加入到文件夹中
     """
-    for i, page_id in enumerate(folder.order):
+    for i, page_id in enumerate(order):
         stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
         page: Page = db.exec(stmt).first()
         if page:
@@ -30,7 +30,8 @@ def create_folder(db: Session, folder: FolderCreate) -> Folder:
     )
     db.add(folder_entity)
     db.refresh(folder_entity)
-    update_page_order(db, folder.order, folder_entity)
+    if folder.order:
+        update_page_order(db, folder.order, folder_entity)
     return folder_entity
 
 
@@ -38,8 +39,9 @@ def update_folder(db: Session, folder: FolderUpdate) -> Folder:
     stmt = select(Folder).where(Folder.id == folder.id).where(Folder.is_deleted == False)
     folder_entity: Folder = db.exec(stmt).first()
     if folder:
-        folder.name = folder.name
-        update_page_order(db, folder.order, folder_entity)
+        folder_entity.name = folder.name
+        if folder.order:
+            update_page_order(db, folder.order, folder_entity)
     return folder_entity
 
 

@@ -1,24 +1,53 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 
-from ..model.entity import Page
+from ..model.entity import Page, Widget
 from ..model.schema.page import PageCreate, PageUpdate
 
 
+def update_widget_order(db: Session, order: list[int]):
+    for i, widget_id in enumerate(order):
+        stmt = select(Page).where(Widget.id == widget_id).where(Widget.is_deleted == False)
+        widget: Widget = db.exec(stmt).first()
+        if widget:
+            widget.index = i
+
+
 def get_page(db: Session, page_id: int) -> Page:
-    pass
+    stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
+    page: Page = db.exec(stmt).first()
+    return page
 
 
 def get_class_pages(db: Session, class_id: int) -> list[Page]:
-    pass
+    stmt = select(Page).where(Page.class_id == class_id).where(Page.is_deleted == False)
+    pages: list[Page] = db.exec(stmt).all()
+    return pages
 
 
 def create_page(db: Session, page: PageCreate) -> Page:
-    pass
+    page_entity: Page = Page(
+        class_id=page.class_id,
+        folder_id=page.folder_id,
+        index=page.index
+    )
+    db.add(page_entity)
+    db.refresh(page_entity)
+    return page_entity
 
 
 def update_page(db: Session, page: PageUpdate) -> Page:
-    pass
+    stmt = select(Page).where(Page.id == page.id).where(Page.is_deleted == False)
+    page_entity: Page = db.exec(stmt).first()
+    if page_entity:
+        page_entity.folder_id = page.folder_id
+        if page.order:
+            update_widget_order(db, page.order)
 
 
 def delete_page(db: Session, page_id: int) -> Page:
-    pass
+    stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
+    page: Page = db.exec(stmt).first()
+    if page:
+        page.is_deleted = True
+        db.refresh(page)
+    return db
