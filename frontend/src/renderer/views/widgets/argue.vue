@@ -1,91 +1,111 @@
 <template>
-    <widget-card :title="computedTitle" color="orange" icon="Opportunity">
-      <div class="container">
-        <!--   作业状态   -->
-        <div class="argue-status">
-          <el-row class="status-row">
-            <!-- 状态信息 -->
-            <el-col :span="12" class="status-text">
-              <el-icon :size="28" class="status-icon" :color="statusColor">
-                <component :is="statusIcon"/>
-              </el-icon>
-              <el-text>
-                {{ statusText }}
-              </el-text>
-            </el-col>
-  
-            <!-- 得分展示 -->
-            <el-col :span="12" class="score-display">
-              <span class="original-score" :style="{ color: originalScoreColor }">{{ displayOriginalScore }}</span>
-              / 
-              <span class="verified-score" :style="{ color: verifiedScoreColor }">{{ displayVerifiedScore }}</span>
-              / 
-              <span class="max-score">{{ displayMaxScore }}</span>
-            </el-col>
-          </el-row>
-        </div>
-  
-        <md-and-file :data="props.data"/>
-  
-        <!--   辩驳信息   -->
-        <div class="submit-record" v-if="props.data.status === 'submitted'">
-          <el-row justify="space-between">
-            <el-text size="large" class="submit-record-title"> 提交记录</el-text>
-          </el-row>
-          <el-divider></el-divider>
-          <el-row
-              v-for="record in props.data.submittedArgue"
-              :key="record.submittedTime"
-              class="submit-record-item"
-              justify="space-between"
-          >
-            <el-col :span="1">
-              <el-icon :size="20">
-                <component :is="Memo"/>
-              </el-icon>
-            </el-col>
-            <el-col :span="16">
-              <el-text truncated> 提交时间：{{ record.submittedTime }}</el-text>
-            </el-col>
-            <el-col :span="6" class="edit-button">
-              <el-button
-                  type="primary"
-                  link
-                  :icon="Edit"
-                  @click="editSubmittedAssignment(record)"
-              >
-                编辑
-              </el-button>
-            </el-col>
-          </el-row>
-        </div>
-  
-        <!--   提交作业区   -->
-        <div class="homework-submit" v-if="props.data.status === 'pending' || isEditing">
-          <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
-            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+  <widget-card :title="computedTitle" color="orange" icon="Opportunity">
+    <div class="container">
+      <!-- 辩驳状态 -->
+      <div>
+        <el-text class="section-title">辩驳状态</el-text>
+          <div class="assignment-status">
+            <el-row class="status-row">
+              <!-- 状态信息 -->
+              <el-col :span="12" class="status-text">
+                <el-icon :size="28" class="status-icon" :color="statusColor">
+                  <component :is="statusIcon"/>
+                </el-icon>
+                <el-text>
+                  {{ statusText }}
+                </el-text>
+              </el-col>
+    
+              <!-- 得分展示 -->
+              <el-col :span="12" class="score-display">
+                <span class="original-score" :style="{ color: originalScoreColor }">{{ displayOriginalScore }}</span>
+                / 
+                <span class="verified-score" :style="{ color: verifiedScoreColor }">{{ displayVerifiedScore }}</span>
+                / 
+                <span class="max-score">{{ displayMaxScore }}</span>
+              </el-col>
+            </el-row>
           </div>
-  
+      </div>
+    </div>
+
+    <!-- 作业信息 -->
+    <div>
+      <el-text class="section-title">作业信息</el-text>
+      <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
+    </div>
+    
+    <!-- 批改建议 -->
+    <div>
+      <el-text class="section-title">批改建议</el-text>
+      <div class="container">
+        <md-and-file :fileList="props.data.returnedFiles" :content="props.data.feedback"/>
+      </div>
+    </div>
+
+    <!-- 辩驳反馈 -->
+    <div v-if="props.data.status === 'returned'">
+      <el-text class="section-title">辩驳反馈</el-text>
+      <div class="container">
+        <md-and-file :fileList="props.data.argueReturnedFiles" :content="props.data.argueFeedback"/>
+      </div>
+    </div>
+
+    <!-- 提交争辩区 -->
+    <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
+      <el-text class="section-title">辩驳理由</el-text>
+      <div class="container">
+        <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+          <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+        </div>
+        <el-button
+            type="primary"
+            :icon="Upload"
+            @click="submit"
+            style="width: 120px; margin-left: auto"
+        >
+          提交辩驳
+        </el-button>
+      </div>
+    </div>
+    
+    <!-- 辩驳记录 -->
+    <!-- 设定只能Argue一次 -->
+    <div v-if="props.data.status !== 'pending'">
+      <el-text class="section-title">辩驳记录</el-text>
+      <el-row>
+        <el-col :span="1">
+          <el-icon :size="20">
+            <component :is="Memo"/>
+          </el-icon>
+        </el-col>
+        <el-col :span="16">
+          <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
+        </el-col>
+        <!-- <el-col :span="6" class="edit-button">
           <el-button
               type="primary"
-              :icon="Upload"
-              @click="submit"
-              style="width: 120px; margin-left: auto"
+              link
+              :icon="Edit"
+              @click="editSubmittedArguement(props.data.submittedArguement)"
           >
-            提交辩驳
+            编辑
           </el-button>
-        </div>
+        </el-col> -->
+      </el-row>
+      <div class="container">
+        <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
       </div>
-    </widget-card>
-  </template>
+    </div>
+  </widget-card>
+</template>
   
-  <script setup lang="ts">
+<script setup lang="ts">
   import WidgetCard from "./utils/widget-card.vue";
   import MdAndFile from "./utils/md-and-file.vue";
   import MdAndFileEditor from "./utils/md-and-file-editor.vue";
-  import CodeEditor from "./utils/code-editor.vue";
   import {computed, ref} from "vue";
-  import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+  import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
   
   const props = defineProps({
     data: {
@@ -111,14 +131,14 @@
     if (props.data.status === "returned") return "green";
   });
   const originalScoreColor = computed(() => {
-    if (props.data.status == "returned") return "#999999";
+    if (props.data.status === "returned") return "#999";
     const ratio = props.data.originalScore / props.data.maxScore;
     const red = Math.round(255 * (1 - ratio));
     const green = Math.round(255 * ratio);
     return `rgb(${red}, ${green}, 0)`;
   });
   const verifiedScoreColor = computed(() => {
-    if (props.data.status == "pending") return "#666666";
+    if (props.data.status === "pending") return "#666";
     const ratio = props.data.verifiedScore / props.data.maxScore;
     const red = Math.round(255 * (1 - ratio));
     const green = Math.round(255 * ratio);
@@ -137,7 +157,7 @@
   const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
   const content = ref("");
   const fileList = ref([]);
-  const editSubmittedAssignment = (record: any) => {
+  const editSubmittedArguement = (record: any) => {
     content.value = JSON.parse(JSON.stringify(record.content));
     fileList.value = JSON.parse(JSON.stringify(record.attachments));
     // updateMode();
@@ -146,6 +166,7 @@
   
   // 提交辩驳
   const submit = () => {
+  // TODO
     if (contentEditor.value) {
       const content = contentEditor.value.getContent();
       console.log(content);
@@ -153,10 +174,10 @@
       console.log(fileList);
     }
   }
-  </script>
+</script>
   
-  <style scoped>
-  .container, .homework-submit {
+<style scoped>
+  .container {
     display: flex;
     flex-direction: column;
     padding: 0;
@@ -198,22 +219,6 @@
     margin-right: 20px;
   }
   
-  /*
-  .submit-btn {
-    margin-left: auto;
-    margin-right: 20px;
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 8px;
-    background: #409eff;
-    color: #fff;
-  }
-  
-  .submit-btn:hover {
-    background-color: #66b1ff;
-  }
-   */
-  
   .assignment-status {
     height: 60px;
     display: flex;
@@ -249,7 +254,7 @@
   }
   
   .original-score {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: 700;
   }
 
@@ -261,20 +266,6 @@
   .max-score {
     font-size: 16px;
     color: #666;
-  }
-  
-  .submit-record {
-    min-width: 350px;
-    background: #f9fafb;
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  .submit-record-title {
-    font-weight: bold;
-    font-size: 18px;
-    color: #333;
   }
   
   .submit-record-item {
@@ -306,5 +297,29 @@
   .el-button:hover {
     background-color: #66b1ff;
   }
-  </style>
+
+  .section-title {
+    display: block;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    color: #303133;
+  }
+
+  .section-title {
+    position: relative;
+    padding-left: 24px;
+  }
+
+  .section-title::before {
+    content: '>';
+    position: absolute;
+    left: 0;
+    top: 0;
+    color: #409EFF;
+    font-weight: bold;
+    font-size: 22px;
+    transform: translateY(1px);
+  }
+</style>
   
