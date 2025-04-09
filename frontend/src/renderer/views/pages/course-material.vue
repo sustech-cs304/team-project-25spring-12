@@ -62,6 +62,11 @@ const assignmentData2 = {
   submitTypes: ['file', 'code'],
   score: 90,
   maxScore: 100,
+  feedback: 'ok',
+  returned_files: [
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+  ],
 }
 
 const assignmentData3 = {
@@ -85,6 +90,18 @@ const assignmentData3 = {
         language: "python",
       },
       submittedTime: "2025-03-14 11:45:14",
+    },
+    {
+      content: "上次提交的文本233",
+      attachments: [
+        {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+        {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+      ],
+      code: {
+        content: "# 上次提交的代码",
+        language: "python",
+      },
+      submittedTime: "2025-03-14 11:45:16",
     }
   ]
 }
