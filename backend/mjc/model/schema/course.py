@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from .common import File
+from backend.mjc.model.schema.common import File
 
 
 class ClassBase(BaseModel):

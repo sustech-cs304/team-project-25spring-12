@@ -2,12 +2,12 @@ from datetime import datetime
 
 from sqlmodel import Session, select
 
-from ..model.schema.user import UserInDB
-from ..model.schema.widget import WidgetAttachmentCreate
-from ..model.schema.widget import DocWidgetCreate, DocWidgetUpdate
-from ..model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
-from ..model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate
-from ..model.entity import Widget, WidgetType, WidgetAttachment, AssignmentWidget, SubmitType
+from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.model.schema.widget import WidgetAttachmentCreate
+from backend.mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
+from backend.mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
+from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate
+from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, AssignmentWidget, SubmitType
 
 
 def get_widget(db: Session, widget_id: int) -> Widget:

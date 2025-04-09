@@ -3,13 +3,13 @@ from fastapi_cache.decorator import cache
 from sqlmodel import Session
 
 import backend.mjc.model.schema.user
-from ..crud import user as crud
-from ..model import entity
-from ..utils import security, database
-from .. import config
+from backend.mjc.crud import user as crud
+from backend.mjc.model.entity import User
+from backend.mjc.utils import security, database
+from backend.mjc import config
 
 
-def pack_profile(user: entity.User) -> backend.mjc.model.schema.user.Profile:
+def pack_profile(user: User) -> backend.mjc.model.schema.user.Profile:
     return backend.mjc.model.schema.user.Profile(
         username=user.username,
         name=user.profile.name,
@@ -28,7 +28,7 @@ def login(db: Session, username: str, plain_password: str) -> backend.mjc.model.
     :param plain_password:
     :return: access_token if verified, None otherwise
     """
-    user: entities.User = crud.get_user(db, username)
+    user: User = crud.get_user(db, username)
     if user:
         if not user.is_active:
             raise HTTPException(status_code=400, detail="未激活的用户")
@@ -55,15 +55,16 @@ def get_profile(db: Session, username: str) -> backend.mjc.model.schema.user.Pro
     :param username:
     :return:
     """
-    user: entities.User = crud.get_user(db, username)
+    user: User = crud.get_user(db, username)
     if user:
         return pack_profile(user)
     return None
 
 
 @cache(expire=2)
-async def get_current_user(db: database.Session,
-                           token: str = Depends(security.oauth2_scheme)) -> backend.mjc.model.schema.user.UserInDB:
+async def get_current_user(db: database.Session = Depends(database.get_session),
+                           token: str = Depends(security.oauth2_scheme)) \
+        -> backend.mjc.model.schema.user.UserInDB:
     """
     For get current authenticated user
     :param db:
@@ -71,7 +72,7 @@ async def get_current_user(db: database.Session,
     :return:
     """
     username = security.extract_username(token)
-    user: entities.User = crud.get_user(db, username=username)
+    user: User = crud.get_user(db, username=username)
     if user is None:
         raise HTTPException(status_code=401, detail="未认证")
-    return backend.mjc.model.schema.user.UserInDB.model_validate(user)
+    return backend.mjc.model.schema.user.UserInDB.model_validate(user.dict())

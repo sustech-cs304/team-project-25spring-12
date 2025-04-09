@@ -1,16 +1,14 @@
-from tokenize import endpats
-
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from ..model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, Class, Semester, ClassCard
-from ..model.schema.common import File
-from ..model.schema.user import UserInDB
-from ..crud import course as crud_course, user
-from ..model import entity
+from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, Class, Semester, ClassCard
+from backend.mjc.model.schema.common import File
+from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.crud import course as crud_course
+from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity
 
 
-def entity2cls(cls_entity: entity.Class, role: str) -> Class:
+def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
     cls = Class(name=cls_entity.name,
                 course_code=cls_entity.course_code,
                 semester=cls_entity.semester.name,
@@ -33,7 +31,7 @@ def cls2cls_card(cls: Class) -> ClassCard:
     return class_card
 
 
-def entity2semester(semester_entity: entity.Semester) -> Semester:
+def entity2semester(semester_entity: SemesterEntity) -> Semester:
     semester = Semester(id=semester_entity.id,
                         name=semester_entity.name,
                         start_time=semester_entity.start_time,
@@ -136,7 +134,7 @@ def delete_class(db: Session, cls_id: int) -> Class:
     return cls
 
 
-def get_semester(db: Session) -> list[Semester] | None:
+def get_semesters(db: Session) -> list[Semester] | None:
     semester_entities = crud_course.get_semesters(db)
     if semester_entities is None:
         return None

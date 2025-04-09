@@ -8,7 +8,7 @@ from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
 from mjc.utils.database import create_db_and_tables
-from mjc.router import user
+from mjc.router import user, course
 
 
 @asynccontextmanager
@@ -30,4 +30,5 @@ app.add_middleware(
 )
 
 app.include_router(user.router)
+app.include_router(course.router)
 

@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 
-from ..model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from ..model.entity import Class, Semester, Profile, ClassStudentLink
-from ..model.schema.user import UserInDB
+from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
+from backend.mjc.model.entity import Class, Semester, Profile, ClassStudentLink
+from backend.mjc.model.schema.user import UserInDB
 
 
 def get_class(db: Session, class_id: int) -> Class:
@@ -49,7 +49,7 @@ def create_class(db: Session, cls: ClassCreate) -> Class:
         lecturer=cls.lecturer,
         location=cls.location,
         time=cls.time,
-        syllabus_id=cls.syllabus.id
+        syllabus_id=cls.syllabus.id if cls.syllabus else None
     )
     db.add(cls_entity)
 

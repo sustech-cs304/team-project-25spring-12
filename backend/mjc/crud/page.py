@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
-from ..model.entity import Page, Widget
-from ..model.schema.page import PageCreate, PageUpdate
+from backend.mjc.model.entity import Page, Widget
+from backend.mjc.model.schema.page import PageCreate, PageUpdate
 
 
 def update_widget_order(db: Session, order: list[int]):

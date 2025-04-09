@@ -84,7 +84,7 @@ class Class(SQLModel, table=True):
     lecturer: str
     location: str
     time: str
-    syllabus_id: uuid.UUID = Field(default=None, foreign_key="local_resource_file.id")
+    syllabus_id: uuid.UUID | None = Field(default=None, foreign_key="local_resource_file.id")
     is_deleted: bool = Field(default=False, nullable=False)
 
     teachers: list["Profile"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)

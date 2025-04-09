@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 
-from ..model.entity import User, Profile
-from ..model.schema.user import UserCreate, ChangePassword
-from ..utils import security
+from backend.mjc.model.entity import User, Profile
+from backend.mjc.model.schema.user import UserCreate, ChangePassword
+from backend.mjc.utils import security
 
 
 def get_user(db: Session, username: str) -> User:

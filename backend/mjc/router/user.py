@@ -4,9 +4,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 import backend.mjc.model.schema.user
-from ..model.schema.user import UserInDB
-from ..service import user as user_service
-from ..utils.database import SessionDep
+from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.service import user as user_service
+from backend.mjc.utils.database import SessionDep
 
 router = APIRouter()
 
@@ -28,5 +28,5 @@ async def get_profile(db: SessionDep, username: str):
 
 @router.get("/user/me", response_model=backend.mjc.model.schema.user.Profile)
 async def get_profile_me(db: SessionDep,
-                         current_user: backend.mjc.model.schema.user.UserInDB = Annotated[UserInDB, Depends(user_service.get_current_user)]):
+                         current_user: UserInDB = Depends(user_service.get_current_user)):
     return user_service.get_profile(db, current_user.username)
