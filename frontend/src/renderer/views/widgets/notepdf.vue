@@ -4,7 +4,7 @@
       <el-text>
         提示：在课件任意位置右键，创建一条笔记！
       </el-text>
-      <el-button type="primary" :icon="Download">
+      <el-button type="primary" :icon="Download" @click="handleDownloadFile">
         下载原课件
       </el-button>
     </div>
@@ -69,6 +69,7 @@ import { onMounted, ref, nextTick, toRaw, computed } from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
 import widgetCard from "./utils/widget-card.vue";
+import {downloadFile} from '@/utils/useDownloader';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -147,7 +148,7 @@ const loadPDF = async () => {
   try {
     // 从给定的 URL 读取一个pdf文件
     // 下载并没有采用流式传输：pdf文件的下载速度远大于加载（渲染）速度
-    const loadingTask = pdfjsLib.getDocument(props.data.pdfFile);
+    const loadingTask = pdfjsLib.getDocument(props.data.pdfFile.url);
     pdfInstance.value = await loadingTask.promise;
 
     totalPages = pdfInstance.value.numPages;
@@ -225,6 +226,15 @@ onMounted(async () => {
   await loadPDF();
   observeBottom();
 });
+
+// 下载原课件
+const handleDownloadFile = async () => {
+  try {
+    await downloadFile(props.data.pdfFile.url, props.data.pdfFile.fileName);
+  } catch (error) {
+    console.error('下载失败：', error);
+  }
+};
 </script>
 
 <style scoped>

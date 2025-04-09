@@ -20,7 +20,10 @@ import assignment from "../widgets/assignment.vue"
 
 const notePdfData = {
   title: '互动式课件 [自定义title]',
-  pdfFile: 'https://arxiv.org/pdf/2403.14740',
+  pdfFile: {
+    fileName: '为什么开水和凉水听起来不一样.pdf',
+    url: 'https://arxiv.org/pdf/2403.14740',
+  },
   notes: [
     {page: 1, x: 100, y: 100, text: "毕导：为什么开水和凉水听起来不一样"}
   ]
