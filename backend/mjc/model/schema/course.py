@@ -29,7 +29,6 @@ class ClassCreate(ClassBase):
     semester_id: int
     syllabus: File | None
     template_id: int | None
-    pass
 
 
 class ClassUpdate(ClassBase):

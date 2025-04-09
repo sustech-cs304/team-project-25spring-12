@@ -121,6 +121,7 @@ class Page(SQLModel, table=True):
     class_id: int = Field(foreign_key="class.id")
     index: int
     is_deleted: bool = Field(default=False, nullable=False)
+    visible: bool = Field(default=True, nullable=False)
 
     folder: Folder = Relationship(back_populates="pages")
     class_: "Class" = Relationship(back_populates="pages")
@@ -138,6 +139,7 @@ class WidgetAttachment(SQLModel, table=True):
     """
     id: int | None = Field(default=None, primary_key=True)
     file_id: uuid.UUID = Field(default=None, foreign_key="local_resource_file.id")
+    uploader_username: str = Field(foreign_key="profile.username")
     widget_id: int = Field(foreign_key="widget.id")
 
     uploader: "Profile" = Relationship()
@@ -159,6 +161,7 @@ class Widget(SQLModel, table=True):
     content: str | None
     page_id: int = Field(foreign_key="page.id")
     is_deleted: bool = Field(default=False, nullable=False)
+    visible: bool = Field(default=False, nullable=False)
 
     editor: "Profile" = Relationship()  # 此处通过 widget 不应能改变 profile，不加 back_populates
     attachments: list[WidgetAttachment] = Relationship(back_populates="widget")
@@ -237,10 +240,11 @@ class LocalResourceFile(SQLModel, table=True):
 
     id: uuid.UUID | None = Field(default_factory=uuid.uuid4, primary_key=True)
     upload_time: datetime | None = Field(default=None, nullable=True)
-    upload_username: str | None = Field(foreign_key="mjc_user.username")
+    uploader_username: str | None = Field(foreign_key="profile.username")
     filename: str = Field(nullable=False)
     system_path: str = Field(nullable=False)
     visibility: Visibility = Field(default=Visibility.in_class, sa_column=Column(SQLEnum(WidgetType)))
+    is_deleted: bool = Field(default=False, nullable=False)
 
     uploader: "Profile" = Relationship()
 
