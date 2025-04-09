@@ -74,8 +74,8 @@ def update_class(db: Session, cls: ClassUpdate) -> Class:
     return cls_entity
 
 
-def delete_class(db: Session, cls: Class) -> Class:
-    stmt = select(Class).where(Class.id == cls.id).where(Class.is_deleted == False)
+def delete_class(db: Session, cls_id: int) -> Class:
+    stmt = select(Class).where(Class.id == cls_id).where(Class.is_deleted == False)
     cls_entity = db.exec(stmt).first()
     if cls_entity:
         cls_entity.is_deleted = True

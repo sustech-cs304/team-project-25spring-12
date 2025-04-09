@@ -16,13 +16,13 @@ class ClassBase(BaseModel):
 
 class ClassCard(ClassBase):
     id: int
-    role: str
+    role: str | None
 
 
 class Class(ClassBase):
     id: int
     syllabus: File | None
-    role: str
+    role: str | None
 
 
 class ClassCreate(ClassBase):
