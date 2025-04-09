@@ -4,6 +4,18 @@ from ..model.entity import Folder, Page
 from ..model.schema.folder import FolderCreate, FolderUpdate
 
 
+def update_page_order(db: Session, order: list[int], folder: Folder):
+    """
+    将页面按顺序加入到文件夹中
+    """
+    for i, page_id in enumerate(folder.order):
+        stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
+        page: Page = db.exec(stmt).first()
+        if page:
+            page.folder = folder
+            page.index = i
+
+
 def get_class_folders(db: Session, class_id: int) -> list[Folder]:
     stmt = select(Folder).where(Folder.id == class_id).where(Folder.is_deleted == False)
     folders: list[Folder] = db.exec(stmt).all()
@@ -18,20 +30,22 @@ def create_folder(db: Session, folder: FolderCreate) -> Folder:
     )
     db.add(folder_entity)
     db.refresh(folder_entity)
-    # 将页面按顺序加入到文件夹中
-    for i, page_id in enumerate(folder.order):
-        stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
-        page: Page = db.exec(stmt).first()
-        if page:
-            page.folder = folder_entity
-            page.index = i
+    update_page_order(db, folder.order, folder_entity)
     return folder_entity
 
 
-
 def update_folder(db: Session, folder: FolderUpdate) -> Folder:
-    pass
+    stmt = select(Folder).where(Folder.id == folder.id).where(Folder.is_deleted == False)
+    folder_entity: Folder = db.exec(stmt).first()
+    if folder:
+        folder.name = folder.name
+        update_page_order(db, folder.order, folder_entity)
+    return folder_entity
 
 
 def delete_folder(db: Session, folder_id: int) -> Folder:
-    pass
+    stmt = select(Folder).where(Folder.id == folder_id).where(Folder.is_deleted == False)
+    folder: Folder = db.exec(stmt).first()
+    if folder:
+        folder.is_deleted = True
+    return folder
