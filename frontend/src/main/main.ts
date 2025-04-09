@@ -52,3 +52,31 @@ app.on('window-all-closed', function () {
 ipcMain.on('message', (event, message) => {
   console.log(message);
 })
+
+// upload and download file under Electron framework
+
+import { dialog } from 'electron';
+import * as fs from 'fs';
+import * as https from 'https';
+import * as http from 'http';
+
+ipcMain.handle('download-file', async (event, url: string, filename: string) => {
+  const win = BrowserWindow.fromWebContents(event.sender);
+  const savePath = dialog.showSaveDialogSync(win!, {
+    defaultPath: filename
+  });
+
+  if (!savePath) return;
+
+  return new Promise<void>((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    client.get(url, response => {
+      const stream = fs.createWriteStream(savePath);
+      response.pipe(stream);
+      stream.on('finish', () => {
+        stream.close();
+        resolve();
+      });
+    }).on('error', reject);
+  });
+});

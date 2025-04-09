@@ -20,7 +20,10 @@ import assignment from "../widgets/assignment.vue"
 
 const notePdfData = {
   title: '互动式课件 [自定义title]',
-  pdfFile: 'https://arxiv.org/pdf/2403.14740',
+  pdfFile: {
+    fileName: '为什么开水和凉水听起来不一样.pdf',
+    url: 'https://arxiv.org/pdf/2403.14740',
+  },
   notes: [
     {page: 1, x: 100, y: 100, text: "毕导：为什么开水和凉水听起来不一样"}
   ]
@@ -62,6 +65,11 @@ const assignmentData2 = {
   submitTypes: ['file', 'code'],
   score: 90,
   maxScore: 100,
+  feedback: 'ok',
+  returned_files: [
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+  ],
 }
 
 const assignmentData3 = {
@@ -85,6 +93,18 @@ const assignmentData3 = {
         language: "python",
       },
       submittedTime: "2025-03-14 11:45:14",
+    },
+    {
+      content: "上次提交的文本233",
+      attachments: [
+        {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+        {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+      ],
+      code: {
+        content: "# 上次提交的代码",
+        language: "python",
+      },
+      submittedTime: "2025-03-14 11:45:16",
     }
   ]
 }

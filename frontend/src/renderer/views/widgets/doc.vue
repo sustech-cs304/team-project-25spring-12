@@ -1,11 +1,11 @@
 <template>
   <widget-card :title="computedTitle" color="green" icon="Document">
-    <md-and-file :data="props.data"/>
+    <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
   </widget-card>
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from "vue";
+import {computed} from "vue";
 import widgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 

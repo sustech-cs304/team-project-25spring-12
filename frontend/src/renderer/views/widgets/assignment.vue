@@ -2,35 +2,38 @@
   <widget-card :title="computedTitle" color="orange" icon="Notebook">
     <div class="container">
       <!--   作业状态   -->
-      <div class="assignment-status">
-        <el-row class="status-row">
-          <!-- 状态信息 -->
-          <el-col :span="12" class="status-text">
-            <el-icon :size="28" class="status-icon" :color="statusColor">
-              <component :is="statusIcon"/>
-            </el-icon>
-            <el-text>
-              {{ statusText }}
-            </el-text>
-          </el-col>
+      <div>
+        <el-text class="section-title">作业状态</el-text>
+        <div class="assignment-status">
+          <el-row class="status-row">
+            <!-- 状态信息 -->
+            <el-col :span="12" class="status-text">
+              <el-icon :size="28" class="status-icon" :color="statusColor">
+                <component :is="statusIcon"/>
+              </el-icon>
+              <el-text>
+                {{ statusText }}
+              </el-text>
+            </el-col>
 
-          <!-- 得分展示 -->
-          <el-col :span="12" class="score-display">
-            <span class="score" :style="{ color: scoreColor }">{{ displayScore }}</span>
-            <span class="total-score"> / {{ displayTotalScore }}</span>
-          </el-col>
-        </el-row>
+            <!-- 得分展示 -->
+            <el-col :span="12" class="score-display">
+              <span class="score" :style="{ color: scoreColor }">{{ displayScore }}</span>
+              <span class="total-score"> / {{ displayTotalScore }}</span>
+            </el-col>
+          </el-row>
+        </div>
       </div>
 
       <!--   作业信息   -->
-      <md-and-file :data="props.data"/>
+      <div>
+        <el-text class="section-title">作业信息</el-text>
+        <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
+      </div>
 
-      <!--   作业信息   -->
-      <div class="submit-record" v-if="props.data.status === 'submitted'">
-        <el-row justify="space-between">
-          <el-text size="large" class="submit-record-title"> 提交记录</el-text>
-        </el-row>
-        <el-divider></el-divider>
+      <!--   提交记录   -->
+      <div v-if="props.data.status === 'submitted'">
+        <el-text tag="h4" class="section-title">提交记录</el-text>
         <el-row
             v-for="record in props.data.submittedAssignment"
             :key="record.submittedTime"
@@ -43,7 +46,7 @@
             </el-icon>
           </el-col>
           <el-col :span="16">
-            <el-text truncated> 提交时间：{{ record.submittedTime }}</el-text>
+            <el-text truncated>提交时间：{{ record.submittedTime }}</el-text>
           </el-col>
           <el-col :span="6" class="edit-button">
             <el-button
@@ -59,34 +62,48 @@
       </div>
 
       <!--   提交作业区   -->
-      <div class="homework-submit" v-if="props.data.status === 'pending' || isEditing">
-        <div class="code-editor" v-if="props.data.submitTypes.includes('code')">
-          <div class="toolbar">
-            <span class="el-text">选择语言：</span>
-            <el-select v-model="selectedLanguage" size="small" @change="updateMode">
-              <el-option v-for="lang in languages" :key="lang.value" :label="lang.label" :value="lang.value"/>
-            </el-select>
-
-<!--            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>-->
+      <div v-if="props.data.status === 'pending' || isEditing">
+        <el-text class="section-title">提交作业</el-text>
+        <div class="container">
+          <div class="code-editor" v-if="props.data.submitTypes.includes('code')">
+            <div class="toolbar">
+              <span class="el-text">选择语言：</span>
+              <el-select v-model="selectedLanguage" size="small" @change="updateMode">
+                <el-option v-for="lang in languages" :key="lang.value" :label="lang.label" :value="lang.value"/>
+              </el-select>
+            </div>
+            <div style="width: 100%; height: 100%;">
+              <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
+            </div>
           </div>
-
-          <div style="width: 100%; height: 100%;">
-            <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
+          <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
           </div>
+          <el-button
+              type="primary"
+              :icon="Upload"
+              @click="submit"
+              style="width: 120px; margin-left: auto"
+          >
+            提交作业
+          </el-button>
         </div>
+      </div>
 
-        <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
-          <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+      <!--   批改建议   -->
+      <div v-if="props.data.status === 'returned'">
+        <el-text class="section-title">批改建议</el-text>
+        <div class="container">
+          <md-and-file :file-list="props.data.returned_files" :content="props.data.feedback"/>
+          <el-button
+              type="primary"
+              :icon="ChatRound"
+              @click="postArgue"
+              style="width: 140px; margin-right: auto"
+          >
+            我要 Argue ！
+          </el-button>
         </div>
-
-        <el-button
-            type="primary"
-            :icon="Upload"
-            @click="submit"
-            style="width: 120px; margin-left: auto"
-        >
-          提交作业
-        </el-button>
       </div>
     </div>
   </widget-card>
@@ -98,7 +115,7 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
-import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
 
 const props = defineProps({
   data: {
@@ -185,10 +202,20 @@ const submit = () => {
     console.log(fileList);
   }
 }
+
+// 发起 argue
+const postArgue = () => {
+  // TODO
+  if ('argue_id' in props.data && Number.isInteger(props.data.argue_id)) {
+    // 路由到对应的Argue的页面
+  } else {
+    // 路由到创建Argue的页面
+  }
+}
 </script>
 
 <style scoped>
-.container, .homework-submit {
+.container {
   display: flex;
   flex-direction: column;
   padding: 0;
@@ -229,22 +256,6 @@ const submit = () => {
   width: 120px;
   margin-right: 20px;
 }
-
-/*
-.submit-btn {
-  margin-left: auto;
-  margin-right: 20px;
-  padding: 8px 16px;
-  font-size: 14px;
-  border-radius: 8px;
-  background: #409eff;
-  color: #fff;
-}
-
-.submit-btn:hover {
-  background-color: #66b1ff;
-}
- */
 
 .assignment-status {
   height: 60px;
@@ -290,20 +301,6 @@ const submit = () => {
   color: #666;
 }
 
-.submit-record {
-  min-width: 350px;
-  background: #f9fafb;
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-}
-
-.submit-record-title {
-  font-weight: bold;
-  font-size: 18px;
-  color: #333;
-}
-
 .submit-record-item {
   display: flex;
   align-items: center;
@@ -332,5 +329,29 @@ const submit = () => {
 
 .el-button:hover {
   background-color: #66b1ff;
+}
+
+.section-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #303133;
+}
+
+.section-title {
+  position: relative;
+  padding-left: 24px;
+}
+
+.section-title::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #409EFF;
+  font-weight: bold;
+  font-size: 22px;
+  transform: translateY(1px);
 }
 </style>
