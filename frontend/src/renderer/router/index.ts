@@ -34,7 +34,7 @@ const routes: RouteRecordRaw[] = [
         path: '/argue',
         name: 'argue',
         meta: {
-          title: '争辩',
+          title: '辩驳',
         },
         component: () => import('../views/pages/argue.vue'),
       },

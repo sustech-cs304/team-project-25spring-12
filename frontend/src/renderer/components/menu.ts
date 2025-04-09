@@ -8,7 +8,7 @@ export const menuData: Menus[] = [
     },
     {
         index: '/argue',
-        title: '争辩',
+        title: '辩驳',
         icon: 'Opportunity'
     },
 ]
