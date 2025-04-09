@@ -46,9 +46,9 @@ class Profile(SQLModel, table=True):
 
     username: str = Field(nullable=False, foreign_key="mjc_user.username", unique=True)
     user: User = Relationship(back_populates="profile")
-    teacher_classes: list["Class"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
-    teaching_assistant_classes: list["Class"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
-    student_classes: list["Class"] = Relationship(back_populates="student_classes", link_model=ClassStudentLink)
+    teacher_classes: list["Class"] = Relationship(back_populates="teachers", link_model=ClassTeacherLink)
+    teaching_assistant_classes: list["Class"] = Relationship(back_populates="teaching_assistants", link_model=ClassTeachingAssistantLink)
+    student_classes: list["Class"] = Relationship(back_populates="students", link_model=ClassStudentLink)
 
 
 class SyllabusFile(SQLModel, table=True):
@@ -139,10 +139,9 @@ class WidgetAttachment(SQLModel, table=True):
     """
     id: int | None = Field(default=None, primary_key=True)
     file_id: uuid.UUID = Field(default=None, foreign_key="local_resource_file.id")
-    uploader_username: str = Field(foreign_key="profile.username")
     widget_id: int = Field(foreign_key="widget.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
-    uploader: "Profile" = Relationship()
     widget: "Widget" = Relationship(back_populates="attachments")
     file: "LocalResourceFile" = Relationship()
 
@@ -219,9 +218,9 @@ class AssignmentWidget(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
-    submit_types: list[SubmitType] = Field(sa_column=Column(SQLEnum(SubmitType)))
+    submit_type: list[SubmitType] = Field(sa_column=Column(SQLEnum(SubmitType)))
     ddl: datetime
-    max_score: int
+    max_score: float
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
     # TODO: 跟已提交的作业的关系
