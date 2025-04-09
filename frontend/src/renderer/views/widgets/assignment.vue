@@ -32,8 +32,8 @@
         </el-row>
         <el-divider></el-divider>
         <el-row
-            v-for="record in props.data.submitted_assignment"
-            :key="record.submitted_time"
+            v-for="record in props.data.submittedAssignment"
+            :key="record.submittedTime"
             class="submit-record-item"
             justify="space-between"
         >
@@ -43,14 +43,14 @@
             </el-icon>
           </el-col>
           <el-col :span="16">
-            <el-text truncated> 提交时间：{{ record.submitted_time }}</el-text>
+            <el-text truncated> 提交时间：{{ record.submittedTime }}</el-text>
           </el-col>
           <el-col :span="6" class="edit-button">
             <el-button
                 type="primary"
                 link
                 :icon="Edit"
-                @click="editSubmittedAssignment(record?.content, record?.code, record?.attachments)"
+                @click="editSubmittedAssignment(record)"
             >
               编辑
             </el-button>
@@ -60,30 +60,34 @@
 
       <!--   提交作业区   -->
       <div class="homework-submit" v-if="props.data.status === 'pending' || isEditing">
-        <div class="code-editor" v-if="props.data.submit_types.includes('code')">
+        <div class="code-editor" v-if="props.data.submitTypes.includes('code')">
           <div class="toolbar">
             <span class="el-text">选择语言：</span>
             <el-select v-model="selectedLanguage" size="small" @change="updateMode">
               <el-option v-for="lang in languages" :key="lang.value" :label="lang.label" :value="lang.value"/>
             </el-select>
 
-            <span class="el-text">Tab 长度：</span>
-            <el-select v-model="tabSize" placeholder="Tab 长度" size="small">
-              <el-option v-for="size in tabSizes" :key="size" :label="`${size} 空格`" :value="size"/>
-            </el-select>
-
-            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>
+<!--            <el-button type="primary" :icon="Upload" @click="submitCode" class="submit-btn">提交</el-button>-->
           </div>
 
-          <div id="code-editor" style="height: 100%"></div>
-
+          <div style="width: 100%; height: 100%;">
+            <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
+          </div>
         </div>
 
-        <div class="homework-editor" v-if="props.data.submit_types.includes('file')">
-          <md-and-file-editor :text="editingText" :file_list="editingFileList"/>
+        <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+          <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
         </div>
+
+        <el-button
+            type="primary"
+            :icon="Upload"
+            @click="submit"
+            style="width: 120px; margin-left: auto"
+        >
+          提交作业
+        </el-button>
       </div>
-
     </div>
   </widget-card>
 </template>
@@ -92,6 +96,7 @@
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
+import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
 
@@ -102,92 +107,84 @@ const props = defineProps({
   },
 });
 
-const value = /* set from `myEditor.getModel()`: */ `function hello() {
-	alert('Hello world!');
-}`;
-
-// Hover on each property to see its docs!
-const myEditor = monaco.editor.create(document.getElementById("code-editor"), {
-  value,
-  language: "javascript",
-  automaticLayout: true,
-});
-
-
+/*
+* 代码编辑器的所有常量和方法：
+* languages：可选的语言（label），以及monaco切换高亮模式需要的名字（value）
+* selectedLanguage：已选的语言（value）
+* code：代码编辑器的内容
+* updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
+* */
 const languages = [
-  {label: "C++", value: "text/x-c++src"},
-  {label: "Java", value: "text/x-java"},
+  {label: "C++", value: "cpp"},
+  {label: "C", value: "c"},
+  {label: "Java", value: "java"},
   {label: "Python", value: "python"},
 ];
+const selectedLanguage = ref("cpp");
+const code = ref('');
+const updateMode = () => {
+  // Nothing
+};
 
+const codeEditor = ref<InstanceType<typeof CodeEditor> | null>(null);
+const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+
+// 本卡片的标题
 const computedTitle = computed(() => props.data?.title || "作业");
 
-const code = ref("");
-const selectedLanguage = ref("text/x-c++src");
-const tabSizes = [2, 4, 8];
-const tabSize = ref(4);
-
-const options = computed(() => ({
-  mode: selectedLanguage.value,
-  theme: "dracula",
-  lineNumbers: true,
-  tabSize: tabSize.value,
-  indentUnit: tabSize.value,
-  indentWithTabs: true,
-  autoCloseBrackets: true,
-}));
-
-const updateMode = () => {
-  options.value.mode = selectedLanguage.value;
-};
-
-const submitCode = () => {
-  console.log(code.value);
-  // TODO: 上传到后端
-};
-
+// 状态区的所有方法，都是外观特效
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
   if (props.data.status === "returned") return Checked;
 });
-
 const statusColor = computed(() => {
   if (props.data.status === "pending") return "red";
   if (props.data.status === "submitted") return "orange";
   if (props.data.status === "returned") return "green";
 });
-
 const scoreColor = computed(() => {
-  if (props.data.status !== "returned") return "#666"; // 默认灰色
-  const ratio = props.data.score / props.data.max_score;
+  if (props.data.status !== "returned") return "#666";
+  const ratio = props.data.score / props.data.maxScore;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
 });
-
 const statusText = computed(() => {
   if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
-
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
-const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.max_score : "--"));
+const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.maxScore : "--"));
 
-const isEditing = ref(false);
-const editingText = ref('');
-const editingFileList = ref([]);
-
-const editSubmittedAssignment = (content, editing_code, attachments) => {
-  editingText.value = JSON.parse(JSON.stringify(content));
-  editingFileList.value = JSON.parse(JSON.stringify(attachments));
-  code.value = "123";
-  selectedLanguage.value = JSON.parse(JSON.stringify(editing_code.language));
-  updateMode();
+// 编辑提交记录
+const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
+const content = ref("");
+const fileList = ref([]);
+const editSubmittedAssignment = (record: any) => {
+  content.value = JSON.parse(JSON.stringify(record.content));
+  code.value = JSON.parse(JSON.stringify(record.code.content));
+  selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
+  fileList.value = JSON.parse(JSON.stringify(record.attachments));
+  // updateMode();
   isEditing.value = true;
 }
 
+// 提交作业
+const submit = () => {
+  // TODO
+  if (codeEditor.value) {
+    const code = codeEditor.value.getCode();
+    console.log(code);
+  }
+  if (contentEditor.value) {
+    const content = contentEditor.value.getContent();
+    console.log(content);
+    const fileList = contentEditor.value.getFileList();
+    console.log(fileList);
+  }
+}
 </script>
 
 <style scoped>
@@ -233,6 +230,7 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
   margin-right: 20px;
 }
 
+/*
 .submit-btn {
   margin-left: auto;
   margin-right: 20px;
@@ -246,6 +244,7 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
 .submit-btn:hover {
   background-color: #66b1ff;
 }
+ */
 
 .assignment-status {
   height: 60px;
@@ -321,5 +320,17 @@ const editSubmittedAssignment = (content, editing_code, attachments) => {
 
 .edit-button {
   text-align: right;
+}
+
+.el-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+  background: #409eff;
+  color: #fff;
+}
+
+.el-button:hover {
+  background-color: #66b1ff;
 }
 </style>

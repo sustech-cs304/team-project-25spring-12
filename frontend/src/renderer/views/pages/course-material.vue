@@ -20,7 +20,7 @@ import assignment from "../widgets/assignment.vue"
 
 const notePdfData = {
   title: '互动式课件 [自定义title]',
-  pdf_file: 'https://arxiv.org/pdf/2403.14740',
+  pdfFile: 'https://arxiv.org/pdf/2403.14740',
   notes: [
     {page: 1, x: 100, y: 100, text: "毕导：为什么开水和凉水听起来不一样"}
   ]
@@ -30,13 +30,13 @@ const docData = {
   title: '富文本文档 [自定义title]',
   content: '# 本项目 UI 组件为\n\n<img src=\"https://element-plus.org/images/element-plus-logo.svg\" width="75"\>',
   attachments: [
-    {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.jpg', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.mp4', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.mp3', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.zip', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.tff', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.jpg', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.mp4', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.mp3', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.zip', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.tff', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
   ],
 }
 
@@ -44,47 +44,47 @@ const assignmentData = {
   title: '作业 [自定义title]',
   content: '# 我是作业\n\n请完成作业',
   attachments: [
-    {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
   ],
   status: 'pending',
-  submit_types: ['file', 'code'],
+  submitTypes: ['file', 'code'],
 }
 
 const assignmentData2 = {
   title: '已完成的作业',
   content: '# 我是作业\n\n请完成作业',
   attachments: [
-    {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
   ],
   status: 'returned',
-  submit_types: ['file', 'code'],
+  submitTypes: ['file', 'code'],
   score: 90,
-  max_score: 100,
+  maxScore: 100,
 }
 
 const assignmentData3 = {
   title: '编辑提交记录',
   content: '# 我是作业\n\n请完成作业',
   attachments: [
-    {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+    {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
   ],
   status: 'submitted',
-  submit_types: ['file', 'code'],
-  submitted_assignment: [
+  submitTypes: ['file', 'code'],
+  submittedAssignment: [
     {
       content: "上次提交的文本",
       attachments: [
-        {file_name: '真7zip.exe', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-        {file_name: '伪7zip.pdf', URL: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+        {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+        {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
       ],
       code: {
         content: "# 上次提交的代码",
         language: "python",
       },
-      submitted_time: "2025-03-14 11:45:14",
+      submittedTime: "2025-03-14 11:45:14",
     }
   ]
 }

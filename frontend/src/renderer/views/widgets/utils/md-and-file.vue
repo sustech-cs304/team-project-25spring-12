@@ -6,7 +6,7 @@
     </div>
 
     <!-- 下载文件列表 -->
-    <download-upload-file-list :file_list="props.data.attachments" title="下载附件"/>
+    <download-upload-file-list :fileList="props.data.attachments" title="下载附件"/>
   </div>
 </template>
 

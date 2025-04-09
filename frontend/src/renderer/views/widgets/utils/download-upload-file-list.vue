@@ -13,25 +13,25 @@
     </el-row>
     <el-divider></el-divider>
     <el-row
-        v-for="file in file_list"
-        :key="file.URL"
+        v-for="file in fileList"
+        :key="file.url"
         class="attachment-item"
         justify="space-between"
     >
       <el-col :span="2">
         <el-icon :size="20">
-          <component :is="getFileIcon(file.file_name)"/>
+          <component :is="getFileIcon(file.fileName)"/>
         </el-icon>
       </el-col>
       <el-col :span="16">
-        <el-text truncated>{{ file.file_name }}</el-text>
+        <el-text truncated>{{ file.fileName }}</el-text>
       </el-col>
       <el-col :span="6" class="download-btn">
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click="downloadFile(file.URL, file.file_name)"
+            @click="downloadFile(file.url, file.fileName)"
         >
           下载
         </el-button>
@@ -42,9 +42,10 @@
 
 <script setup lang="ts">
 import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
+import {ref} from "vue";
 
 const props = defineProps({
-  file_list: {
+  fileList: {
     type: Object,
     required: false,
     default: [],
@@ -60,7 +61,7 @@ const props = defineProps({
   },
 });
 
-const file_list = JSON.parse(JSON.stringify(props.file_list));
+const fileList = ref(JSON.parse(JSON.stringify(props.fileList)));
 
 // 根据文件后缀返回对应的 Element Plus 图标
 const getFileIcon = (fileName: string) => {
@@ -77,12 +78,24 @@ const getFileIcon = (fileName: string) => {
 // 下载文件
 const downloadFile = (url: string, fileName: string) => {
   // TODO
+  // 判断当前平台（web/desktop），将url对应的文件下载到本地，与后端无关。
 };
 
 // 上传文件
 const uploadFile = () => {
   // TODO
+  // 判断当前平台，弹出上传文件窗口，然后将文件上传到服务器，得到服务器返回的url，然后将url和文件名加入fileList。
+  // 仅测试：
+  fileList.value.push({
+    url: "example.com",
+    fileName: "upload.txt",
+  })
 };
+
+// 返回文件列表
+defineExpose({
+  getFileList: () => JSON.parse(JSON.stringify(fileList.value)),
+})
 </script>
 
 <style scoped>
