@@ -25,7 +25,7 @@
             type="primary"
             link
             :icon="Download"
-            @click="downloadFile(file.url, file.fileName)"
+            @click.stop="handleDownloadFile(file.url, file.fileName)"
         >
           下载
         </el-button>
@@ -35,8 +35,9 @@
 </template>
 
 <script setup lang="ts">
-import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
+import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download} from "@element-plus/icons-vue";
 import {ref} from "vue";
+import {downloadFile} from "@/utils/useDownloader";
 
 const props = defineProps({
   fileList: {
@@ -75,10 +76,13 @@ const getFileIcon = (fileName: string) => {
 };
 
 // 下载文件
-const downloadFile = (url: string, fileName: string) => {
-  // TODO
-  // 判断当前平台（web/desktop），将url对应的文件下载到本地，与后端无关。
-};
+const handleDownloadFile = async (url: string, fileName: string) => {
+   try {
+     await downloadFile(url, fileName);
+   } catch (error) {
+     console.error('下载失败：', error);
+   }
+ };
 
 const selectFile = (file: Object) => {
   if (selectedFile.value === file) {
