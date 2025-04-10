@@ -14,14 +14,6 @@ const routes: RouteRecordRaw[] = [
     component: Home,
     children: [
       {
-        path: '/user-center',
-        name: 'user-center',
-        meta: {
-          title: '个人中心',
-        },
-        component: () => import('../views/pages/user-center.vue'),
-      },
-      {
         path: '/homepage',
         name: 'homepage',
         meta: {
