@@ -21,19 +21,27 @@
 
             <div class="card-body">
               <div class="course-info">
-                <el-icon><User /></el-icon>
+                <el-icon>
+                  <User/>
+                </el-icon>
                 <span>授课教师：{{ course.lecturer }}</span>
               </div>
               <div class="course-info">
-                <el-icon><Place /></el-icon>
+                <el-icon>
+                  <Place/>
+                </el-icon>
                 <span>授课地点：{{ course.location }}</span>
               </div>
               <div class="course-info">
-                <el-icon><Timer /></el-icon>
+                <el-icon>
+                  <Timer/>
+                </el-icon>
                 <span>授课时间：{{ course.time }}</span>
               </div>
               <div class="course-info">
-                <el-icon><Avatar /></el-icon>
+                <el-icon>
+                  <Avatar/>
+                </el-icon>
                 <span>您在本课程作为：{{ roleDisplayMap[course.role] }}</span>
               </div>
             </div>
@@ -49,8 +57,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { User, Place, Timer, Avatar } from '@element-plus/icons-vue'
+import {ref, computed} from 'vue'
+import {User, Place, Timer, Avatar} from '@element-plus/icons-vue'
 
 interface Course {
   id: string
@@ -115,7 +123,7 @@ const courses = ref<Course[]>([
 const getSemesterValue = (semester: string): number => {
   const [yearStr, season] = semester.split(' ')
   const year = parseInt(yearStr)
-  const seasonRank: Record<string, number> = { Spring: 1, Summer: 2, Fall: 3 }
+  const seasonRank: Record<string, number> = {Spring: 1, Summer: 2, Fall: 3}
   return year * 10 + seasonRank[season] || 0
 }
 
