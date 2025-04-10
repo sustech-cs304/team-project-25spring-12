@@ -15,21 +15,6 @@
         </div>
         <div class="header-right">
             <div class="header-user-con">
-                <div class="btn-icon" @click="router.push('/theme')">
-                    <el-tooltip effect="dark" content="设置主题" placement="bottom">
-                        <i class="el-icon-lx-skin"></i>
-                    </el-tooltip>
-                </div>
-                <div class="btn-icon" @click="router.push('/user-center')">
-                    <el-tooltip
-                        effect="dark"
-                        :content="message ? `有${message}条未读消息` : `消息中心`"
-                        placement="bottom"
-                    >
-                        <i class="el-icon-lx-notice"></i>
-                    </el-tooltip>
-                    <span class="btn-bell-badge" v-if="message"></span>
-                </div>
                 <div class="btn-icon" @click="setFullScreen">
                     <el-tooltip effect="dark" content="全屏" placement="bottom">
                         <i class="el-icon-lx-full"></i>
@@ -47,14 +32,11 @@
                     </span>
                     <template #dropdown>
                         <el-dropdown-menu>
-                            <a href="https://github.com/lin-xin/vue-manage-system" target="_blank">
+                            <a href="https://github.com/sustech-cs304/team-project-25spring-12" target="_blank">
                                 <el-dropdown-item>项目仓库</el-dropdown-item>
                             </a>
-                            <a href="https://lin-xin.gitee.io/example/vuems-doc/" target="_blank">
-                                <el-dropdown-item>官方文档</el-dropdown-item>
-                            </a>
-                            <el-dropdown-item command="user">个人中心</el-dropdown-item>
-                            <el-dropdown-item divided command="loginout">退出登录</el-dropdown-item>
+                            <el-dropdown-item command="settings">设置</el-dropdown-item>
+                            <el-dropdown-item divided command="logout">退出登录</el-dropdown-item>
                         </el-dropdown-menu>
                     </template>
                 </el-dropdown>
@@ -66,12 +48,12 @@
 import { onMounted } from 'vue';
 import { useSidebarStore } from '../store/sidebar';
 import { useRouter } from 'vue-router';
-import imgurl from '../assets/img/img.jpg';
+import imgurl from '../assets/img/img.jpg';  // TODO: 获取用户头像
 
-const username: string | null = localStorage.getItem('vuems_name');
-const message: number = 2;
+const username: string | null = localStorage.getItem('vuems_name');  // TODO: 获取用户名
 
 const sidebar = useSidebarStore();
+
 // 侧边栏折叠
 const collapseChage = () => {
     sidebar.handleCollapse();
@@ -86,11 +68,12 @@ onMounted(() => {
 // 用户名下拉菜单选择事件
 const router = useRouter();
 const handleCommand = (command: string) => {
-    if (command == 'loginout') {
-        localStorage.removeItem('vuems_name');
-        router.push('/login');
-    } else if (command == 'user') {
-        router.push('/ucenter');
+    if (command == 'logout') {
+        // TODO: 登出
+        // localStorage.removeItem('vuems_name');
+        // router.push('/login');
+    } else if (command == 'settings') {
+      // TODO: router push 到一个设置页，目前除了“修改密码”以外不知道还有没有需求，也可以整个删掉
     }
 };
 
@@ -102,6 +85,7 @@ const setFullScreen = () => {
     }
 };
 </script>
+
 <style scoped>
 .header {
     display: flex;
@@ -155,12 +139,6 @@ const setFullScreen = () => {
     display: flex;
     height: 70px;
     align-items: center;
-}
-
-.btn-fullscreen {
-    transform: rotate(45deg);
-    margin-right: 5px;
-    font-size: 24px;
 }
 
 .btn-icon {
