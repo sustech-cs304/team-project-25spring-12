@@ -66,7 +66,7 @@ const assignmentData2 = {
   score: 90,
   maxScore: 100,
   feedback: 'ok',
-  returned_files: [
+  returnedFiles: [
     {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
     {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
   ],

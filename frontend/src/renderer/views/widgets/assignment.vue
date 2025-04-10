@@ -94,7 +94,7 @@
       <div v-if="props.data.status === 'returned'">
         <el-text class="section-title">批改建议</el-text>
         <div class="container">
-          <md-and-file :file-list="props.data.returned_files" :content="props.data.feedback"/>
+          <md-and-file :file-list="props.data.returnedFiles" :content="props.data.feedback"/>
           <el-button
               type="primary"
               :icon="ChatRound"
