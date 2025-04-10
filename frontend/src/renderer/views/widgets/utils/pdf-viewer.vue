@@ -1,5 +1,5 @@
 <template>
-  <el-card>
+  <el-card class="pdf-card">
     <div class="mark-header" v-if="props.isMarking">
       <div style="text-align: center;">
         <el-button-group>
@@ -52,7 +52,7 @@
     </div>
     <el-scrollbar
         ref="scrollbar"
-        class="pdfScrollbar"
+        class="pdf-scrollbar"
         style="z-index: 0;"
     ></el-scrollbar>
   </el-card>
@@ -108,7 +108,7 @@ const resizeObserver = new ResizeObserver((entries) => {
 const loadPDF = async () => {
   try {
     const container = scrollbar.value.wrapRef;
-    container.classList.add("viewerContainer");
+    container.classList.add("viewer-container");
     const viewer = container.childNodes[0];
     viewer.classList.add("pdfViewer");
     pdfViewer = new pdfjsViewer.PDFViewer({
@@ -193,16 +193,18 @@ onUnmounted(() => {
 
 <style scoped>
 :deep(.el-card__header) {
-  background-color: initial !important;
-  padding: initial !important;
-  margin: initial !important;
-  border: initial !important;
+  background-color: #ffffff !important;
 }
 
 :deep(.el-card__body) {
-  background-color: initial !important;
-  padding: initial !important;
-  margin: initial !important;
+  background-color: #ffffff !important;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pdf-card {
+  height: calc(100vh - 145px);
 }
 
 .mark-header {
@@ -219,12 +221,12 @@ onUnmounted(() => {
   border-color: #409eff;
 }
 
-.pdfScrollbar {
+.pdf-scrollbar {
+  flex: 1;
   width: 100%;
-  height: calc(100vh - 145px);
 }
 
-:deep(.viewerContainer) {
+:deep(.viewer-container) {
   position: absolute;
   width: 100%;
 }

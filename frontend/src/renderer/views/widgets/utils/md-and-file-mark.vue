@@ -9,7 +9,7 @@
         :key="file.url"
     >
       <div class="container" v-if="selectedFileUrl === file.url">
-        <pdf-viewer :pdf-file="file" :is-marking="true" v-if="file.fileName.endsWith('pdf')"/>
+        <pdf-viewer :pdf-file="file" :is-marking="true" v-if="file.fileName.endsWith('.pdf')"/>
         <span v-else>暂不支持当前类型文件预览</span>
       </div>
     </template>
