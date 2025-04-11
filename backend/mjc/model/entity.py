@@ -24,6 +24,7 @@ class ClassRole(str, Enum):
     TEACHER = 'teacher'
     STUDENT = 'student'
     TA = 'teaching assistant'
+    NONE = ''
 
 
 class ClassTeacherLink(SQLModel, table=True):

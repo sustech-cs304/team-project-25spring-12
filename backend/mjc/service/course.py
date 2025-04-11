@@ -21,7 +21,7 @@ def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
                     file_name=cls_entity.syllabus.filename,
                     visibility=cls_entity.syllabus.visibility,
                     url=None
-                ),
+                ) if cls_entity.syllabus else None,
                 role=ClassRole(role))
     return cls
 
