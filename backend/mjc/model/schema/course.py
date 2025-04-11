@@ -69,3 +69,15 @@ class DDL(BaseModel):
     assignment_id: int
     assignment_name: str
     ddl: datetime
+
+
+class ClassUserEnroll(BaseModel):
+    class_id: int
+    usernames: list[str]
+    role: ClassRole
+
+
+class ClassUserUpdate(BaseModel):
+    class_id: int
+    username: str
+    role: ClassRole

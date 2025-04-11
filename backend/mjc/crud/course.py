@@ -4,6 +4,8 @@ from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCr
 from backend.mjc.model.entity import Class, Semester, Profile, \
                                      ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
 from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.crud.user import get_profile
+from model.schema.course import ClassUserEnroll, ClassUserUpdate
 
 
 def get_class(db: Session, class_id: int) -> Class:
@@ -111,16 +113,71 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
     return semester_entity
 
 
-def get_user_class_role(db: Session, user: UserInDB, cls_id: int) -> ClassRole:
+def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
     stmt = select(ClassStudentLink).where(ClassStudentLink.class_id == cls_id) \
-                                   .where(ClassStudentLink.username == user.username)
+                                   .where(ClassStudentLink.username == username)
     if db.exec(stmt).first():
         return ClassRole.STUDENT
     stmt = select(ClassTeacherLink).where(ClassTeacherLink.class_id == cls_id) \
-                                   .where(ClassTeacherLink.username == user.username)
+                                   .where(ClassTeacherLink.username == username)
     if db.exec(stmt).first():
         return ClassRole.TEACHER
     stmt = select(ClassTeachingAssistantLink).where(ClassTeachingAssistantLink.class_id == cls_id) \
-                                             .where(ClassTeachingAssistantLink.username == user.username)
+                                             .where(ClassTeachingAssistantLink.username == username)
     if db.exec(stmt).first():
         return ClassRole.TA
+
+
+def assign_class_user(db: Session, assign: ClassUserEnroll) -> Class:
+    cls = get_class(db, assign.class_id)
+    if cls:
+        for username in assign.usernames:
+            user = get_profile(db, username)
+            if user:
+                if assign.role is ClassRole.STUDENT:
+                    cls.students.append(user)
+                elif assign.role is ClassRole.TEACHER:
+                    cls.teachers.append(user)
+                elif assign.role is ClassRole.TA:
+                    cls.teaching_assistants.append(user)
+        db.refresh(cls)
+    return cls
+
+
+def update_class_user(db: Session, assign: ClassUserUpdate) -> Class:
+    cls = get_class(db, assign.class_id)
+    if cls:
+        user = get_profile(db, assign.username)
+        if user:
+            role = get_user_class_role(db, user.username, assign.class_id)
+            if role is ClassRole.STUDENT:
+                cls.students.remove(user)
+            elif role is ClassRole.TEACHER:
+                cls.teachers.remove(user)
+            elif role is ClassRole.TA:
+                cls.teaching_assistants.remove(user)
+            if assign.role is ClassRole.STUDENT:
+                cls.students.append(user)
+            if assign.role is ClassRole.TEACHER:
+                cls.teachers.append(user)
+            if assign.role is ClassRole.TA:
+                cls.teaching_assistants.append(user)
+            db.refresh(cls)
+    return cls
+
+
+def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
+    cls = get_class(db, class_id)
+    if cls:
+        user = get_profile(db, username)
+        if user:
+            role = get_user_class_role(db, user.username, class_id)
+            if role == ClassRole.STUDENT:
+                if role == ClassRole.STUDENT:
+                    cls.students.remove(user)
+                elif role == ClassRole.TEACHER:
+                    cls.teachers.remove(user)
+                elif role == ClassRole.TA:
+                    cls.teaching_assistants.remove(user)
+        db.refresh(cls)
+    return cls
