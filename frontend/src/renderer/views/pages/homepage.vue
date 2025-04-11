@@ -28,17 +28,6 @@
         </template>
         <DeadlineCalendarWidget/>
       </el-card>
-      <el-card shadow="hover" style="margin-top: 20px;">
-        <template #header>
-          <div class="card-header">
-            <el-icon style="margin-right: 8px;">
-              <MessageBox/>
-            </el-icon>
-            最新通知
-          </div>
-        </template>
-        <MessageBoxWidget/>
-      </el-card>
     </el-col>
   </el-row>
 </template>

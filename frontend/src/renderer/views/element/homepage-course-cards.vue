@@ -1,5 +1,6 @@
 <template>
-  <el-tabs class="semester-tabs" v-model="activeSemester" type="border-card" tab-position="left">
+  <div class="main-container">
+    <el-tabs v-model="activeSemester" type="border-card" tab-position="left">
     <el-tab-pane
         v-for="semester in sortedSemesters"
         :key="semester"
@@ -54,6 +55,7 @@
       </el-scrollbar>
     </el-tab-pane>
   </el-tabs>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -151,7 +153,7 @@ const enterCourse = (id: string) => {
 </script>
 
 <style scoped>
-.semester-tabs {
+.main-container {
   height: calc(100vh - 250px);
 }
 

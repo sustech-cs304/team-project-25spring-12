@@ -1,5 +1,11 @@
 <template>
-  <FullCalendar :options="calendarOptions" class="fc-theme-standard" />
+  <div class="main-container" ref="calendarWrapper">
+    <FullCalendar
+        :options="calendarOptions"
+        ref="calendar"
+        class="fc-theme-standard"
+    />
+  </div>
 
   <!-- 作业详情抽屉 -->
   <el-drawer
@@ -25,10 +31,10 @@
 </template>
 
 <script setup lang="ts">
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import { ref } from 'vue'
 
 interface Deadline {
   widgetId: string
@@ -66,10 +72,13 @@ const deadlines = ref<Deadline[]>([
 
 const drawerVisible = ref(false)
 const selectedDeadline = ref<Deadline | null>(null)
+const calendar = ref()
+const calendarWrapper = ref()
 
 const calendarOptions = {
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
+  height: '100%',
   events: deadlines.value.map(item => ({
     title: item.widgetTitle,
     start: item.ddl,
@@ -86,11 +95,37 @@ const calendarOptions = {
   }
 }
 
+// ⏱ ResizeObserver 监听容器变化并刷新 FullCalendar
+let resizeObserver: ResizeObserver
+
+onMounted(() => {
+  if (calendarWrapper.value) {
+    resizeObserver = new ResizeObserver(() => {
+      if (calendar.value) {
+        calendar.value.getApi().updateSize()
+      }
+    })
+    resizeObserver.observe(calendarWrapper.value)
+  }
+})
+
+onBeforeUnmount(() => {
+  resizeObserver?.disconnect()
+})
+
 const goToTask = () => {
-  // TODO: 前往完成 handler
+  // TODO: 前往完成
 }
 
 const dismissReminder = () => {
-  // TODO: 不再提醒 handler
+  // TODO: 不再提醒
 }
 </script>
+
+<style scoped>
+.main-container {
+  height: calc(100vh - 250px);
+  min-height: 400px;
+  overflow: hidden;
+}
+</style>
