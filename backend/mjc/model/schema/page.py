@@ -20,6 +20,7 @@ class PageCreate(PageBase):
     class_id: int
     folder_id: int
     index: int
+    visible: bool | None = True
 
 
 class PageUpdate(PageBase):
@@ -27,3 +28,4 @@ class PageUpdate(PageBase):
     folder_id : int
     index: int
     order: list[int] | None
+    visible: bool | None = True

@@ -21,6 +21,7 @@ class FolderCreate(FolderBase):
     index: int  # 左侧栏中的顺序
     name: str | None
     order: list[int] | None
+    visible: bool | None = True
 
 
 class FolderUpdate(FolderBase):
@@ -28,3 +29,4 @@ class FolderUpdate(FolderBase):
     index: int
     name: str | None
     order: list[int] | None
+    visible: bool | None = True
