@@ -5,7 +5,7 @@ from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCr
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.crud import course as crud_course
-from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity
+from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
 
 
 def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
@@ -22,7 +22,7 @@ def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
                     visibility=cls_entity.syllabus.visibility,
                     url=None
                 ),
-                role=role)
+                role=ClassRole(role))
     return cls
 
 
