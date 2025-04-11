@@ -34,6 +34,7 @@ def get_get_uncategorized_pages(db: Session, class_id: int) -> list[Page]:
 
 def create_page(db: Session, page: PageCreate) -> Page:
     page_entity: Page = Page(
+        name=page.name,
         class_id=page.class_id,
         folder_id=page.folder_id,
         index=page.index,
@@ -49,6 +50,7 @@ def update_page(db: Session, page: PageUpdate) -> Page:
     stmt = select(Page).where(Page.id == page.id).where(Page.is_deleted == False)
     page_entity: Page = db.exec(stmt).first()
     if page_entity:
+        page_entity.name = page.name
         page_entity.folder_id = page.folder_id
         page_entity.visible = page.visible
         if page.order:
