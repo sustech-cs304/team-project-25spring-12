@@ -20,6 +20,12 @@ class User(SQLModel, table=True):
     profile: "Profile" = Relationship(back_populates="user")
 
 
+class ClassRole(str, Enum):
+    TEACHER = 'teacher'
+    STUDENT = 'student'
+    TA = 'teaching assistant'
+
+
 class ClassTeacherLink(SQLModel, table=True):
     class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
     username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
@@ -105,6 +111,7 @@ class Folder(SQLModel, table=True):
     index: int
     class_id: int = Field(foreign_key="class.id")
     is_deleted: bool = Field(default=False, nullable=False)
+    visible: bool = Field(default=True, nullable=False)
 
     pages: list["Page"] = Relationship(back_populates="folder")
     class_: "Class" = Relationship(back_populates="folders")
