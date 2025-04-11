@@ -1,4 +1,5 @@
 from datetime import datetime
+from idlelib import editor
 
 from sqlmodel import Session, select
 
@@ -7,7 +8,7 @@ from backend.mjc.model.schema.widget import WidgetAttachmentCreate
 from backend.mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from backend.mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
 from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate
-from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, AssignmentWidget, SubmitType
+from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, AssignmentWidget, NotePDFWidget, SubmitType
 
 
 def get_widget(db: Session, widget_id: int) -> Widget:
@@ -16,12 +17,13 @@ def get_widget(db: Session, widget_id: int) -> Widget:
     return widget
 
 
-def create_widget(db, editor: UserInDB,
-                  widget: DocWidgetCreate | AssignmentWidgetCreate | NotePdfWidgetCreate) -> Widget:
+def create_widget(db, widget: DocWidgetCreate | AssignmentWidgetCreate | NotePdfWidgetCreate,
+                  editor: UserInDB) \
+        -> Widget:
     widget_entity = Widget(
         title=widget.title,
         index=widget.index,
-        type=WidgetType.doc,
+        type=WidgetType[widget.type].value,
         create_time=datetime.now(),
         update_time=datetime.now(),
         editor_username=editor.username,
@@ -67,7 +69,7 @@ def delete_widget_attachment(db: Session, file_id: int) -> WidgetAttachment:
 
 
 def create_doc_widget(db: Session, widget: DocWidgetCreate, editor: UserInDB) -> Widget:
-    widget_entity = create_widget(db, editor, widget)
+    widget_entity = create_widget(db, widget, editor)
     return widget_entity
 
 
@@ -78,7 +80,7 @@ def update_doc_widget(db: Session, widget: DocWidgetUpdate, editor: UserInDB) ->
 
 
 def create_assignment_widget(db: Session, widget: AssignmentWidgetCreate, editor: UserInDB) -> Widget:
-    widget_entity = create_widget(db, editor, widget)
+    widget_entity = create_widget(db, widget, editor)
     assignment = AssignmentWidget(
         widget_id=widget_entity.id,
         submit_type=[SubmitType[typ].value for typ in widget.submit_type],
@@ -99,13 +101,27 @@ def update_assignment_widget(db: Session, widget: AssignmentWidgetUpdate, editor
     return widget_entity
 
 
-def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate) -> Widget:
-    pass
+def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: UserInDB) -> Widget:
+    widget_entity = create_widget(db, widget, editor)
+    note_pdf = NotePDFWidget(
+        widget_id=widget_entity.id,
+        pdf_file_id=widget.pdf_file.id
+    )
+    db.add(note_pdf)
+    db.refresh(widget_entity)
+    return widget_entity
 
 
-def update_note_pdf_widget(db: Session, widget: NotePdfWidgetUpdate) -> None:
-    pass
+def update_note_pdf_widget(db: Session, widget: NotePdfWidgetUpdate, editor: UserInDB) -> Widget:
+    widget_entity = update_widget(db, widget, editor)
+    widget_entity.note_pdf_widget.pdf_file_id = widget.pdf_file.id
+    db.refresh(widget_entity)
+    return widget_entity
 
 
 def delete_widget(db: Session, widget_id: int) -> Widget:
-    pass
+    widget_entity = get_widget(db, widget_id)
+    if widget_entity:
+        widget_entity.is_deleted = True
+    db.refresh(widget_entity)
+    return widget_entity
