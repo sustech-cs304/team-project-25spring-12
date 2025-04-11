@@ -16,14 +16,14 @@ class Page(PageBase):
 
 class PageCreate(PageBase):
     class_id: int
-    folder_id: int
+    folder_id: int | None = None
     index: int
     visible: bool | None = True
 
 
 class PageUpdate(PageBase):
     id: int
-    folder_id : int
+    folder_id : int | None = None
     index: int
     order: list[int] | None
     visible: bool | None = True

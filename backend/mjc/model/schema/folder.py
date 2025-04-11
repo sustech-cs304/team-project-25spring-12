@@ -19,14 +19,14 @@ class Folder(FolderBase):
 class FolderCreate(FolderBase):
     class_id: int
     index: int  # 左侧栏中的顺序
-    name: str | None
-    order: list[int] | None
+    name: str | None = None
+    order: list[int] | None = None
     visible: bool | None = True
 
 
 class FolderUpdate(FolderBase):
     id: int
     index: int
-    name: str | None
-    order: list[int] | None
+    name: str | None = None
+    order: list[int] | None = None
     visible: bool | None = True

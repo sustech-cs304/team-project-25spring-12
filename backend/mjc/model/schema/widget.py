@@ -10,21 +10,21 @@ class WidgetBase(BaseModel):
     title: str
     index: int
     type: str
-    create_time: datetime
-    update_time: datetime
-    editor: Profile | None
+    create_time: datetime | None = None
+    update_time: datetime | None = None
+    editor: Profile | None = None
     visible: bool
 
 
 class DocWidget(WidgetBase):
     id: int
-    content: str | None
-    attachments: list[File] | None
+    content: str | None = None
+    attachments: list[File] | None = None
 
 
 class DocWidgetCreate(WidgetBase):
     index: int
-    content: str | None
+    content: str | None = None
     page_id: int
     visible: bool | None = True
 
@@ -38,17 +38,17 @@ class AssignmentWidget(WidgetBase):
     content: str | None
     attachments: list[File] | None
     submit_type: list[str]
-    submitted_assignment: list["SubmittedAssignment"] | None
+    submitted_assignment: list["SubmittedAssignment"] | None = None
     status: str
     ddl: datetime
-    score: float | None
+    score: float | None = None
     max_score: float
-    feedback: str | None
+    feedback: str | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
     index: int
-    content: str | None
+    content: str | None = None
     submit_type: list[str]
     ddl: datetime
     max_score: float
@@ -58,7 +58,7 @@ class AssignmentWidgetCreate(WidgetBase):
 
 class AssignmentWidgetUpdate(WidgetBase):
     id: int
-    content: str | None
+    content: str | None = None
     submit_type: list[str]
     ddl: datetime
     max_score: float
@@ -93,7 +93,7 @@ class Note(NoteBase):
 class NotePdfWidget(WidgetBase):
     id: int
     pdf_file: File
-    notes: list[Note] | None
+    notes: list[Note] | None = None
 
 
 class NotePdfWidgetCreate(WidgetBase):

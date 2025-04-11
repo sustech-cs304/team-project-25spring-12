@@ -8,4 +8,4 @@ class File(BaseModel):
     id: uuid.UUID
     file_name: str
     visibility: Visibility
-    url: str | None
+    url: str | None = None

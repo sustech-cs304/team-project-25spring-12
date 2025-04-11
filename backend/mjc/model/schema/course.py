@@ -17,25 +17,25 @@ class ClassBase(BaseModel):
 
 class ClassCard(ClassBase):
     id: int
-    role: str | None
+    role: str | None = None
 
 
 class Class(ClassBase):
     id: int
-    syllabus: File | None
-    role: ClassRole | None
+    syllabus: File | None = None
+    role: ClassRole | None = None
 
 
 class ClassCreate(ClassBase):
     semester_id: int
-    syllabus: File | None
+    syllabus: File | None = None
     template_id: int | None = None
 
 
 class ClassUpdate(ClassBase):
     id: int
     semester_id: int
-    syllabus: File | None
+    syllabus: File | None = None
 
 
 class SemesterBase(BaseModel):
