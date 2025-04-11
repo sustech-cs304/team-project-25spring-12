@@ -5,7 +5,7 @@ from backend.mjc.model.entity import Class, Semester, Profile, \
                                      ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
 from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.crud.user import get_profile
-from model.schema.course import ClassUserEnroll, ClassUserUpdate
+from backend.mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate
 
 
 def get_class(db: Session, class_id: int) -> Class:
