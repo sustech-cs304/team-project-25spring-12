@@ -3,6 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from backend.mjc.model.schema.common import File
+from backend.mjc.model.entity import ClassRole
 
 
 class ClassBase(BaseModel):
@@ -22,7 +23,7 @@ class ClassCard(ClassBase):
 class Class(ClassBase):
     id: int
     syllabus: File | None
-    role: str | None
+    role: ClassRole | None
 
 
 class ClassCreate(ClassBase):
