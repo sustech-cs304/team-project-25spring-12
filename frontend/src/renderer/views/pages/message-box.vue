@@ -1,5 +1,9 @@
 <template>
-  <el-scrollbar height="150px" always>
+  <div class="handle-row" style="margin-top: 20px">
+    <el-button type="primary" @click="handleAllRead">全部标为已读</el-button>
+  </div>
+  <el-divider></el-divider>
+  <el-scrollbar height="100%" always>
     <el-table :data="sortedNotifications" :show-header="false" style="width: 100%">
       <el-table-column>
         <template #default="scope">
@@ -26,10 +30,6 @@
       </el-table-column>
     </el-table>
   </el-scrollbar>
-
-  <div class="handle-row" style="margin-top: 20px">
-    <el-button type="primary" @click="handleAllRead">全部标为已读</el-button>
-  </div>
 </template>
 
 <script setup lang="ts" name="message-box">
