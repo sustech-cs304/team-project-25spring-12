@@ -12,7 +12,7 @@ class FolderBase(BaseModel):
 
 
 class Folder(FolderBase):
-    id: int
+    id: int | None = None
     pages: list[FolderPageItem]
 
 
