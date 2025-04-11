@@ -2,7 +2,6 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.entity import WidgetAttachment
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import Profile
 
@@ -27,10 +26,11 @@ class DocWidgetCreate(WidgetBase):
     index: int
     content: str | None
     page_id: int
+    visible: bool | None = True
 
 
 class DocWidgetUpdate(DocWidget):
-    pass
+    visible: bool | None = True
 
 
 class AssignmentWidget(WidgetBase):
@@ -53,6 +53,7 @@ class AssignmentWidgetCreate(WidgetBase):
     ddl: datetime
     max_score: float
     page_id: int
+    visible: bool | None = True
 
 
 class AssignmentWidgetUpdate(WidgetBase):
@@ -61,6 +62,7 @@ class AssignmentWidgetUpdate(WidgetBase):
     submit_type: list[str]
     ddl: datetime
     max_score: float
+    visible: bool | None = True
 
 
 class Code(BaseModel):
@@ -98,11 +100,13 @@ class NotePdfWidgetCreate(WidgetBase):
     index: int
     pdf_file: File
     page_id: int
+    visible: bool | None = True
 
 
 class NotePdfWidgetUpdate(WidgetBase):
     id: int
     pdf_file: File
+    visible: bool | None = True
 
 
 class WidgetAttachmentCreate(BaseModel):
