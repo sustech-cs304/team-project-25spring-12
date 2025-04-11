@@ -25,6 +25,10 @@
     "vite": "^6.1.1"
   },
   "dependencies": {
+    "@fullcalendar/core": "^6.1.17",
+    "@fullcalendar/daygrid": "^6.1.17",
+    "@fullcalendar/interaction": "^6.1.17",
+    "@fullcalendar/vue3": "^6.1.17",
     "axios": "^1.8.0",
     "element-plus": "^2.9.5",
     "md-editor-v3": "^5.3.2",

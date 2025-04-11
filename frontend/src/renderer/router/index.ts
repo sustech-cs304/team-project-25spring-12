@@ -6,8 +6,7 @@ import 'nprogress/nprogress.css';
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    redirect: '/course/material?id=123',
-    // redirect: '/user-center',  // kl: 之后可以设计一个更适合的默认界面。
+    redirect: '/homepage'
   },
   {
     path: '/',
@@ -15,12 +14,12 @@ const routes: RouteRecordRaw[] = [
     component: Home,
     children: [
       {
-        path: '/user-center',
-        name: 'user-center',
+        path: '/homepage',
+        name: 'homepage',
         meta: {
-          title: '个人中心',
+          title: '首页',
         },
-        component: () => import('../views/pages/user-center.vue'),
+        component: () => import('../views/pages/homepage.vue'),
       },
       {
         path: '/course/material',
@@ -29,6 +28,14 @@ const routes: RouteRecordRaw[] = [
           title: '课程信息',
         },
         component: () => import('../views/pages/course-material.vue'),
+      },
+      {
+        path: '/messages',
+        name: 'message-box',
+        meta: {
+          title: '消息中心',
+        },
+        component: () => import('../views/pages/message-box.vue'),
       },
     ]
   },
