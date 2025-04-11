@@ -28,7 +28,8 @@ def create_page(db: Session, page: PageCreate) -> Page:
     page_entity: Page = Page(
         class_id=page.class_id,
         folder_id=page.folder_id,
-        index=page.index
+        index=page.index,
+        visible=page.visible
     )
     db.add(page_entity)
     db.refresh(page_entity)
@@ -40,6 +41,7 @@ def update_page(db: Session, page: PageUpdate) -> Page:
     page_entity: Page = db.exec(stmt).first()
     if page_entity:
         page_entity.folder_id = page.folder_id
+        page_entity.visible = page.visible
         if page.order:
             update_widget_order(db, page.order)
 

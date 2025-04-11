@@ -1,7 +1,8 @@
 from sqlmodel import Session, select
 
 from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from backend.mjc.model.entity import Class, Semester, Profile, ClassStudentLink
+from backend.mjc.model.entity import Class, Semester, Profile, \
+                                     ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
 from backend.mjc.model.schema.user import UserInDB
 
 
@@ -108,3 +109,18 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
     if semester_entity:
         semester_entity.is_deleted = True
     return semester_entity
+
+
+def get_user_class_role(db: Session, user: UserInDB, cls_id: int) -> ClassRole:
+    stmt = select(ClassStudentLink).where(ClassStudentLink.class_id == cls_id) \
+                                   .where(ClassStudentLink.username == user.username)
+    if db.exec(stmt).first():
+        return ClassRole.STUDENT
+    stmt = select(ClassTeacherLink).where(ClassTeacherLink.class_id == cls_id) \
+                                   .where(ClassTeacherLink.username == user.username)
+    if db.exec(stmt).first():
+        return ClassRole.TEACHER
+    stmt = select(ClassTeachingAssistantLink).where(ClassTeachingAssistantLink.class_id == cls_id) \
+                                             .where(ClassTeachingAssistantLink.username == user.username)
+    if db.exec(stmt).first():
+        return ClassRole.TA
