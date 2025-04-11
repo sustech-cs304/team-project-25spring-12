@@ -1,5 +1,4 @@
 from datetime import datetime
-from idlelib import editor
 
 from sqlmodel import Session, select
 
@@ -32,6 +31,7 @@ def create_widget(db, widget: DocWidgetCreate | AssignmentWidgetCreate | NotePdf
         visible=widget.visible
     )
     db.add(widget_entity)
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity
 
@@ -45,6 +45,7 @@ def update_widget(db: Session,
     widget_entity.editor_username = editor.username
     widget_entity.update_time = datetime.now()
     widget_entity.visible = widget.visible
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity
 
@@ -55,6 +56,7 @@ def create_widget_attachment(db: Session, widget_attachment: WidgetAttachmentCre
         widget_id=widget_attachment.widget_id,
     )
     db.add(attach)
+    db.commit()
     db.refresh(attach)
     return attach
 
@@ -70,6 +72,7 @@ def delete_widget_attachment(db: Session, file_id: int) -> WidgetAttachment:
 
 def create_doc_widget(db: Session, widget: DocWidgetCreate, editor: UserInDB) -> Widget:
     widget_entity = create_widget(db, widget, editor)
+    db.commit()
     return widget_entity
 
 

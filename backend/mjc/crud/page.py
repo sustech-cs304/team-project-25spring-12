@@ -24,6 +24,14 @@ def get_class_pages(db: Session, class_id: int) -> list[Page]:
     return pages
 
 
+def get_get_uncategorized_pages(db: Session, class_id: int) -> list[Page]:
+    stmt = select(Page).where(Page.class_id == class_id) \
+                       .where(Page.is_deleted == False) \
+                       .where(Page.folder_id == None)
+    pages = db.exec(stmt).all()
+    return pages
+
+
 def create_page(db: Session, page: PageCreate) -> Page:
     page_entity: Page = Page(
         class_id=page.class_id,
@@ -32,6 +40,7 @@ def create_page(db: Session, page: PageCreate) -> Page:
         visible=page.visible
     )
     db.add(page_entity)
+    db.commit()
     db.refresh(page_entity)
     return page_entity
 
@@ -44,6 +53,8 @@ def update_page(db: Session, page: PageUpdate) -> Page:
         page_entity.visible = page.visible
         if page.order:
             update_widget_order(db, page.order)
+    db.commit()
+    return page
 
 
 def delete_page(db: Session, page_id: int) -> Page:
@@ -52,4 +63,5 @@ def delete_page(db: Session, page_id: int) -> Page:
     if page:
         page.is_deleted = True
         db.refresh(page)
-    return db
+    db.commit()
+    return page

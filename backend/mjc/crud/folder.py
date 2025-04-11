@@ -16,13 +16,9 @@ def update_page_order(db: Session, order: list[int], folder: Folder):
             page.index = i
 
 
-def get_class_folders(db: Session, class_id: int, visible: bool = None) -> list[Folder]:
-    if visible is None:
-        stmt = select(Folder).where(Folder.id == class_id).where(Folder.is_deleted == False)
-    else:
-        stmt = select(Folder).where(Folder.id == class_id) \
-                             .where(Folder.is_deleted == False) \
-                             .where(Folder.visible == visible)
+def get_class_folders(db: Session, class_id: int, ) -> list[Folder]:
+    stmt = select(Folder).where(Folder.id == class_id) \
+                         .where(Folder.is_deleted == False)
     folders: list[Folder] = db.exec(stmt).all()
     return folders
 
@@ -35,6 +31,7 @@ def create_folder(db: Session, folder: FolderCreate) -> Folder:
         visible=folder.visible
     )
     db.add(folder_entity)
+    db.commit()
     db.refresh(folder_entity)
     if folder.order:
         update_page_order(db, folder.order, folder_entity)
@@ -49,6 +46,7 @@ def update_folder(db: Session, folder: FolderUpdate) -> Folder:
         folder.visible = folder.visible
         if folder.order:
             update_page_order(db, folder.order, folder_entity)
+    db.commit()
     return folder_entity
 
 
@@ -59,4 +57,5 @@ def delete_folder(db: Session, folder_id: int) -> Folder:
         for page in folder.pages:
             page.folder_id = None
         folder.is_deleted = True
+    db.commit()
     return folder
