@@ -1,8 +1,6 @@
 from pydantic import BaseModel
 
-
-class PageWidgetItem(BaseModel):
-    pass
+from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
 
 
 class PageBase(BaseModel):
@@ -13,7 +11,7 @@ class PageBase(BaseModel):
 class Page(PageBase):
     id: int
     index: int
-    widgets: list[PageWidgetItem]
+    widgets: list[AssignmentWidget | NotePdfWidget | DocWidget]
 
 
 class PageCreate(PageBase):
