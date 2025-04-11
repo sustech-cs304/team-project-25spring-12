@@ -1,6 +1,6 @@
 <template>
   <div class="main-container">
-    <el-tabs v-model="activeSemester" type="border-card" tab-position="left">
+    <el-tabs v-model="activeSemester" type="border-card" tab-position="left" style="height: 100%;">
     <el-tab-pane
         v-for="semester in sortedSemesters"
         :key="semester"
