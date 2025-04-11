@@ -7,14 +7,15 @@ from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 from redis import asyncio as aioredis
 
-from mjc.utils.database import create_db_and_tables
-from mjc.router import user, course
+from backend.mjc.utils.database import create_db_and_tables
+from backend.mjc.utils.keybuilder import request_key_builder
+from backend.mjc.router import user, course
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     redis = aioredis.from_url("redis://localhost")
-    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache")
+    FastAPICache.init(RedisBackend(redis), prefix="fastapi-cache", key_builder=request_key_builder)
     create_db_and_tables()
     yield
 
