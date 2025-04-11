@@ -2,20 +2,24 @@
   <div class="header">
     <!-- 左侧区域 -->
     <div class="header-left">
-      <img class="logo" src="../assets/img/logo.svg" alt="Logo" />
+      <img class="logo" src="../assets/img/logo.svg" alt="Logo"/>
       <div class="web-title">后台管理系统</div>
 
       <!-- 导航按钮 -->
       <div class="nav-buttons">
         <el-tooltip effect="dark" content="首页" placement="bottom">
           <div class="btn-icon" @click="goToHome">
-            <el-icon><HomeFilled /></el-icon>
+            <el-icon>
+              <HomeFilled/>
+            </el-icon>
           </div>
         </el-tooltip>
 
         <el-tooltip effect="dark" content="反馈" placement="bottom">
-          <div class="btn-icon" @click="goToFeedback">
-            <el-icon><ChatRound /></el-icon>
+          <div class="btn-icon" @click="goToArguePost">
+            <el-icon>
+              <ChatRound/>
+            </el-icon>
           </div>
         </el-tooltip>
       </div>
@@ -27,41 +31,51 @@
         <!-- 全屏按钮 -->
         <el-tooltip effect="dark" content="全屏" placement="bottom">
           <div class="btn-icon" @click="setFullScreen">
-            <el-icon><FullScreen /></el-icon>
+            <el-icon>
+              <FullScreen/>
+            </el-icon>
           </div>
         </el-tooltip>
 
         <!-- 消息通知 -->
         <el-tooltip effect="dark" content="消息" placement="bottom">
           <div class="btn-icon" @click="goToMessages">
-            <el-icon><Bell /></el-icon>
+            <el-icon>
+              <Bell/>
+            </el-icon>
             <span v-if="unreadCount > 0" class="btn-bell-badge"></span>
           </div>
         </el-tooltip>
 
         <!-- 用户信息 -->
-        <el-avatar class="user-avatar" :size="30" :src="userAvatar" />
+        <el-avatar class="user-avatar" :size="30" :src="userAvatar"/>
         <el-dropdown class="user-name" trigger="click" @command="handleCommand">
                     <span class="el-dropdown-link">
                         {{ username }}
                         <el-icon class="el-icon--right">
-                            <arrow-down />
+                            <arrow-down/>
                         </el-icon>
                     </span>
           <template #dropdown>
             <el-dropdown-menu>
               <a href="https://github.com/sustech-cs304/team-project-25spring-12" target="_blank">
                 <el-dropdown-item>
-                  <el-icon><Link /></el-icon>
+                  <el-icon>
+                    <Link/>
+                  </el-icon>
                   项目仓库
                 </el-dropdown-item>
               </a>
               <el-dropdown-item command="settings">
-                <el-icon><Setting /></el-icon>
+                <el-icon>
+                  <Setting/>
+                </el-icon>
                 设置
               </el-dropdown-item>
               <el-dropdown-item divided command="logout">
-                <el-icon><SwitchButton /></el-icon>
+                <el-icon>
+                  <SwitchButton/>
+                </el-icon>
                 退出登录
               </el-dropdown-item>
             </el-dropdown-menu>
@@ -73,9 +87,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { useSidebarStore } from '../store/sidebar';
-import { useRouter } from 'vue-router';
+import {ref, onMounted} from 'vue';
+import {useRouter} from 'vue-router';
 import {
   HomeFilled,
   ChatRound,
@@ -90,37 +103,23 @@ import {
 // 用户数据
 const username = ref(localStorage.getItem('vuems_name') || '用户');
 const userAvatar = ref('../assets/img/img.jpg'); // TODO: 从用户信息获取头像
-const unreadCount = ref(0); // TODO: 从API获取未读消息数
+const unreadCount = ref(1); // TODO: 从API获取未读消息数
 
 // 路由和状态管理
 const router = useRouter();
-const sidebar = useSidebarStore();
-
-// 侧边栏折叠
-const collapseChage = () => {
-  sidebar.handleCollapse();
-};
-
-onMounted(() => {
-  if (document.body.clientWidth < 1500) {
-    collapseChage();
-  }
-});
 
 // 导航功能
 const goToHome = () => {
-  // TODO: 跳转到首页
-  // router.push('/home');
+  router.push('/')
 };
 
-const goToFeedback = () => {
+const goToArguePost = () => {
   // TODO: 跳转到反馈页面
   // router.push('/feedback');
 };
 
 const goToMessages = () => {
-  // TODO: 跳转到消息中心
-  // router.push('/messages');
+  router.push('/messages');
 };
 
 // 用户菜单操作
@@ -195,6 +194,7 @@ const setFullScreen = () => {
 }
 
 .btn-icon {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;

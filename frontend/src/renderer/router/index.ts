@@ -29,6 +29,14 @@ const routes: RouteRecordRaw[] = [
         },
         component: () => import('../views/pages/course-material.vue'),
       },
+      {
+        path: '/messages',
+        name: 'message-box',
+        meta: {
+          title: '消息中心',
+        },
+        component: () => import('../views/pages/message-box.vue'),
+      },
     ]
   },
   {

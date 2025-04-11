@@ -32,7 +32,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="message-box">
 import {ref, computed} from 'vue';
 
 interface Notification {

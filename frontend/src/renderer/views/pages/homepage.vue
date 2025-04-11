@@ -32,11 +32,10 @@
   </el-row>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="homepage">
 import CourseListWidget from '@/views/element/homepage-course-cards.vue'
-import MessageBoxWidget from '@/views/element/homepage-message-box.vue'
 import DeadlineCalendarWidget from '@/views/element/hoempage-deadline-calendar.vue'
-import {MessageBox, Calendar, Collection} from '@element-plus/icons-vue'
+import {Calendar, Collection} from '@element-plus/icons-vue'
 </script>
 
 <style scoped>

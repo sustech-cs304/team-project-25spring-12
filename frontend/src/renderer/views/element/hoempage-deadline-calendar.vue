@@ -207,8 +207,30 @@ const goToTask = () => {
 }
 
 const dismissReminder = () => {
-  // TODO: 不再提醒
-}
+  if (!selectedDeadline.value) return;
+  deadlines.value = deadlines.value.filter(
+      item => item.widgetId !== selectedDeadline.value?.widgetId ||
+          item.ddl !== selectedDeadline.value?.ddl
+  );
+  drawerVisible.value = false;
+  if (calendar.value) {
+    const calendarApi = calendar.value.getApi();
+    calendarApi.removeAllEvents();
+    calendarApi.addEventSource(
+        deadlines.value.map(item => ({
+          title: `${item.courseCode}`,
+          start: item.ddl,
+          extendedProps: item,
+          backgroundColor: getCourseColor(item.courseCode),
+          borderColor: getCourseColor(item.courseCode),
+          textColor: getTextColor(getCourseColor(item.courseCode)),
+          className: 'calendar-event'
+        }))
+    );
+  }
+
+  // TODO: 后端
+};
 
 const onDrawerOpen = () => {}
 
