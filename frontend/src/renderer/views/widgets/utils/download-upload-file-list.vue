@@ -42,14 +42,15 @@
 
 <script setup lang="ts">
 import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
-import {ref} from "vue";
+import {PropType, ref} from "vue";
 import {downloadFile} from '@/utils/useDownloader';
+import {FileMeta} from "@/types/widgets";
 
 const props = defineProps({
   fileList: {
-    type: Object,
+    type: Array as PropType<FileMeta[]>,
     required: false,
-    default: [],
+    default: () => [],
   },
   upload: {
     type: Boolean,
@@ -62,7 +63,7 @@ const props = defineProps({
   },
 });
 
-const fileList = ref(JSON.parse(JSON.stringify(props.fileList)));
+const fileList = ref<FileMeta[]>([...props.fileList]);
 
 // 根据文件后缀返回对应的 Element Plus 图标
 const getFileIcon = (fileName: string) => {
@@ -77,7 +78,7 @@ const getFileIcon = (fileName: string) => {
 };
 
 // 下载文件
-const handleDownloadFile = async (url: string, fileName: string) => {
+const handleDownloadFile = async (url: string, fileName: string): Promise<void> => {
   try {
     await downloadFile(url, fileName);
   } catch (error) {
@@ -98,8 +99,8 @@ const uploadFile = () => {
 
 // 返回文件列表
 defineExpose({
-  getFileList: () => JSON.parse(JSON.stringify(fileList.value)),
-})
+  getFileList: (): FileMeta[] => [...fileList.value],
+});
 </script>
 
 <style scoped>

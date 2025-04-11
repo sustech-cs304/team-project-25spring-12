@@ -6,7 +6,7 @@
     </div>
 
     <!-- 附加文件列表 -->
-    <download-upload-file-list title="已上传文件" :upload="true" :fileList="fileList" ref="fileUploader"/>
+    <download-upload-file-list title="已上传文件" :upload="true" :fileList="files" ref="fileUploader"/>
   </div>
 </template>
 
@@ -14,7 +14,8 @@
 import 'md-editor-v3/lib/style.css';
 import {MdEditor} from "md-editor-v3";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
-import {ref} from "vue";
+import {PropType, ref} from "vue";
+import {FileMeta} from "@/types/widgets";
 
 const props = defineProps({
   content: {
@@ -22,20 +23,20 @@ const props = defineProps({
     required: true,
   },
   fileList: {
-    type: Object,
-    required: true,
+    type: Array as PropType<FileMeta[]>,
+    required: false,
+    default: () => []
   },
 });
 
-const content = ref<String>(JSON.parse(JSON.stringify(props.content)));
-const fileList = JSON.parse(JSON.stringify(props.fileList));
-
-const fileUploader = ref<InstanceType<typeof DownloadUploadFileList> | null>(null);
+const content = ref<string>(props.content);
+const files = ref<FileMeta[]>([...props.fileList]);
+const fileUploader = ref<InstanceType<typeof DownloadUploadFileList>>();
 
 defineExpose({
-  getContent: () => content.value,
-  getFileList: () => fileUploader?.value?.getFileList() || [],
-})
+  getContent: (): string => content.value,
+  getFileList: (): FileMeta[] => fileUploader.value?.getFileList() ?? [],
+});
 </script>
 
 <style scoped>

@@ -1,58 +1,55 @@
 <template>
   <widget-card :title="computedTitle" icon="DataAnalysis" color="blue">
     <div class="card-content">
-      <el-text>
-        提示：在课件任意位置右键，创建一条笔记！
-      </el-text>
-      <el-button type="primary" :icon="Download" @click="handleDownloadFile">
-        下载原课件
-      </el-button>
+      <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
+      <el-button type="primary" :icon="Download" @click="handleDownloadFile">下载原课件</el-button>
     </div>
 
     <el-scrollbar class="pdf-scroll-container">
       <div class="pdf-container" ref="pdfContainer">
         <div
             v-for="(page, index) in pages"
-            :key="index"
+            :key="page"
             class="pdf-page"
             @contextmenu.prevent="openContextMenu($event, page)"
         >
-          <!--   渲染一页 pdf   -->
-          <canvas :ref="(el) => setCanvasRef(el, index)"></canvas>
+          <canvas :ref="el => setCanvasRef(el, index)"></canvas>
 
-          <!--   在这一页上渲染笔记   -->
           <el-tooltip
-              v-for="(note, noteIndex) in getNotesForPage(page)"
-              :key="noteIndex"
+              v-for="note in getNotesForPage(page)"
+              :key="note.id"
               effect="dark"
               :content="note.text"
               placement="top"
           >
             <div
                 class="note-button"
-                :style="{ left: note.x + 'px', top: note.y + 'px' }"
+                :style="{ left: `${note.x}px`, top: `${note.y}px` }"
                 @click="toggleNote(note)"
             ></div>
           </el-tooltip>
         </div>
 
-        <!--   监听用户处于底部，加载新的页面   -->
         <div ref="bottomObserver" class="observer"></div>
       </div>
     </el-scrollbar>
 
-    <!--   右键添加笔记   -->
+    <!-- 添加笔记弹窗 -->
     <el-popover
         v-model:visible="contextMenu.visible"
         trigger="manual"
         placement="bottom-start"
         teleported
         popper-class="custom-popover"
-        :popper-style="{ top: `${popoverPosition.y}px`, left: `${popoverPosition.x}px`,
-            'max-height': '90px', 'overflow': 'hidden' }"
+        :popper-style="{
+        top: `${popoverPosition.y}px`,
+        left: `${popoverPosition.x}px`,
+        'max-height': '90px',
+        overflow: 'hidden',
+      }"
     >
       <template #reference>
-        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"></div>
+        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef" />
       </template>
 
       <div class="context-menu-content">
@@ -63,63 +60,64 @@
   </widget-card>
 </template>
 
-<script setup>
+<script setup lang="ts">
+import { onMounted, ref, nextTick, toRaw, computed } from 'vue';
+import * as pdfjsLib from 'pdfjs-dist';
+import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import { Download } from '@element-plus/icons-vue';
-import { onMounted, ref, nextTick, toRaw, computed } from "vue";
-import * as pdfjsLib from "pdfjs-dist";
-import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
-import widgetCard from "./utils/widget-card.vue";
-import {downloadFile} from '@/utils/useDownloader';
+import widgetCard from './utils/widget-card.vue';
+import { downloadFile } from '@/utils/useDownloader';
+import type { NotePdfWidget, Note } from '@/types/widgets';
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
-});
+const props = defineProps<{
+  data: NotePdfWidget;
+}>();
 
-const computedTitle = computed(() => {
-  return props.data?.title || "互动式课件";
-});
+const computedTitle = computed(() => props.data.title || '互动式课件');
 
-// pdf渲染
-const pages = ref([]);
-const canvasRefs = ref([]);
-const pdfInstance = ref(null);
-const bottomObserver = ref(null);
-const pdfContainer = ref(null);
+// refs
+const pages = ref<number[]>([]);
+const canvasRefs = ref<(HTMLCanvasElement | undefined)[]>([]);
+const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
+const bottomObserver = ref<HTMLElement | null>(null);
+const pdfContainer = ref<HTMLElement | null>(null);
+
+const notes = ref<Note[]>(structuredClone(props.data.notes));
+const contextMenuRef = ref<HTMLElement | null>(null);
+const activeNote = ref<Note | null>(null);
+const contextMenu = ref({
+  visible: false,
+  x: 0,
+  y: 0,
+  page: 1,
+});
+const popoverPosition = ref({ x: 0, y: 0 });
+const newNoteText = ref('');
 let totalPages = 0;
 const pageBatchSize = 5;
 
-// 笔记
-const notes = ref(JSON.parse(JSON.stringify(props.data.notes)));
-const contextMenuRef = ref(null);
-const activeNote = ref(null);
-const contextMenu = ref({ visible: false, x: 0, y: 0, page: 1 });
-const popoverPosition = ref({x: 0, y: 0});
-const newNoteText = ref("");
-
-const setCanvasRef = (el, index) => {
-  if (el) {
-    canvasRefs.value[index] = el;
-  }
+// canvas 操作
+const setCanvasRef = (el: HTMLCanvasElement | null, index: number) => {
+  if (el) canvasRefs.value[index] = el;
 };
 
-const renderPage = async (pageNumber) => {
+const renderPage = async (pageNumber: number) => {
   if (!pdfInstance.value) return;
-
-  const rawPdfInstance = toRaw(pdfInstance.value);
+  const rawPdf = toRaw(pdfInstance.value);
   try {
-    const page = await rawPdfInstance.getPage(pageNumber);
+    const page = await rawPdf.getPage(pageNumber);
     const scale = 1.5;
     const viewport = page.getViewport({ scale });
-
     const canvas = canvasRefs.value[pageNumber - 1];
+    if (!canvas) return;
+
     canvas.width = viewport.width;
     canvas.height = viewport.height;
-    const context = canvas.getContext("2d");
+
+    const context = canvas.getContext('2d');
+    if (!context) return;
 
     await page.render({ canvasContext: context, viewport }).promise;
   } catch (error) {
@@ -130,24 +128,22 @@ const renderPage = async (pageNumber) => {
 const loadMorePages = async () => {
   if (!pdfInstance.value) return;
 
-  const startPage = pages.value.length + 1;
-  const endPage = Math.min(startPage + pageBatchSize - 1, totalPages);
+  const start = pages.value.length + 1;
+  const end = Math.min(start + pageBatchSize - 1, totalPages);
 
-  for (let i = startPage; i <= endPage; i++) {
+  for (let i = start; i <= end; i++) {
     pages.value.push(i);
   }
 
   await nextTick();
 
-  for (let i = startPage; i <= endPage; i++) {
+  for (let i = start; i <= end; i++) {
     await renderPage(i);
   }
 };
 
 const loadPDF = async () => {
   try {
-    // 从给定的 URL 读取一个pdf文件
-    // 下载并没有采用流式传输：pdf文件的下载速度远大于加载（渲染）速度
     const loadingTask = pdfjsLib.getDocument(props.data.pdfFile.url);
     pdfInstance.value = await loadingTask.promise;
 
@@ -158,11 +154,11 @@ const loadPDF = async () => {
   }
 };
 
-const getNotesForPage = (page) => {
-  return notes.value.filter((note) => note.page === page);
+const getNotesForPage = (page: number): Note[] => {
+  return notes.value.filter(note => note.page === page);
 };
 
-const toggleNote = (note) => {
+const toggleNote = (note: Note) => {
   activeNote.value = activeNote.value === note ? null : note;
 };
 
@@ -185,19 +181,19 @@ const openContextMenu = (event, page) => {
 
   // 设置弹窗位置
   nextTick(() => {
-    popoverPosition.value.x = event.clientX;
-    popoverPosition.value.y = event.clientY;
+    popoverPosition.value = { x: event.clientX, y: event.clientY };
   });
 };
 
 const addNote = () => {
-  if (!newNoteText.value.trim()) return;
+  const text = newNoteText.value.trim();
+  if (!text) return;
 
   notes.value.push({
     page: contextMenu.value.page,
     x: contextMenu.value.x,
     y: contextMenu.value.y,
-    text: newNoteText.value,
+    text,
   });
 
   // TODO: 上传到后端
@@ -210,7 +206,7 @@ const observeBottom = () => {
   if (!bottomObserver.value) return;
 
   const observer = new IntersectionObserver(
-      (entries) => {
+      entries => {
         const entry = entries[0];
         if (entry.isIntersecting && pages.value.length < totalPages) {
           loadMorePages();
@@ -222,12 +218,6 @@ const observeBottom = () => {
   observer.observe(bottomObserver.value);
 };
 
-onMounted(async () => {
-  await loadPDF();
-  observeBottom();
-});
-
-// 下载原课件
 const handleDownloadFile = async () => {
   try {
     await downloadFile(props.data.pdfFile.url, props.data.pdfFile.fileName);
@@ -235,6 +225,11 @@ const handleDownloadFile = async () => {
     console.error('下载失败：', error);
   }
 };
+
+onMounted(() => {
+  loadPDF();
+  observeBottom();
+});
 </script>
 
 <style scoped>

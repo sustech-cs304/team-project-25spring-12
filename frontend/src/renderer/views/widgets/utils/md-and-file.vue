@@ -14,6 +14,8 @@
 import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
+import {PropType} from "vue";
+import {FileMeta} from "@/types/widgets";
 
 const props = defineProps({
   content: {
@@ -21,8 +23,9 @@ const props = defineProps({
     required: true,
   },
   fileList: {
-    type: Object,
+    type: Array as PropType<FileMeta[]>,
     required: false,
+    default: () => []
   },
 });
 
