@@ -13,14 +13,14 @@ from backend.mjc.utils.database import SessionDep
 router = APIRouter()
 
 
-@router.get(path="/class/{class_id}", response_model=backend.mjc.model.schema.course.Class)
-async def get_class(db: SessionDep, class_id: int):
-    return course_service.get_class(db, class_id)
-
-
 @router.get(path="/class/semester", response_model=list[backend.mjc.model.schema.course.Semester])
 async def get_semester(db: SessionDep):
     return course_service.get_semesters(db)
+
+
+@router.get(path="/class/{class_id}", response_model=backend.mjc.model.schema.course.Class)
+async def get_class(db: SessionDep, class_id: int):
+    return course_service.get_class(db, class_id)
 
 
 @router.post(path="/class", response_model=backend.mjc.model.schema.course.Class)

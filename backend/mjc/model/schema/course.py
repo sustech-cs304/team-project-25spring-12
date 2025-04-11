@@ -9,10 +9,10 @@ from backend.mjc.model.entity import ClassRole
 class ClassBase(BaseModel):
     name: str
     course_code: str
-    semester: str | None
-    lecturer: str | None
-    location: str | None
-    time: str | None
+    semester: str | None = None
+    lecturer: str | None = None
+    location: str | None = None
+    time: str | None = None
 
 
 class ClassCard(ClassBase):
@@ -29,7 +29,7 @@ class Class(ClassBase):
 class ClassCreate(ClassBase):
     semester_id: int
     syllabus: File | None
-    template_id: int | None
+    template_id: int | None = None
 
 
 class ClassUpdate(ClassBase):

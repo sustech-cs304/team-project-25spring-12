@@ -60,6 +60,8 @@ def create_class(db: Session, cls: ClassCreate) -> Class:
         # TODO: 当存在课程模板的时候为课程添加默认结构
         pass
 
+    db.commit()
+    db.refresh(cls_entity)
     return cls_entity
 
 
@@ -73,7 +75,8 @@ def update_class(db: Session, cls: ClassUpdate) -> Class:
         cls_entity.lecturer = cls.lecturer
         cls_entity.location = cls.location
         cls_entity.time = cls.time
-        cls_entity.syllabus_id = cls.syllabus.id
+        cls_entity.syllabus_id = cls.syllabus.id if cls.syllabus else None
+    db.commit()
     return cls_entity
 
 
@@ -82,6 +85,7 @@ def delete_class(db: Session, cls_id: int) -> Class:
     cls_entity = db.exec(stmt).first()
     if cls_entity:
         cls_entity.is_deleted = True
+    db.commit()
     return cls_entity
 
 
@@ -92,6 +96,8 @@ def create_semester(db: Session, semester: SemesterCreate) -> Semester:
         end_time=semester.end_time,
     )
     db.add(semester_entity)
+    db.commit()
+    db.refresh(semester_entity)
     return semester_entity
 
 
@@ -102,6 +108,7 @@ def update_semester(db: Session, semester: SemesterUpdate) -> Semester:
         semester_entity.name = semester.name
         semester_entity.start_time = semester.start_time
         semester_entity.end_time = semester.end_time
+    db.commit()
     return semester_entity
 
 
@@ -110,6 +117,7 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
     semester_entity = db.exec(stmt).first()
     if semester_entity:
         semester_entity.is_deleted = True
+    db.commit()
     return semester_entity
 
 
