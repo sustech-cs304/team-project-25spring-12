@@ -16,6 +16,11 @@ def get_user(db: Session, username: str) -> User:
     return db.exec(stmt).first()
 
 
+def get_profile(db: Session, username: str) -> Profile:
+    stmt = select(Profile).where(Profile.username == username)
+    return db.exec(stmt).first()
+
+
 def create_user(db: Session, user: UserCreate) -> User:
     """
     创建新用户。
