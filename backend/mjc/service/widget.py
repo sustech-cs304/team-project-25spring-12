@@ -2,7 +2,8 @@ from fastapi import HTTPException, status
 from sqlmodel import Session
 
 from backend.mjc.crud import widget as crud_widget
-from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.service import user as user_service
+from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
@@ -11,7 +12,12 @@ from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
 
 def entity2widget(entity: WidgetEntity) -> AssignmentWidget | NotePdfWidget | DocWidget | None:
     if entity.type == WidgetType.doc:
-        doc_widget = DocWidget.model_validate(entity.model_dump())
+        print(entity.model_dump())
+        doc_widget = DocWidget(
+            **entity.model_dump(),
+            # TODO: attachments=,
+            editor=Profile.model_validate(entity.editor.model_dump())
+        )
         return doc_widget
     elif entity.type == WidgetType.assignment:
         assignment_widget = AssignmentWidget.model_validate(**entity.assignment_widget.model_dump())
