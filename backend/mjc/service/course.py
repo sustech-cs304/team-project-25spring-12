@@ -171,6 +171,10 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
     return semester
 
 
+def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
+    return crud_course.get_user_class_role(db, username, cls_id)
+
+
 def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class:
     return crud_course.enroll_class_users(db, enroll)
 
