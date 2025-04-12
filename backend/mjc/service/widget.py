@@ -15,7 +15,7 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
     if entity.attachments:
         for attachment in entity.attachment:
             file: File = File(id=attachment.file_id,
-                              file_name=attachment.name,
+                              filename=attachment.name,
                               visibility=attachment.file.visibility,
                               url=None)
             attach.append(file)
@@ -39,7 +39,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
     if entity.attachments:
         for attachment in entity.attachment:
             file: File = File(id=attachment.file_id,
-                              file_name=attachment.name,
+                              filename=attachment.name,
                               visibility=attachment.file.visibility,
                               url=None)
             attach.append(file)
@@ -77,7 +77,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
         id=entity.id,
         pdf_file=File(
             id=entity.note_pdf_widget.pdf_file.id,
-            file_name=entity.note_pdf_widget.pdf_file.filename,
+            filename=entity.note_pdf_widget.pdf_file.filename,
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
         ),
