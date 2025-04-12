@@ -35,9 +35,9 @@ class DocWidgetUpdate(DocWidget):
 
 class AssignmentWidget(WidgetBase):
     id: int
-    content: str | None
-    attachments: list[File] | None
-    submit_type: list[str]
+    content: str | None = None
+    attachments: list[File] | None = None
+    submit_types: list[str]
     submitted_assignment: list["SubmittedAssignment"] | None = None
     status: str
     ddl: datetime
@@ -49,7 +49,7 @@ class AssignmentWidget(WidgetBase):
 class AssignmentWidgetCreate(WidgetBase):
     index: int
     content: str | None = None
-    submit_type: list[str]
+    submit_types: list[str]
     ddl: datetime
     max_score: float
     page_id: int
@@ -59,7 +59,7 @@ class AssignmentWidgetCreate(WidgetBase):
 class AssignmentWidgetUpdate(WidgetBase):
     id: int
     content: str | None = None
-    submit_type: list[str]
+    submit_types: list[str]
     ddl: datetime
     max_score: float
     visible: bool | None = True

@@ -78,7 +78,8 @@ def create_doc_widget(db: Session, widget: DocWidgetCreate, editor: UserInDB) ->
 
 def update_doc_widget(db: Session, widget: DocWidgetUpdate, editor: UserInDB) -> Widget:
     widget_entity = update_widget(db, widget, editor)
-    db.refresh(widget)
+    db.commit()
+    db.refresh(widget_entity)
     return widget_entity
 
 
@@ -86,20 +87,23 @@ def create_assignment_widget(db: Session, widget: AssignmentWidgetCreate, editor
     widget_entity = create_widget(db, widget, editor)
     assignment = AssignmentWidget(
         widget_id=widget_entity.id,
-        submit_type=[SubmitType[typ].value for typ in widget.submit_type],
         ddl=widget.ddl,
+        submit_types=widget.submit_types,
         max_score=widget.max_score,
     )
     db.add(assignment)
+    db.commit()
+    db.refresh(assignment)
     db.refresh(widget_entity)
     return widget_entity
 
 
 def update_assignment_widget(db: Session, widget: AssignmentWidgetUpdate, editor: UserInDB) -> Widget:
     widget_entity = update_widget(db, widget, editor)
-    widget_entity.assignment_widget.submit_type = [SubmitType[typ].value for typ in widget.submit_type]
+    widget_entity.assignment_widget.submit_types = [SubmitType[typ].value for typ in widget.submit_types]
     widget_entity.assignment_widget.ddl = widget.ddl
     widget_entity.assignment_widget.max_score = widget.max_score
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity
 
@@ -111,6 +115,7 @@ def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: Use
         pdf_file_id=widget.pdf_file.id
     )
     db.add(note_pdf)
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity
 
@@ -118,6 +123,7 @@ def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: Use
 def update_note_pdf_widget(db: Session, widget: NotePdfWidgetUpdate, editor: UserInDB) -> Widget:
     widget_entity = update_widget(db, widget, editor)
     widget_entity.note_pdf_widget.pdf_file_id = widget.pdf_file.id
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity
 
@@ -126,5 +132,6 @@ def delete_widget(db: Session, widget_id: int) -> Widget:
     widget_entity = get_widget(db, widget_id)
     if widget_entity:
         widget_entity.is_deleted = True
+    db.commit()
     db.refresh(widget_entity)
     return widget_entity

@@ -2,82 +2,156 @@ from fastapi import HTTPException, status
 from sqlmodel import Session
 
 from backend.mjc.crud import widget as crud_widget
-from backend.mjc.service import user as user_service
 from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
+from backend.mjc.model.schema.common import File
 from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
+
+
+def entity2doc(entity: WidgetEntity) -> DocWidget:
+    attach: list[File] = []
+    if entity.attachments:
+        for attachment in entity.attachment:
+            file: File = File(id=attachment.file_id,
+                              file_name=attachment.name,
+                              visibility=attachment.file.visibility,
+                              url=None)
+            attach.append(file)
+    doc_widget = DocWidget(
+        title=entity.title,
+        index=entity.index,
+        type=entity.type,
+        create_time=entity.create_time,
+        update_time=entity.update_time,
+        editor=Profile.model_validate(entity.editor.model_dump()),
+        visible=entity.visible,
+        id=entity.id,
+        content=entity.content if entity.content else None,
+        attachments=attach
+    )
+    return doc_widget
+
+
+def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
+    attach: list[File] = []
+    if entity.attachments:
+        for attachment in entity.attachment:
+            file: File = File(id=attachment.file_id,
+                              file_name=attachment.name,
+                              visibility=attachment.file.visibility,
+                              url=None)
+            attach.append(file)
+    assignment_widget = AssignmentWidget(
+        title=entity.title,
+        index=entity.index,
+        type=entity.type,
+        create_time=entity.create_time,
+        update_time=entity.update_time,
+        editor=Profile.model_validate(entity.editor.model_dump()),
+        visible=entity.visible,
+        id=entity.id,
+        content=entity.content if entity.content else None,
+        submit_types=entity.assignment_widget.submit_types,
+        submitted_assignment=None,  # TODO: 已提交作业
+        status='',  # TODO: 提交与批改的状态
+        ddl=entity.assignment_widget.ddl,
+        score=None,  # TODO: 已批改作业的分数
+        max_score=entity.assignment_widget.max_score,
+        feedback=None,
+        attachments=attach
+    )
+    return assignment_widget
+
+
+def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
+    note_pdf_widget = NotePdfWidget(
+        title=entity.title,
+        index=entity.index,
+        type=entity.type,
+        create_time=entity.create_time,
+        update_time=entity.update_time,
+        editor=Profile.model_validate(entity.editor.model_dump()),
+        visible=entity.visible,
+        id=entity.id,
+        pdf_file=File(
+            id=entity.note_pdf_widget.pdf_file.id,
+            file_name=entity.note_pdf_widget.pdf_file.filename,
+            visibility=entity.note_pdf_widget.pdf_file.visibility,
+            url=None
+        ),
+    )
+    return note_pdf_widget
 
 
 def entity2widget(entity: WidgetEntity) -> AssignmentWidget | NotePdfWidget | DocWidget | None:
     if entity.type == WidgetType.doc:
-        print(entity.model_dump())
-        doc_widget = DocWidget(
-            **entity.model_dump(),
-            # TODO: attachments=,
-            editor=Profile.model_validate(entity.editor.model_dump())
-        )
-        return doc_widget
+        return entity2doc(entity)
     elif entity.type == WidgetType.assignment:
-        assignment_widget = AssignmentWidget.model_validate(**entity.assignment_widget.model_dump())
-        return assignment_widget
+        return entity2assignment(entity)
     elif entity.type == WidgetType.note_pdf:
-        return NotePdfWidget.model_validate(**entity.note_pdf_widget.model_dump())
+        return entity2notepdf(entity)
 
 
 def create_doc_widget(db: Session, editor: UserInDB, doc_widget_create: DocWidgetCreate) -> DocWidget:
-    widget_entity = crud_widget.create_doc_widget(db, doc_widget_create, editor)
-    if widget_entity:
-        doc_widget = entity2widget(widget_entity)
-        return doc_widget
+    if doc_widget_create.type == WidgetType.doc:
+        widget_entity = crud_widget.create_doc_widget(db, doc_widget_create, editor)
+        if widget_entity:
+            doc_widget = entity2widget(widget_entity)
+            return doc_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create doc widget failed")
 
 
 def update_doc_widget(db:Session, editor: UserInDB, doc_widget_update: DocWidgetUpdate) -> DocWidget:
-    widget_entity = crud_widget.update_doc_widget(db, doc_widget_update, editor)
-    if widget_entity:
-        doc_widget = entity2widget(widget_entity)
-        return doc_widget
+    if doc_widget_update.type == WidgetType.doc:
+        widget_entity = crud_widget.update_doc_widget(db, doc_widget_update, editor)
+        if widget_entity:
+            doc_widget = entity2widget(widget_entity)
+            return doc_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Update doc widget failed")
 
 
 def create_assignment_widget(db:Session, editor:UserInDB, assignment_widget_create: AssignmentWidgetCreate) -> AssignmentWidget:
-    widget_entity = crud_widget.create_assignment_widget(db, assignment_widget_create, editor)
-    if widget_entity:
-        assignment_widget = entity2widget(widget_entity)
-        return assignment_widget
+    if assignment_widget_create.type == WidgetType.assignment:
+        widget_entity = crud_widget.create_assignment_widget(db, assignment_widget_create, editor)
+        if widget_entity:
+            assignment_widget = entity2widget(widget_entity)
+            return assignment_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create assignment widget failed")
 
 
 def update_assignment_widget(db:Session, editor: UserInDB, assignment_widget_update: AssignmentWidgetUpdate) -> AssignmentWidget:
-    widget_entity = crud_widget.update_assignment_widget(db, assignment_widget_update, editor)
-    if widget_entity:
-        assignment_widget = entity2widget(widget_entity)
-        return assignment_widget
+    if assignment_widget_update.type == WidgetType.assignment:
+        widget_entity = crud_widget.update_assignment_widget(db, assignment_widget_update, editor)
+        if widget_entity:
+            assignment_widget = entity2widget(widget_entity)
+            return assignment_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Update assignment widget failed")
 
 
 def create_note_pdf_widget(db:Session, editor:UserInDB, note_pdf_widget_create: NotePdfWidgetCreate) -> NotePdfWidget:
-    widget_entity = crud_widget.create_note_pdf_widget(db, note_pdf_widget_create, editor)
-    if widget_entity:
-        note_pdf_widget = entity2widget(widget_entity)
-        return note_pdf_widget
+    if note_pdf_widget_create.type == WidgetType.note_pdf:
+        widget_entity = crud_widget.create_note_pdf_widget(db, note_pdf_widget_create, editor)
+        if widget_entity:
+            note_pdf_widget = entity2widget(widget_entity)
+            return note_pdf_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create note pdf widget failed")
 
 
 def update_note_pdf_widget(db: Session, editor:UserInDB, note_pdf_widget_update: NotePdfWidgetUpdate) -> NotePdfWidget:
-    widget_entity = crud_widget.update_widget(db, note_pdf_widget_update,editor)
-    if widget_entity:
-        note_pdf_widget = entity2widget(widget_entity)
-        return note_pdf_widget
+    if note_pdf_widget_update.type == WidgetType.note_pdf:
+        widget_entity = crud_widget.update_widget(db, note_pdf_widget_update,editor)
+        if widget_entity:
+            note_pdf_widget = entity2widget(widget_entity)
+            return note_pdf_widget
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Update note pdf widget failed")
 
 
 def delete_widget(db: Session, widget_id: int):
     widget_entity = crud_widget.delete_widget(db, widget_id)
     if widget_entity:
-        return widget_entity
+        return
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete widget failed")
 
 
