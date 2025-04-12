@@ -23,10 +23,12 @@
   @props {String} title - 标题
   @props {String} icon - Element Plus 图标名称
   @props {String} color - 预设颜色 (red, green, blue, purple, orange, teal, gray)
+  @props {String} type - 使用 @/utils/widgetColorIconManager.ts 中的配色方案，方便在其他位置复用
 -->
 
-<script setup>
+<script setup lang="ts">
 import { computed, resolveComponent } from 'vue'
+import { getWidgetStyle, getHeaderColor, getBodyColor } from '@/utils/widgetColorIconManager'
 
 const props = defineProps({
   title: String,
@@ -37,37 +39,27 @@ const props = defineProps({
   color: {
     type: String,
     default: 'blue',
-    validator: (value) => ['red', 'green', 'blue', 'purple', 'orange', 'teal', 'gray'].includes(value),
+    validator: (value: String) =>
+        ['red', 'green', 'blue', 'purple', 'orange', 'teal', 'gray'].includes(value),
+  },
+  type: {
+    type: String,
+    default: '',
   },
 })
 
-const headerColor = computed(() => {
-  return {
-    red: '#F87171',
-    green: '#34D399',
-    blue: '#60A5FA',
-    purple: '#A78BFA',
-    orange: '#FB923C',
-    teal: '#2DD4BF',
-    gray: '#9CA3AF',
-  }[props.color] || '#60A5FA'
+const resolvedColor = computed(() => {
+  return props.type ? getWidgetStyle(props.type).color : props.color
+})
+const resolvedIcon = computed(() => {
+  return props.type ? getWidgetStyle(props.type).icon : props.icon
 })
 
-const bodyColor = computed(() => {
-  return {
-    red: '#FEE2E2',
-    green: '#D1FAE5',
-    blue: '#DBEAFE',
-    purple: '#EDE9FE',
-    orange: '#FFEDD5',
-    teal: '#CCFBF1',
-    gray: '#E5E7EB',
-  }[props.color] || '#DBEAFE'
-})
-
-const iconComponent = computed(() => {
-  return props.icon ? resolveComponent(props.icon) : null
-})
+const headerColor = computed(() => getHeaderColor(resolvedColor.value))
+const bodyColor = computed(() => getBodyColor(resolvedColor.value))
+const iconComponent = computed(() =>
+    resolvedIcon.value ? resolveComponent(resolvedIcon.value) : null
+)
 </script>
 
 <style scoped>

@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" color="green" icon="Document">
+  <widget-card :title="computedTitle" type="doc">
     <md-and-file :fileList="props.data.attachments" :content="props.data.content" />
   </widget-card>
 </template>

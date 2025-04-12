@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" color="orange" icon="Notebook">
+  <widget-card :title="computedTitle" type="assignment">
     <div class="container">
       <!--   作业状态   -->
       <div>

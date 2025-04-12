@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" icon="DataAnalysis" color="blue">
+  <widget-card :title="computedTitle" type="notepdf">
     <div class="card-content">
       <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
       <el-button type="primary" :icon="Download" @click="handleDownloadFile">下载原课件</el-button>

@@ -5,11 +5,21 @@
         :default-active="activeWidgetId"
         @select="handleMenuSelect"
     >
+      <!-- 顶部标题 -->
+      <el-menu-item index="__title" disabled style="cursor: default; font-weight: bold; opacity: 1;">
+        {{ title }}
+      </el-menu-item>
+
+      <!-- 动态菜单项 -->
       <el-menu-item
           v-for="widget in widgetsSortedByIndex"
           :key="widget.id"
           :index="widget.id"
+          :style="getMenuItemStyle(widget)"
       >
+        <el-icon v-if="getIconComponent(widget)">
+          <component :is="getIconComponent(widget)" />
+        </el-icon>
         {{ widget.title }}
       </el-menu-item>
     </el-menu>
@@ -28,10 +38,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
+import {ref, computed, onMounted, resolveComponent} from 'vue';
 import { useRoute } from 'vue-router';
 import type { WidgetUnion } from '@/types/widgets';
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue';
+import { getWidgetStyle, getHeaderColor, getBodyColor } from '@/utils/widgetColorIconManager'
 
 const route = useRoute();
 
@@ -87,6 +98,7 @@ const widgets: WidgetUnion[] = [
     status: 'pending',
   },
 ];
+const title: string = '课程资源';
 
 const activeWidgetId = ref('');
 const widgetRefs = new Map<string, any>();
@@ -127,8 +139,27 @@ onMounted(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.();
   }, 50);
 });
-</script>
+const getMenuItemStyle = (widget: WidgetUnion) => {
+  const color = getWidgetStyle(widget.type).color
+  return {
+    backgroundColor: widget.id === activeWidgetId.value
+        ? getHeaderColor(color)
+        : getBodyColor(color),
+    color: widget.id === activeWidgetId.value ? 'white' : 'black',
+    fontWeight: 'bold',
+    borderRadius: '6px',
+    margin: '4px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+  }
+}
 
+const getIconComponent = (widget: WidgetUnion) => {
+  const iconName = getWidgetStyle(widget.type).icon
+  return resolveComponent(iconName)
+}
+</script>
 <style scoped>
 .widget-layout {
   display: flex;
@@ -140,6 +171,7 @@ onMounted(() => {
   width: 200px;
   height: 100%;
   border-right: 1px solid #ebeef5;
+  padding-top: 8px;
 }
 
 .widget-content {
