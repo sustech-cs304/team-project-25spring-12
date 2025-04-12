@@ -6,8 +6,10 @@ from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.model.schema.widget import WidgetAttachmentCreate
 from backend.mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from backend.mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
-from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate
-from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, AssignmentWidget, NotePDFWidget, SubmitType
+from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
+from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, \
+                                     AssignmentWidget, NotePDFWidget, SubmitType,\
+                                     Note
 
 
 def get_widget(db: Session, widget_id: int) -> Widget:
@@ -135,3 +137,45 @@ def delete_widget(db: Session, widget_id: int) -> Widget:
     db.commit()
     db.refresh(widget_entity)
     return widget_entity
+
+
+def get_note(db: Session, note_id: int) -> Note:
+    stmt = select(Note).where(Note.id == note_id).where(Note.is_deleted == False)
+    note: Note = db.exec(stmt).first()
+    return note
+
+
+def create_note(db: Session, note: NoteCreate, editor: UserInDB) -> Note:
+    widget, note_entity = get_widget(db, note.widget_id), None
+    if widget:
+        note_entity = Note(
+            page=note.page, x=note.x, y=note.y, text=note.text,
+            editor_username=editor.username,
+            note_pdf_widget_id=widget.note_pdf_widget.id,
+            create_time=datetime.now(),
+            update_time=datetime.now()
+        )
+        db.add(note_entity)
+        db.commit()
+        db.refresh(note_entity)
+    return note_entity
+
+
+def update_note(db: Session, note: NoteUpdate) -> Note:
+    note_entity = get_note(db, note.id)
+    if note_entity:
+        note_entity.page = note.page
+        note_entity.x = note.x
+        note_entity.y = note.y
+        note_entity.text = note.text
+        note_entity.update_time = datetime.now()
+    db.commit()
+    return note_entity
+
+
+def delete_note(db: Session, note_id: int) -> Note:
+    note_entity = get_note(db, note_id)
+    if note_entity:
+        note_entity.is_deleted = True
+    db.commit()
+    return note_entity

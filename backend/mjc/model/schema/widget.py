@@ -90,6 +90,14 @@ class Note(NoteBase):
     editor: Profile
 
 
+class NoteCreate(NoteBase):
+    widget_id: int
+
+
+class NoteUpdate(NoteBase):
+    id: int
+
+
 class NotePdfWidget(WidgetBase):
     id: int
     pdf_file: File
