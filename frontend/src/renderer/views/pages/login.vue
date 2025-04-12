@@ -134,18 +134,4 @@ useTabsStore().clearTabs();
 .login-btn {
   width: 100%;
 }
-
-.login-footer-tip {
-  margin-top: 15px;
-  font-size: 12px;
-  color: #999;
-  text-align: center;
-}
-
-.login-footer-text {
-  margin-top: 15px;
-  font-size: 14px;
-  text-align: center;
-  color: #555;
-}
 </style>
