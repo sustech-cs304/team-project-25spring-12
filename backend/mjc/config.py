@@ -7,3 +7,6 @@ DATABASE_URL = os.environ.get('MJC_DATABASE_URL')
 SECRET_KEY = os.environ.get('MJC_SECRET_KEY')
 JWT_ENCODE_ALGORITHM = 'HS256'
 TOKEN_EXPIRE_MINUTES = timedelta(minutes=1800)
+
+# File Saving
+FILE_SAVE_ADDRESS = './resources/user_files/'

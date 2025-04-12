@@ -22,6 +22,6 @@ async def update_page(db:SessionDep, page: PageUpdate):
     return page_service.update_page(db, page)
 
 
-@router.delete(path="/class/page/{id}", response_model=Message, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(path="/class/page/{id}", response_model=Message)
 async def delete_page(db:SessionDep, id:int):
     return page_service.delete_page(db, id)

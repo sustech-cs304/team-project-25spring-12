@@ -4,11 +4,19 @@ from pydantic import BaseModel
 from backend.mjc.model.entity import Visibility
 
 
-class File(BaseModel):
-    id: uuid.UUID
-    file_name: str
+class FileBase(BaseModel):
+    id: uuid.UUID | None = None
+    filename: str
     visibility: Visibility
+
+
+class File(FileBase):
     url: str | None = None
+
+
+class LocalResourceFileCreate(FileBase):
+    id: uuid.UUID
+    system_path: str
 
 
 class Message(BaseModel):

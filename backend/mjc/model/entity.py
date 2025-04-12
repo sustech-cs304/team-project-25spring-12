@@ -252,7 +252,7 @@ class LocalResourceFile(SQLModel, table=True):
     uploader_username: str | None = Field(foreign_key="profile.username")
     filename: str = Field(nullable=False)
     system_path: str = Field(nullable=False)
-    visibility: Visibility = Field(default=Visibility.in_class, sa_column=Column(SQLEnum(WidgetType)))
+    visibility: Visibility = Field(default=Visibility.in_class, sa_column=Column(SQLEnum(Visibility)))
     is_deleted: bool = Field(default=False, nullable=False)
 
     uploader: "Profile" = Relationship()
