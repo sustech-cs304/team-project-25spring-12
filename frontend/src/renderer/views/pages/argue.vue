@@ -53,6 +53,9 @@
     originalScore: 90,
     verifiedScore: 85,
     maxScore: 100,
+
+    voteTotal: 0,
+    voteSupport: 0,
   }
 
   const argueDataSubmitted = {
@@ -80,6 +83,9 @@
         content: "# This is my kingdom come↑\n\nThis is my kingdom come↓",
         time: "2025-03-14 11:45:16",
     },
+
+    voteTotal: 0,
+    voteSupport: 0,
   }
 
   const argueDataReturned = {
@@ -93,6 +99,7 @@
     originalScore: 90,
     verifiedScore: 85,
     maxScore: 100,
+
     submittedArguement: {
         attachments: [
           {
@@ -103,6 +110,9 @@
         content: "# This is my kingdom come↑\n\nThis is my kingdom come↓",
         time: "2025-03-14 11:45:16",
     },
+
+    voteTotal: 3,
+    voteSupport: 1,
   }
 </script>
   

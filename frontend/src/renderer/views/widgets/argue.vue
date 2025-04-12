@@ -27,74 +27,101 @@
             </el-row>
           </div>
       </div>
-    </div>
 
-    <!-- 作业信息 -->
-    <div>
-      <el-text class="section-title">作业信息</el-text>
-      <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
-    </div>
+      <!-- 作业信息 -->
+      <div>
+        <el-text class="section-title">作业信息</el-text>
+        <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
+      </div>
     
-    <!-- 批改建议 -->
-    <div>
-      <el-text class="section-title">批改建议</el-text>
-      <div class="container">
-        <md-and-file :fileList="props.data.returnedFiles" :content="props.data.feedback"/>
-      </div>
-    </div>
-
-    <!-- 辩驳反馈 -->
-    <div v-if="props.data.status === 'returned'">
-      <el-text class="section-title">辩驳反馈</el-text>
-      <div class="container">
-        <md-and-file :fileList="props.data.argueReturnedFiles" :content="props.data.argueFeedback"/>
-      </div>
-    </div>
-
-    <!-- 提交争辩区 -->
-    <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
-      <el-text class="section-title">辩驳理由</el-text>
-      <div class="container">
-        <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
-          <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+      <!-- 批改建议 -->
+      <div>
+        <el-text class="section-title">批改建议</el-text>
+        <div class="container">
+          <md-and-file :fileList="props.data.returnedFiles" :content="props.data.feedback"/>
         </div>
-        <el-button
-            type="primary"
-            :icon="Upload"
-            @click="submit"
-            style="width: 120px; margin-left: auto"
-        >
-          提交辩驳
-        </el-button>
       </div>
-    </div>
-    
-    <!-- 辩驳记录 -->
-    <!-- 设定只能Argue一次 -->
-    <div v-if="props.data.status !== 'pending'">
-      <el-text class="section-title">辩驳记录</el-text>
-      <el-row>
-        <el-col :span="1">
-          <el-icon :size="20">
-            <component :is="Memo"/>
-          </el-icon>
-        </el-col>
-        <el-col :span="16">
-          <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
-        </el-col>
-        <!-- <el-col :span="6" class="edit-button">
+
+      <!-- 辩驳反馈 -->
+      <div v-if="props.data.status === 'returned'">
+        <el-text class="section-title">辩驳反馈</el-text>
+        <div class="container">
+          <md-and-file :fileList="props.data.argueReturnedFiles" :content="props.data.argueFeedback"/>
+        </div>
+      </div>
+
+      <!-- 提交争辩区 -->
+      <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
+        <el-text class="section-title">辩驳理由</el-text>
+        <div class="container">
+          <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+          </div>
           <el-button
               type="primary"
-              link
-              :icon="Edit"
-              @click="editSubmittedArguement(props.data.submittedArguement)"
+              :icon="Upload"
+              @click="submit"
+              style="width: 120px; margin-left: auto"
           >
-            编辑
+            提交辩驳
           </el-button>
-        </el-col> -->
-      </el-row>
-      <div class="container">
-        <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
+        </div>
+      </div>
+    
+      <!-- 辩驳记录 -->
+      <!-- 设定只能Argue一次 -->
+      <div v-if="props.data.status !== 'pending'">
+        <el-text class="section-title">辩驳记录</el-text>
+        <el-row>
+          <el-col :span="1">
+            <el-icon :size="20">
+              <component :is="Memo"/>
+            </el-icon>
+          </el-col>
+          <el-col :span="16">
+            <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
+          </el-col>
+          <!-- <el-col :span="6" class="edit-button">
+            <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                @click="editSubmittedArguement(props.data.submittedArguement)"
+            >
+              编辑
+            </el-button>
+          </el-col> -->
+        </el-row>
+        <div class="container">
+          <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
+        </div>
+      </div>
+
+      <!-- 投票结果 -->
+      <div v-if="props.data.status !== 'pending'">
+        <!-- <el-text class="section-title">投票结果</el-text> -->
+        <el-table :data="tableVote">
+          <el-table-column label="投票结果">
+            <el-progress
+              :percentage=votePercentage
+              color="#49CD62"
+              :stroke-width="20"
+              :show-text=true
+              :status=voteStatus
+              :indeterminate=voteIndeterminate
+            >
+            <el-button size="small">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
+            </el-progress>
+          </el-table-column>
+          <el-table-column label="投票">
+            <div style="display: flex; align-items: center">
+              <!-- <el-button-group> -->
+                <el-button type="success">支持</el-button>
+                <el-button type="warning">反对</el-button>
+              <!-- </el-button-group> -->
+            </div>
+          </el-table-column>
+        </el-table>
       </div>
     </div>
   </widget-card>
@@ -152,6 +179,32 @@
   const displayOriginalScore = props.data.originalScore;
   const displayVerifiedScore = computed(() => (props.data.status === "returned" ? props.data.verifiedScore : "--"));
   const displayMaxScore = props.data.maxScore;
+
+  const votePercentage = computed(() => {
+    return props.data.voteTotal === 0 ?
+      0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100);
+  })
+  const voteStatus = computed(() => {
+    return props.data.voteTotal === 0 ? "warning" : null;
+  });
+  const voteIndeterminate = computed(() => {
+    return props.data.voteTotal === 0 ? true : false;
+  });
+
+  interface VoteResult {
+    percentage: number
+    status: string
+    indeterminate: boolean
+  }
+  const tableVote: VoteResult[] = [
+    {
+      percentage: props.data.voteTotal === 0 ?
+        0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100),
+      status: props.data.voteTotal === 0 ? "warning" : "",
+      indeterminate: props.data.voteTotal === 0 ? true : false,
+    },
+  ]
+
   
   // 编辑提交记录
   const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
