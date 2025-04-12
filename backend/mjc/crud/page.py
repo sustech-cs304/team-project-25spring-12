@@ -63,8 +63,9 @@ def delete_page(db: Session, page_id: int) -> Page:
     stmt = select(Page).where(Page.id == page_id).where(Page.is_deleted == False)
     page: Page = db.exec(stmt).first()
     if page:
+        for widget in page.widgets:
+            widget.is_deleted = True
         page.is_deleted = True
         db.refresh(page)
     db.commit()
     return page
-    # TODO：cascade delete
