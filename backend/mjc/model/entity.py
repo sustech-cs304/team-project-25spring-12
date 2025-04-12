@@ -2,7 +2,7 @@ from datetime import datetime
 from enum import Enum
 import uuid
 
-from sqlmodel import Column, Field, SQLModel, Relationship, Enum as SQLEnum
+from sqlmodel import Column, Field, SQLModel, Relationship, Enum as SQLEnum, ARRAY
 
 
 class User(SQLModel, table=True):
@@ -226,7 +226,7 @@ class AssignmentWidget(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
-    submit_type: list[SubmitType] = Field(sa_column=Column(SQLEnum(SubmitType)))
+    submit_types: list[SubmitType] = Field(sa_column=Column(ARRAY(SQLEnum(SubmitType))))
     ddl: datetime
     max_score: float
 
