@@ -41,4 +41,3 @@ def delete_page(db: Session, page_id: int):
     page = crud_page.delete_page(db, page_id)
     if not page:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete page failed")
-    return entity2page(page)

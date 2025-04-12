@@ -56,7 +56,7 @@ def update_page(db: Session, page: PageUpdate) -> Page:
         if page.order:
             update_widget_order(db, page.order)
     db.commit()
-    return page
+    return page_entity
 
 
 def delete_page(db: Session, page_id: int) -> Page:
@@ -67,3 +67,4 @@ def delete_page(db: Session, page_id: int) -> Page:
         db.refresh(page)
     db.commit()
     return page
+    # TODO：cascade delete
