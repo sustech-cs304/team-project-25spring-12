@@ -268,16 +268,40 @@ class SubmittedAssignmentAttachment(SQLModel, table=True):
     file: "LocalResourceFile" = Relationship()
 
 
+class FeedbackAttachment(SQLModel, table=True):
+    __tablename__ = 'feedback_attachment'
+
+    id: int | None = Field(default=None, primary_key=True)
+    file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
+    feedback_id: int = Field(foreign_key="submitted_assignment_feedback.id")
+
+    feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="attachments")
+    file:"LocalResourceFile" = Relationship()
+
+
+class SubmittedAssignmentFeedback(SQLModel, table=True):
+    __tablename__ = 'submitted_assignment_feedback'
+    id: int | None = Field(default=None, primary_key=True)
+    score: float
+    content: str | None = Field(nullable=False)
+    submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
+
+    attachments: list["FeedbackAttachment"] = Relationship(back_populates="feedback")
+    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="feedback")
+
+
 class SubmittedAssignment(SQLModel, table=True):
     __tablename__ = 'submitted_assignment'
 
     id: int | None = Field(default=None, primary_key=True)
+
     create_time: datetime | None = Field(default=None, nullable=True)
+    assignment_widget_id: int = Field(foreign_key="assignment_widget.id")
     username: str | None = Field(foreign_key="profile.username")
     content: str | None = Field(default=None, nullable=True)
     code: str | None = Field(default=None, nullable=True)
     language: str | None = Field(default=None, nullable=True)
-    feedback: str | None = Field(default=None, nullable=True)
 
-    assignment: "AssignmentWidget" = Relationship(back_populates="submitted_assignment")
+    feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="submitted_assignment")
+    assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")
     attachment: list["SubmittedAssignmentAttachment"] = Relationship(back_populates="submitted_assignment")
