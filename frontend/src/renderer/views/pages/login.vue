@@ -46,6 +46,8 @@ import {useRouter} from 'vue-router';
 import type {FormInstance, FormRules} from 'element-plus';
 import {ElMessage} from 'element-plus';
 import {useTabsStore} from '@/store/tabs';
+import {loginApi} from '@/api/auth';
+import {useUserStore} from '@/store/user';
 
 interface LoginInfo {
   username: string;
@@ -53,6 +55,8 @@ interface LoginInfo {
 }
 
 const router = useRouter();
+const userStore = useUserStore();
+
 const checked = ref(localStorage.getItem('login-param') !== null);
 const defParam = checked.value ? JSON.parse(localStorage.getItem('login-param')!) : null;
 
@@ -69,16 +73,16 @@ const rules: FormRules = {
 const login = ref<FormInstance>();
 const submitForm = (formEl: FormInstance | undefined) => {
   if (!formEl) return;
-  formEl.validate((valid) => {
+  formEl.validate(async (valid) => {
     if (valid) {
-      ElMessage.success('登录成功');
-      localStorage.setItem('vuems_name', param.username);
-      router.push('/');
-      checked.value
-          ? localStorage.setItem('login-param', JSON.stringify(param))
-          : localStorage.removeItem('login-param');
-    } else {
-      ElMessage.error('登录失败');
+      try {
+        const {data} = await loginApi(param);
+        userStore.setToken(data.access_token);
+        ElMessage.success('登录成功');
+        await router.push('/');
+      } catch (error) {
+        ElMessage.error('登录失败，请检查用户名或密码');
+      }
     }
   });
 };

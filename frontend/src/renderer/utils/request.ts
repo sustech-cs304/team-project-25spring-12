@@ -2,7 +2,7 @@ import axios from 'axios'
 import humps from 'humps'
 
 const service = axios.create({
-    baseURL: '', // TODO: baseURL
+    baseURL: 'http://127.0.0.1:4523/m1/5946426-0-default/', // TODO: baseURL
     timeout: 10000,
 })
 
