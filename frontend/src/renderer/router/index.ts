@@ -22,7 +22,7 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/pages/homepage.vue'),
       },
       {
-        path: '/course/material',
+        path: '/course/material/:pageId',
         name: 'course-material',
         meta: {
           title: '课程信息',

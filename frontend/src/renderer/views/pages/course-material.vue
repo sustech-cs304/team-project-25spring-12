@@ -6,7 +6,7 @@
         @select="handleMenuSelect"
     >
       <el-menu-item
-          v-for="widget in widgets"
+          v-for="widget in widgetsSortedByIndex"
           :key="widget.id"
           :index="widget.id"
       >
@@ -28,15 +28,14 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted} from 'vue';
-import {useRoute, useRouter} from 'vue-router';
-import type {WidgetUnion} from '@/types/widgets';
+import { ref, computed, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
+import type { WidgetUnion } from '@/types/widgets';
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue';
 
 const route = useRoute();
-const router = useRouter();
 
-const widgets: WidgetUnion[] = [  // TODO: 从后端获取
+const widgets: WidgetUnion[] = [
   {
     id: '1',
     index: 1,
@@ -89,40 +88,45 @@ const widgets: WidgetUnion[] = [  // TODO: 从后端获取
   },
 ];
 
-// 当前激活 widget id
-const activeWidgetId = ref(widgets[0]?.id ?? '');
+const activeWidgetId = ref('');
+const widgetRefs = new Map<string, any>();
 
-// 当前激活的 widget 对象
+const widgetsSortedByIndex = computed(() => {
+  return [...widgets].sort((a, b) => a.index - b.index);
+});
+
 const activeWidget = computed(() => {
   return widgets.find(w => w.id === activeWidgetId.value);
 });
 
-// 管理 widget 的 ref
-const widgetRefs = new Map<string, any>();
 const setWidgetRef = (id: string, el: any) => {
   if (el) widgetRefs.set(id, el);
 };
 
-// 初始化处理
-onMounted(() => {
+const initActiveWidget = () => {
   const widgetId = route.query.widget as string;
-  if (widgetId && widgets.some(w => w.id === widgetId)) {
-    activeWidgetId.value = widgetId;
+  const matched = widgets.find(w => w.id === widgetId);
+  if (matched) {
+    activeWidgetId.value = matched.id;
+  } else if (widgets.length > 0) {
+    const minWidget = widgetsSortedByIndex.value[0];
+    activeWidgetId.value = minWidget.id;
   }
+};
 
-  // 延迟执行 widget 的 init 方法
-  setTimeout(() => {
-    widgetRefs.get(activeWidgetId.value)?.init?.();
-  }, 0);
-});
-
-// 菜单点击时切换并初始化
 const handleMenuSelect = (widgetId: string) => {
   activeWidgetId.value = widgetId;
   setTimeout(() => {
     widgetRefs.get(widgetId)?.init?.();
   }, 50);
 };
+
+onMounted(() => {
+  initActiveWidget();
+  setTimeout(() => {
+    widgetRefs.get(activeWidgetId.value)?.init?.();
+  }, 50);
+});
 </script>
 
 <style scoped>
