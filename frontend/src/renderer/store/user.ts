@@ -1,9 +1,6 @@
 import { defineStore } from 'pinia'
-
-interface UserState {
-    accessToken: string
-    username: string
-}
+import type {User as UserState} from '../types/user'
+// import type {} from '../types/course'
 
 export const useUserStore = defineStore('user', {
     state: (): UserState => ({
