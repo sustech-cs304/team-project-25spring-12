@@ -12,6 +12,11 @@ from backend.mjc.utils.database import SessionDep
 router = APIRouter()
 
 
+@router.get(path="/class/page/{page_id}", response_model=Page)
+async def get_page(db:SessionDep, page_id:int):
+    return page_service.get_page(db, page_id)
+
+
 @router.post(path="/class/page", response_model=Page)
 async def create_page(db:SessionDep, page: PageCreate):
     return page_service.create_page(db, page)

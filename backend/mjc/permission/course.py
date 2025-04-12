@@ -6,7 +6,7 @@ from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.model.entity import ClassRole
 from backend.mjc.service.user import get_current_user
 from backend.mjc.service import course as course_service
-from model.schema.course import ClassUpdate
+from backend.mjc.model.schema.course import ClassUpdate
 
 
 def verify_class_exist(db: Session, class_id: int):

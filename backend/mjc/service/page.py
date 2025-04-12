@@ -13,7 +13,7 @@ def entity2page(entity: PageEntity) -> Page:
                 name=entity.name,
                 index=entity.index,
                 visible=entity.visible,
-                widgets=[widget_service.entity2widget(widget) for widget in entity.widgets if widget])
+                widgets=[widget_service.entity2widget(widget) for widget in entity.widgets if widget and widget.is_deleted == False])
     return page
 
 
