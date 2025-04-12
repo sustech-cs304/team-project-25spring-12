@@ -70,11 +70,18 @@ class Code(BaseModel):
     language: str
 
 
-class SubmittedAssignment(BaseModel):
+class SubmittedAssignmentBase(BaseModel):
+    content: str | None = None
+    attachments: list[File] | None = None
+    code: Code | None = None
+
+
+class SubmittedAssignmentCreate(SubmittedAssignmentBase):
+    widget_id: int
+
+
+class SubmittedAssignment(SubmittedAssignmentBase):
     id: int
-    content: str
-    attachments: list[File]
-    code: Code
     submitted_time: datetime
 
 

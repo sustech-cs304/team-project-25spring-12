@@ -179,7 +179,6 @@ class Widget(SQLModel, table=True):
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="widget")
 
 
-
 class Note(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     page: int
@@ -233,7 +232,7 @@ class AssignmentWidget(SQLModel, table=True):
     max_score: float
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
-    # TODO: 跟已提交的作业的关系
+    submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment")
 
 
 class Visibility(str, Enum):
@@ -256,3 +255,29 @@ class LocalResourceFile(SQLModel, table=True):
     is_deleted: bool = Field(default=False, nullable=False)
 
     uploader: "Profile" = Relationship()
+
+
+class SubmittedAssignmentAttachment(SQLModel, table=True):
+    __tablename__ = 'submitted_assignment_attachment'
+
+    id: int | None = Field(default=None, primary_key=True)
+    file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
+    submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
+
+    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="submitted_assignments")
+    file: "LocalResourceFile" = Relationship()
+
+
+class SubmittedAssignment(SQLModel, table=True):
+    __tablename__ = 'submitted_assignment'
+
+    id: int | None = Field(default=None, primary_key=True)
+    create_time: datetime | None = Field(default=None, nullable=True)
+    username: str | None = Field(foreign_key="profile.username")
+    content: str | None = Field(default=None, nullable=True)
+    code: str | None = Field(default=None, nullable=True)
+    language: str | None = Field(default=None, nullable=True)
+    feedback: str | None = Field(default=None, nullable=True)
+
+    assignment: "AssignmentWidget" = Relationship(back_populates="submitted_assignment")
+    attachment: list["SubmittedAssignmentAttachment"] = Relationship(back_populates="submitted_assignment")
