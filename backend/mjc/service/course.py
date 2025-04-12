@@ -1,9 +1,11 @@
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, Class, Semester, ClassCard
+from backend.mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
+                                             SemesterUpdate, Class, Semester, ClassCard,
+                                             ClassUserEnroll, ClassUserUpdate)
 from backend.mjc.model.schema.common import File
-from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.crud import course as crud_course
 from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
 
@@ -167,3 +169,15 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
         raise HTTPException(status_code=404, detail="Delete semester failed")
     semester = entity2semester(semester_entity)
     return semester
+
+
+def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class:
+    return crud_course.enroll_class_users(db, enroll)
+
+
+def update_class_user(db: Session, class_user: ClassUserUpdate) -> Class:
+    return crud_course.update_class_user(db, class_user)
+
+
+def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
+    return crud_course.unroll_class_user(db, class_id, username)

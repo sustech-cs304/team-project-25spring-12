@@ -136,7 +136,7 @@ def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
         return ClassRole.TA
 
 
-def assign_class_user(db: Session, assign: ClassUserEnroll) -> Class:
+def enroll_class_users(db: Session, assign: ClassUserEnroll) -> Class:
     cls = get_class(db, assign.class_id)
     if cls:
         for username in assign.usernames:
