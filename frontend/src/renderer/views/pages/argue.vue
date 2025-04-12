@@ -7,7 +7,8 @@
       <argue :data="argueDataReturned"></argue>
     </div>
 </template>
-  
+
+
 <script setup lang="ts">
   import assignment from "../widgets/assignment.vue"
   import argue from "../widgets/argue.vue"
@@ -115,7 +116,8 @@
     voteSupport: 1,
   }
 </script>
-  
+
+
 <style scoped>
   .page {
     display: flex;

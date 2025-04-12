@@ -110,7 +110,7 @@
               :status=voteStatus
               :indeterminate=voteIndeterminate
             >
-            <el-button size="small" type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
+            <el-button size="small" type="primary" disabled>{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
             </el-progress>
           </el-table-column>
           <el-table-column label="投票">
@@ -228,7 +228,8 @@
     }
   }
 </script>
-  
+
+
 <style scoped>
   .container {
     display: flex;

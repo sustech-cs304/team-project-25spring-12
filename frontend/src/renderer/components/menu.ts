@@ -11,4 +11,9 @@ export const menuData: Menus[] = [
         title: '辩驳',
         icon: 'Opportunity'
     },
+    {
+        index: '/argue_plaza',
+        title: '辩驳广场',
+        icon: 'Opportunity'
+    },
 ]

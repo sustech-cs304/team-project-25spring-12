@@ -38,6 +38,14 @@ const routes: RouteRecordRaw[] = [
         },
         component: () => import('../views/pages/argue.vue'),
       },
+      {
+        path: '/argue_plaza',
+        name: 'argue_plaza',
+        meta: {
+          title: '辩驳广场',
+        },
+        component: () => import('../views/pages/argue_plaza.vue'),
+      },
     ]
   },
   {
