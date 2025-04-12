@@ -6,6 +6,13 @@ from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import Profile
 
 
+class FeedBack(BaseModel):
+    score: float | None = None
+    content: str | None = None
+    attachments: list[File] | None = None
+    create_time: datetime | None = None
+
+
 class WidgetBase(BaseModel):
     title: str
     index: int
@@ -43,7 +50,7 @@ class AssignmentWidget(WidgetBase):
     ddl: datetime
     score: float | None = None
     max_score: float
-    feedback: str | None = None
+    feedback: FeedBack | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
@@ -83,6 +90,8 @@ class SubmittedAssignmentCreate(SubmittedAssignmentBase):
 class SubmittedAssignment(SubmittedAssignmentBase):
     id: int
     submitted_time: datetime
+    student: Profile | None = None
+    feedback: FeedBack | None = None
 
 
 class NoteBase(BaseModel):
