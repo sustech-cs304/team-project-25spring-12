@@ -26,10 +26,13 @@
           {{ selectedDeadline.widgetTitle }}
         </h3>
         <div class="deadline-countdown" :class="getCountdownClass(selectedDeadline.ddl)">
-          <el-icon>
-            <Clock/>
-          </el-icon>
-          剩余 {{ calculateDaysLeft(selectedDeadline.ddl) }} 天
+          <el-icon><Clock /></el-icon>
+          <template v-if="calculateDaysLeft(selectedDeadline.ddl) >= 0">
+            剩余 {{ calculateDaysLeft(selectedDeadline.ddl) }} 天
+          </template>
+          <template v-else>
+            已超过截止时间
+          </template>
         </div>
       </div>
 
@@ -119,13 +122,15 @@ onMounted(async () => {
   userStore.setDeadlines(deadlines.value);
   if (calendar.value) {
     const calendarApi = calendar.value.getApi();
+    const calcColor = (item: Deadline) =>
+        (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
     const events = deadlines.value.map(item => ({
       title: `${item.courseCode}`,
       start: item.ddl,
       extendedProps: item,
-      backgroundColor: getCourseColor(item.courseCode),
-      borderColor: getCourseColor(item.courseCode),
-      textColor: getTextColor(getCourseColor(item.courseCode)),
+      backgroundColor: calcColor(item),
+      borderColor: calcColor(item),
+      textColor: getTextColor(calcColor(item)),
       className: 'calendar-event'
     }))
     calendarApi.removeAllEvents();
@@ -176,6 +181,7 @@ function calculateDaysLeft(ddl: string): number {
 
 function getCountdownClass(ddl: string): string {
   const daysLeft = calculateDaysLeft(ddl)
+  if (daysLeft < 0) return 'expired'
   if (daysLeft <= 3) return 'urgent'
   if (daysLeft <= 7) return 'warning'
   return 'normal'
@@ -294,6 +300,11 @@ onBeforeUnmount(() => {
 .deadline-countdown.urgent {
   background-color: #ffebee;
   color: #c62828;
+}
+
+.deadline-countdown.expired {
+  background-color: #eeeeee;
+  color: #9e9e9e;
 }
 
 .assignment-details {
