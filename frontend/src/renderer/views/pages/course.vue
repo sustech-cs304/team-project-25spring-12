@@ -24,10 +24,11 @@
             :key="folder.id"
             :index="folder.id.toString()"
             class="hoverable-item"
+            :style="getMenuItemStyle(folder)"
+            @mouseenter="hoveredFolderId = folder.id"
+            @mouseleave="hoveredFolderId = null"
         >
-          <el-icon>
-            <Folder/>
-          </el-icon>
+          <el-icon><Folder/></el-icon>
           <span v-if="!collapsed">{{ folder.name }}</span>
         </el-menu-item>
       </el-menu>
@@ -94,6 +95,35 @@ const folders: FolderType[] = [
     ],
   },
 ]
+
+const hoveredFolderId = ref<number | null>(null)
+
+const getMenuItemStyle = (folder: FolderType) => {
+  const isActive = folder.id.toString() === activeFolderId.value
+  const isHovered = folder.id === hoveredFolderId.value
+
+  const baseColor = '#f9f9f9'
+  const hoverColor = '#e6f0ff'
+  const activeColor = '#409EFF'
+
+  return {
+    backgroundColor: isActive
+        ? activeColor
+        : isHovered
+            ? hoverColor
+            : baseColor,
+    color: isActive ? 'white' : 'black',
+    fontWeight: 'bold',
+    borderRadius: '6px',
+    margin: '4px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+  }
+}
 
 const collapsed = ref(false)
 const showTitle = ref(true)

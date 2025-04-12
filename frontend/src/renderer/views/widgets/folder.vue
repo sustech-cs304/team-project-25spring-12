@@ -1,9 +1,5 @@
 <template>
-  <widget-card
-      :title="folder.name"
-      icon="FolderOpened"
-      color="teal"
-  >
+  <widget-card :title="folder.name" type="folder" style="height: 100%">
     <el-scrollbar>
       <div class="page-list">
         <div

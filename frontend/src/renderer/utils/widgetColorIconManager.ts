@@ -1,8 +1,8 @@
-export type WidgetType = 'doc' | 'assignment' | 'notepdf' | string;
+export type WidgetType = 'doc' | 'assignment' | 'notepdf' | 'folder' | string;
 
 export interface WidgetStyle {
     icon: string;
-    color: 'red' | 'green' | 'blue' | 'purple' | 'orange' | 'teal' | 'gray';
+    color: string;
 }
 
 const widgetStyleMap: Record<WidgetType, WidgetStyle> = {
@@ -12,11 +12,15 @@ const widgetStyleMap: Record<WidgetType, WidgetStyle> = {
     },
     assignment: {
         icon: 'Notebook',
-        color: 'orange',
+        color: 'indigo',
     },
     notepdf: {
         icon: 'DataAnalysis',
         color: 'blue',
+    },
+    folder : {
+        icon: 'FolderOpened',
+        color: 'purple',
     },
 };
 
@@ -34,6 +38,16 @@ const colorPalette = {
         orange: '#FB923C',
         teal: '#2DD4BF',
         gray: '#9CA3AF',
+        sky: '#38BDF8',
+        indigo: '#6366F1',
+        navy: '#1E3A8A',
+        sapphire: '#0F52BA',
+        cobalt: '#3B82F6',
+        steel: '#4682B4',
+        slate: '#64748B',
+        denim: '#1E40AF',
+        turquoise: '#06B6D4',
+        azure: '#1FB6FF'
     },
     bodyColor: {
         red: '#FEE2E2',
@@ -43,20 +57,30 @@ const colorPalette = {
         orange: '#FFEDD5',
         teal: '#CCFBF1',
         gray: '#E5E7EB',
-    },
-};
+        sky: '#E0F2FE',
+        indigo: '#E0E7FF',
+        navy: '#DBEAFE',
+        sapphire: '#E0F2FF',
+        cobalt: '#DBEAFE',
+        steel: '#D6EAF8',
+        slate: '#F1F5F9',
+        denim: '#E0E7FF',
+        turquoise: '#CFFAFE',
+        azure: '#E0F7FF'
+    }
+}
 
-export function getWidgetStyle(type: WidgetType): WidgetStyle {
+export function getWidgetStyle(type: string): WidgetStyle {
     return widgetStyleMap[type] ?? {
         icon: 'Box', // 默认图标
         color: 'gray',
     };
 }
 
-export function getHeaderColor(color: WidgetStyle['color']): string {
+export function getHeaderColor(color: string): string {
     return colorPalette.headerColor[color] || '#60A5FA';
 }
 
-export function getBodyColor(color: WidgetStyle['color']): string {
+export function getBodyColor(color: string): string {
     return colorPalette.bodyColor[color] || '#DBEAFE';
 }
