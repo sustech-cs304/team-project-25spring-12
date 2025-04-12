@@ -102,7 +102,7 @@ import {
 
 // 用户数据
 const username = ref(localStorage.getItem('vuems_name') || '用户');
-const userAvatar = ref('../assets/img/img.jpg'); // TODO: 从用户信息获取头像
+const userAvatar = ref('../assets/img/img.jpg');
 const unreadCount = ref(1); // TODO: 从API获取未读消息数
 
 // 路由和状态管理
