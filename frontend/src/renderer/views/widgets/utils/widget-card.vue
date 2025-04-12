@@ -2,10 +2,15 @@
   <el-card class="widget-card">
     <template #header>
       <div class="card-header">
-        <el-icon v-if="iconComponent" class="card-icon">
-          <component :is="iconComponent" />
-        </el-icon>
-        <span>{{ title }}</span>
+        <div class="card-title">
+          <el-icon v-if="iconComponent" class="card-icon">
+            <component :is="iconComponent" />
+          </el-icon>
+          <span>{{ title }}</span>
+        </div>
+        <el-button style="color: white" :color="headerColor" @click="callback" v-if="callback !== undefined">
+          <slot name="button" />
+        </el-button>
       </div>
     </template>
     <slot />
@@ -46,6 +51,10 @@ const props = defineProps({
     type: String,
     default: '',
   },
+  callback: {
+    type: Function,
+    default: undefined,
+  }
 })
 
 const resolvedColor = computed(() => {
@@ -88,12 +97,19 @@ const iconComponent = computed(() =>
 .card-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 8px;
   color: white;
   font-size: 16px;
   font-weight: bold;
   padding: 12px 16px;
   border-radius: 12px 12px 0 0;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .card-icon {

@@ -1,10 +1,10 @@
 <template>
-  <widget-card :title="folder.name" type="folder" style="height: 100%">
+  <widget-card :title="folder.name" type="folder" style="height: 100%" :callback="authenticated ? showCreatePageDialog : undefined">
     <el-scrollbar>
       <div class="page-list">
         <div
             class="page-item"
-            v-for="page in folder.pages"
+            v-for="page in pages"
             :key="page.id"
             @click="handlePageClick(page)"
         >
@@ -13,14 +13,29 @@
         </div>
       </div>
     </el-scrollbar>
+    <template #button>
+      <el-icon><Plus/></el-icon>
+      <span>新增页面</span>
+    </template>
   </widget-card>
+
+  <!-- 创建页面对话框 -->
+  <el-dialog v-model="dialogVisible" title="页面创建" width="500">
+    <p><el-input v-model="newPageTitle" placeholder="请输入标题"></el-input></p>
+    <div style="text-align:center; margin-top: 5px;">
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="handleCreatePage" :disabled="newPageTitle === ''">确认</el-button>
+    </div>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import type { Folder, FolderPageItem } from '@/types/folder'
 import WidgetCard from '@/views/widgets/utils/widget-card.vue'
 import { Document } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 
 const props = defineProps<{
   folder: Folder
@@ -28,10 +43,37 @@ const props = defineProps<{
 
 const router = useRouter()
 
+const authenticated = ref<boolean>(true) // TODO: 鉴权
+const pages = props.folder.pages
+const dialogVisible = ref(false)
+const newPageTitle = ref('')
+
 const handlePageClick = (page: FolderPageItem) => {
   // TODO: 替换为实际的路由跳转逻辑
   // e.g. router.push(`/page/${page.id}`)
   console.log('Clicked page:', page)
+}
+
+const showCreatePageDialog = () => {
+  dialogVisible.value = true
+  newPageTitle.value = ''
+}
+
+const createPage = async () => {
+  try {
+    const payload = {
+      // TODO
+    }
+    const response = await axios.post("https://example.com/api/class/page", payload) // TODO: 替换为正确的 api 请求
+    pages.push(response.data)
+  } catch(error) {
+    console.error(error)
+  }
+}
+
+const handleCreatePage = () => {
+  dialogVisible.value = false
+  createPage()
 }
 </script>
 

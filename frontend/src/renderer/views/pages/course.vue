@@ -32,6 +32,28 @@
           <span v-if="!collapsed">{{ folder.name }}</span>
         </el-menu-item>
       </el-menu>
+      <el-popover
+          :visible="showCreateFolderPopover"
+          placement="top"
+          :width="180"
+          v-if="authenticated"
+      >
+        <p>
+          <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
+        </p>
+        <div style="text-align:center; margin-top: 5px;">
+          <el-button size="small" @click="showCreateFolderPopover = false">取消</el-button>
+          <el-button size="small" type="primary" @click="handleCreateFolder" :disabled="newFolderTitle === ''">确认</el-button>
+        </div>
+        <template #reference>
+          <el-button @click="handleShowCreateFolderPopover()">
+            <el-icon>
+              <Plus/>
+            </el-icon>
+            <span>新建目录</span>
+          </el-button>
+        </template>
+      </el-popover>
     </div>
 
     <!-- 主体内容区域 -->
@@ -46,10 +68,13 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
+import axios from 'axios'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder as FolderType} from '@/types/folder'
 
 const route = useRoute()
+
+const authenticated = ref<boolean>(true) // TODO: 鉴权
 
 const folders: FolderType[] = [
   {
@@ -97,6 +122,33 @@ const folders: FolderType[] = [
 ]
 
 const hoveredFolderId = ref<number | null>(null)
+
+const showCreateFolderPopover = ref<boolean>(false);
+const newFolderTitle = ref<string>('')
+
+const handleShowCreateFolderPopover = () => {
+  newFolderTitle.value = ''
+  showCreateFolderPopover.value = true
+}
+
+const createFolder = async () => {
+  try {
+    const payload = {
+      classId: 0, // TODO: 修改为正确的 classId
+      index: folders.length,
+      name: newFolderTitle.value,
+    }
+    const response = await axios.post("https://example.com/api/class/folder", payload) // TODO: 替换为正确的 api 请求
+    folders.push(response.data) // TODO: 确认响应内容符合预期
+  } catch(error) {
+    console.error(error)
+  }
+}
+
+const handleCreateFolder = () => {
+  showCreateFolderPopover.value = false
+  createFolder()
+}
 
 const getMenuItemStyle = (folder: FolderType) => {
   const isActive = folder.id.toString() === activeFolderId.value

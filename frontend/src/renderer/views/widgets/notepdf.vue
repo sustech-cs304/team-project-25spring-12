@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" type="notepdf">
+  <widget-card :title="computedTitle" type="notepdf" :callback="authenticated ? handleUploadFile : undefined">
     <div class="card-content">
       <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
       <el-button type="primary" :icon="Download" @click="handleDownloadFile">下载原课件</el-button>
@@ -57,6 +57,10 @@
         <el-button type="primary" size="small" @click="addNote">添加笔记</el-button>
       </div>
     </el-popover>
+    <template #button>
+      <el-icon><Upload/></el-icon>
+      <span>上传</span>
+    </template>
   </widget-card>
 </template>
 
@@ -78,6 +82,7 @@ const props = defineProps<{
 const computedTitle = computed(() => props.data.title || '互动式课件');
 
 // refs
+const authenticated = ref<boolean>(true); // TODO: 鉴权
 const pages = ref<number[]>([]);
 const canvasRefs = ref<(HTMLCanvasElement | undefined)[]>([]);
 const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -226,6 +231,10 @@ const handleDownloadFile = async () => {
   }
 };
 
+const handleUploadFile = () => {
+  // TODO: 上传新文件
+}
+
 onMounted(() => {
   loadPDF();
   observeBottom();
@@ -310,9 +319,5 @@ defineExpose({
 .el-text {
   font-size: 14px;
   color: #666;
-}
-
-.el-icon {
-  color: #409eff;
 }
 </style>
