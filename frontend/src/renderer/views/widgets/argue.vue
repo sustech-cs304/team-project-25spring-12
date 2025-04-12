@@ -110,7 +110,7 @@
               :status=voteStatus
               :indeterminate=voteIndeterminate
             >
-            <el-button size="small">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
+            <el-button size="small" type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
             </el-progress>
           </el-table-column>
           <el-table-column label="投票">
@@ -343,8 +343,8 @@
     padding: 8px 16px;
     font-size: 14px;
     border-radius: 8px;
-    background: #409eff;
-    color: #fff;
+    /* background: #409eff; */
+    /* color: #fff; */
   }
   
   .el-button:hover {
