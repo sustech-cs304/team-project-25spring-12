@@ -1,34 +1,40 @@
 <template>
   <div class="widget-layout">
-    <el-menu
-        class="widget-menu"
-        :default-active="activeWidgetId"
-        :collapse="collapsed"
-        @select="handleMenuSelect"
-        :collapse-transition="true"
-        mode="vertical"
-    >
-      <el-menu-item index="__toggle" @click="toggleCollapse" style="cursor: pointer;">
+    <!-- 菜单 + 切换按钮区域 -->
+    <div class="widget-menu-wrapper" :class="{ collapsed }">
+      <!-- 折叠按钮 -->
+      <div class="menu-toggle" @click="toggleCollapse">
         <el-icon>
-          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'" />
+          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
         </el-icon>
-        <span v-if="!collapsed">{{ title }}</span>
-      </el-menu-item>
+        <span v-if="showTitle" class="menu-title">{{ title }}</span>
+      </div>
 
-      <el-menu-item
-          v-for="widget in widgetsSortedByIndex"
-          :key="widget.id"
-          :index="widget.id"
-          :style="getMenuItemStyle(widget)"
-          class="hoverable-item"
+      <!-- 菜单栏 -->
+      <el-menu
+          class="widget-menu"
+          :default-active="activeWidgetId"
+          :collapse="collapsed"
+          :collapse-transition="true"
+          mode="vertical"
+          @select="handleMenuSelect"
       >
-        <el-icon v-if="getIconComponent(widget)">
-          <component :is="getIconComponent(widget)" />
-        </el-icon>
-        <span v-if="!collapsed">{{ widget.title }}</span>
-      </el-menu-item>
-    </el-menu>
+        <el-menu-item
+            v-for="widget in widgetsSortedByIndex"
+            :key="widget.id"
+            :index="widget.id"
+            :style="getMenuItemStyle(widget)"
+            class="hoverable-item"
+        >
+          <el-icon v-if="getIconComponent(widget)">
+            <component :is="getIconComponent(widget)"/>
+          </el-icon>
+          <span v-if="!collapsed">{{ widget.title }}</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
 
+    <!-- 内容区域 -->
     <div class="widget-content">
       <el-scrollbar class="widget-scroll-wrapper">
         <DynamicWidget
@@ -43,19 +49,18 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, resolveComponent } from 'vue'
-import { useRoute } from 'vue-router'
-import type { WidgetUnion } from '@/types/widgets'
+import {ref, computed, onMounted, resolveComponent, nextTick, watch} from 'vue'
+import {useRoute} from 'vue-router'
+import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
-import { getWidgetStyle, getHeaderColor, getBodyColor } from '@/utils/widgetColorIconManager'
+import {getWidgetStyle, getHeaderColor, getBodyColor} from '@/utils/widgetColorIconManager'
 
-// 路由实例
 const route = useRoute()
 
-// 响应式状态
 const activeWidgetId = ref('')
 const collapsed = ref(false)
 const widgetRefs = new Map<string, any>()
+const showTitle = ref(!collapsed.value)
 
 // 模拟数据 - TODO: 从后端获取
 const widgets: WidgetUnion[] = [
@@ -73,7 +78,7 @@ const widgets: WidgetUnion[] = [
       url: 'https://arxiv.org/pdf/2403.14740',
     },
     notes: [
-      { page: 1, x: 100, y: 100, text: '毕导：为什么开水和凉水听起来不一样' },
+      {page: 1, x: 100, y: 100, text: '毕导：为什么开水和凉水听起来不一样'},
     ],
   },
   {
@@ -87,8 +92,8 @@ const widgets: WidgetUnion[] = [
     editor: null,
     content: '# 本项目 UI 组件为\n\n<img src="https://element-plus.org/images/element-plus-logo.svg" width="75"/>',
     attachments: [
-      { fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe' },
-      { fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe' },
+      {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
+      {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
     ],
   },
   {
@@ -103,14 +108,13 @@ const widgets: WidgetUnion[] = [
     editor: null,
     content: '# 我是作业\n\n请完成作业',
     attachments: [
-      { fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe' },
+      {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
     ],
     submitTypes: ['file', 'code'],
     submittedAssignment: null,
     status: 'pending',
   },
 ];
-
 const title: string = '课程资源区'
 
 const widgetsSortedByIndex = computed(() => {
@@ -144,8 +148,9 @@ const getIconComponent = (widget: WidgetUnion) => {
   return resolveComponent(iconName)
 }
 
-const toggleCollapse = () => {
+const toggleCollapse = async () => {
   collapsed.value = !collapsed.value
+  await nextTick()
 }
 
 const setWidgetRef = (id: string, el: any) => {
@@ -178,6 +183,16 @@ onMounted(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.()
   }, 50)
 })
+
+watch(collapsed, (val) => {
+  if (val) { // 收起菜单：立即隐藏文字
+    showTitle.value = false
+  } else { // 展开菜单：动画结束后显示文字
+    setTimeout(() => {
+      showTitle.value = true
+    }, 300)
+  }
+})
 </script>
 
 <style scoped>
@@ -185,30 +200,47 @@ onMounted(() => {
   display: flex;
   height: 100%;
   width: 100%;
+  overflow: hidden;
 }
 
-.widget-menu {
+.widget-menu-wrapper {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   border-right: 1px solid #ebeef5;
   transition: width 0.3s ease-in-out;
-  will-change: width;
+  width: 300px;
+  flex-shrink: 0;
 }
 
-.widget-menu:not(.el-menu--collapse) {
-  width: 300px;
+.widget-menu-wrapper.collapsed {
+  width: 64px;
 }
 
 :deep(.el-menu--collapse) {
   width: 64px;
-  transition: width 0.3s ease-in-out;
 }
 
-:deep(.el-menu-item), :deep(.el-sub-menu__title) {
+.menu-toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #ebeef5;
   transition: padding 0.3s ease-in-out;
 }
 
-.el-menu--collapse {
-  transition: width 0.3s ease-in-out !important;
+.menu-title {
+  font-weight: bold;
+  font-size: 16px;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.hoverable-item:hover {
+  filter: brightness(1.08);
+  cursor: pointer;
 }
 
 .widget-content {
@@ -222,10 +254,5 @@ onMounted(() => {
 .widget-scroll-wrapper {
   height: 100%;
   overflow: auto;
-}
-
-.hoverable-item:hover {
-  filter: brightness(1.08);
-  cursor: pointer;
 }
 </style>
