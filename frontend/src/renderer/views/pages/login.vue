@@ -77,8 +77,9 @@ const submitForm = (formEl: FormInstance | undefined) => {
     if (valid) {
       try {
         const {data} = await loginApi(param);
-        userStore.setToken(data.access_token);
+        userStore.setToken(data.accessToken);
         userStore.setUsername(param.username);
+        console.log('login test', userStore.accessToken, userStore.username, data)
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {
