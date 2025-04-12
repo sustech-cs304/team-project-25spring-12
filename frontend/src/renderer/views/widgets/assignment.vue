@@ -209,6 +209,13 @@ const postArgue = () => {
     // 路由到创建Argue的页面
   }
 }
+
+defineExpose({
+  init: () => {
+    console.log('ass')
+    codeEditor.value?.layout()
+  }
+});
 </script>
 
 <style scoped>

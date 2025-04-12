@@ -15,4 +15,8 @@ const props = defineProps<{
 }>();
 
 const computedTitle = computed(() => props.data?.title || '富文本展示区');
+
+defineExpose({
+  init: () => {}
+});
 </script>

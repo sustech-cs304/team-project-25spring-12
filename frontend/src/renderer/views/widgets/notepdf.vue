@@ -230,6 +230,10 @@ onMounted(() => {
   loadPDF();
   observeBottom();
 });
+
+defineExpose({
+  init: () => {}
+});
 </script>
 
 <style scoped>

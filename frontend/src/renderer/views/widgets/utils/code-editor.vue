@@ -49,6 +49,7 @@ watch(() => props.code, (initCode) => {
 });
 
 defineExpose({
+  layout: () => editorInstance?.layout(),
   getCode: () => editorInstance?.getValue() || "",
 });
 </script>
