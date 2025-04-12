@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import {onMounted, onUnmounted, ref} from "vue";
+import {onBeforeUnmount, onMounted, onUnmounted, ref} from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
@@ -182,8 +182,21 @@ const changeTextSize = (value: number) => {
   });
 };
 
+const submit = async (pdfFile: Object, pdfDocument: pdfjsLib.PDFDocumentProxy | undefined) => {
+  if (pdfDocument === undefined) {
+    console.error("pdfDocument not found");
+    return;
+  }
+  const data = await pdfDocument.saveDocument();
+  // TODO: 上传文件
+};
+
 onMounted(async () => {
   await loadPDF();
+});
+
+onBeforeUnmount(() => {
+  submit(props.pdfFile, pdfViewer.pdfDocument);
 });
 
 onUnmounted(() => {

@@ -57,7 +57,7 @@ const displayTotalScore = computed(() => (props.data.status === "marking" || pro
 const score = ref();
 const error = ref(false);
 
-watch(score, (newVal, oldVal) => {
+watch(score, (newVal) => {
   error.value = newVal < 0 || newVal > props.data.maxScore;
 });
 
@@ -66,6 +66,10 @@ const errorMessage = computed(() => {
   if (error.value) return "分数超出范围";
   return "";
 });
+
+const submit = () => {
+  // TODO: 上传分数
+};
 </script>
 
 <style scoped>
