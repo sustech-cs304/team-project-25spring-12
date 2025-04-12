@@ -8,7 +8,6 @@ from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, Doc
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from backend.mjc.model.schema.common import File, Message
 from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
-from model.schema.common import Message
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:

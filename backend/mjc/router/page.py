@@ -12,6 +12,11 @@ from backend.mjc.utils.database import SessionDep
 router = APIRouter()
 
 
+@router.get(path="/class/page/{page_id}", response_model=Page)
+async def get_page(db:SessionDep, page_id:int):
+    return page_service.get_page(db, page_id)
+
+
 @router.post(path="/class/page", response_model=Page)
 async def create_page(db:SessionDep, page: PageCreate):
     return page_service.create_page(db, page)
@@ -22,6 +27,6 @@ async def update_page(db:SessionDep, page: PageUpdate):
     return page_service.update_page(db, page)
 
 
-@router.delete(path="/class/page/{id}", response_model=Message, status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(path="/class/page/{id}", response_model=Message)
 async def delete_page(db:SessionDep, id:int):
     return page_service.delete_page(db, id)
