@@ -90,7 +90,7 @@ import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import {AlarmClock, BellFilled, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
-import {getCourseColor, getTextColor} from "@/utils";
+import {getCourseColor, getTextColor} from "@/utils/courseColorGenerator";
 
 interface Deadline {
   widgetId: string
