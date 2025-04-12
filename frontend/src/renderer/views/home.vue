@@ -49,7 +49,7 @@ const cachedViews = computed(() => tabs.nameList)
 .content {
   width: auto;
   height: 100%;
-  padding: 20px;
+  padding: 0;
   overflow-y: scroll;
   box-sizing: border-box;
 }
