@@ -1,28 +1,39 @@
 <template>
   <div class="page">
-    <!-- <div class="feeds-container"> -->
-      <Waterfall :list="list" :width="240" :hasAroundGutter="true" style="max-width: 1260px">
-        <template #item="{ item, url, index }">
-          <div class="card">
-            <LazyImg :url="url" style="border-radius: 8px" @click="toMain" />
-            <div class="footer">
-              <a class="title"><span>这是具体内容</span></a>
-              <div class="author-wrapper">
-                <a class="author">
-                  <img class="author-avatar" :src="url" />
-                  <span class="name">这是名字</span>
-                </a>
-                <span class="like-wrapper like-active">
-                  <Search style="width: 1em; height: 1em" />
-                  <span class="count">12</span>
-                </span>
+    <div class="feeds-page">
+      <div class="channel-container">
+        <div class="scroll-container channel-scroll-container">
+          <div class="content-container">
+            <div class="channel active">辩驳广场</div>
+          </div>
+        </div>
+      </div>
+      <div class="loading-container"></div>
+      <div class="feeds-container">
+        <Waterfall :list="list" :width="240" :hasAroundGutter="false" style="max-width: 1260px">
+          <template #item="{ item, url, index }">
+            <div class="card">
+              <LazyImg :url="url" style="border-radius: 8px" @click="toMain" />
+              <div class="footer">
+                <a class="title"><span>这是具体内容</span></a>
+                <div class="author-wrapper">
+                  <a class="author">
+                    <img class="author-avatar" :src="url" />
+                    <span class="name">这是名字</span>
+                  </a>
+                  <span class="like-wrapper like-active">
+                    <Search style="width: 1em; height: 1em" />
+                    <span class="count">12</span>
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
-        </template>
-      </Waterfall>
+          </template>
+        </Waterfall>
+      </div>
+      <div class="feeds-loading"></div>
     </div>
-  <!-- </div> -->
+  </div>
 </template>
 
 
