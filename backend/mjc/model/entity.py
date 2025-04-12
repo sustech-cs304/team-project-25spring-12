@@ -186,6 +186,8 @@ class Note(SQLModel, table=True):
     x: int
     y: int
     text: str
+    create_time: datetime | None
+    update_time: datetime | None
     editor_username: str = Field(nullable=True, foreign_key="profile.username")
     note_pdf_widget_id: int = Field(foreign_key="note_pdf_widget.id")
     is_deleted: bool = Field(default=False, nullable=False)

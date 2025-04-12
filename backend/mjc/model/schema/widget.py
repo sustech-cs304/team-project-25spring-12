@@ -88,6 +88,16 @@ class NoteBase(BaseModel):
 class Note(NoteBase):
     id: int
     editor: Profile
+    create_time: datetime | None = None
+    update_time: datetime | None = None
+
+
+class NoteCreate(NoteBase):
+    widget_id: int
+
+
+class NoteUpdate(NoteBase):
+    id: int
 
 
 class NotePdfWidget(WidgetBase):

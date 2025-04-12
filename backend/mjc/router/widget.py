@@ -2,10 +2,9 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.widget import DocWidget, DocWidgetCreate, DocWidgetUpdate, \
     AssignmentWidget, AssignmentWidgetCreate, AssignmentWidgetUpdate, \
-    NotePdfWidget, NotePdfWidgetCreate, NotePdfWidgetUpdate
+    NotePdfWidget, NotePdfWidgetCreate, NotePdfWidgetUpdate, Note, NoteCreate, NoteUpdate
 from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.service import user as user_service
 from backend.mjc.service import widget as widget_service
@@ -57,6 +56,23 @@ async def update_note_pdf_widget(db: SessionDep,
     return widget_service.update_note_pdf_widget(db, current_user, widget)
 
 
-@router.delete(path="/class/widget/{widget_id}", response_model=Message, status_code=status.HTTP_200_OK)
+@router.post(path="/class/widget/notepdf/note", response_model=Note)
+async def create_note(db: SessionDep, note: NoteCreate,
+                      current_user: UserInDB = Depends(user_service.get_current_user)):
+    return widget_service.create_note(db, note, current_user)
+
+
+@router.patch(path="/class/widget/notepdf/note", response_model=Note)
+async def update_note(db: SessionDep, note: NoteUpdate,
+                      current_user: UserInDB = Depends(user_service.get_current_user)):
+    return widget_service.update_note(db, note, current_user)
+
+
+@router.delete(path="/class/widget/{widget_id}", status_code=status.HTTP_200_OK)
 async def delete_widget(db: SessionDep, widget_id: int):
     return widget_service.delete_widget(db, widget_id)
+
+
+@router.delete(path="/class/widget/notepdf/note/note_id}", status_code=status.HTTP_200_OK)
+async def delete_note(db: SessionDep, note_id: int):
+    return widget_service.delete_note(db, note_id)

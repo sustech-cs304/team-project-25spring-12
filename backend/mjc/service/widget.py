@@ -4,10 +4,11 @@ from sqlmodel import Session
 from backend.mjc.crud import widget as crud_widget
 from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
-    DocWidgetUpdate, \
+    DocWidgetUpdate, Note, NoteCreate, NoteUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from backend.mjc.model.schema.common import File, Message
 from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
+from model.schema.common import Message
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
@@ -155,13 +156,28 @@ def delete_widget(db: Session, widget_id: int) -> Message:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete widget failed")
 
 
-def add_widget_attachment(db:Session, attachment: WidgetAttachmentCreate) -> DocWidget | AssignmentWidget | NotePdfWidget:
+def add_widget_attachment(db: Session, attachment: WidgetAttachmentCreate) -> DocWidget | AssignmentWidget | NotePdfWidget:
     # TODO:
     pass
 
 
-def delete_attachment(db:Session, attachment_id: int):
+def delete_attachment(db: Session, attachment_id: int):
     attachment_entity = crud_widget.delete_widget(db, attachment_id)
     if attachment_entity:
         return attachment_entity
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete attachment failed")
+
+
+def create_note(db: Session, note: NoteCreate, editor: UserInDB) -> Note:
+    note_entity = crud_widget.create_note(db, note, editor)
+    return Note.model_validate(note_entity.model_dump())
+
+
+def update_note(db: Session, note: NoteUpdate, editor: UserInDB) -> Note:
+    note_entity = crud_widget.update_note(db, note)
+    return Note.model_validate(note_entity.model_dump())
+
+
+def delete_note(db: Session, note_id: int, editor: UserInDB) -> Message:
+    crud_widget.delete_note(db, note_id)
+    return Message(msg='Success')
