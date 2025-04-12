@@ -88,6 +88,8 @@ class NoteBase(BaseModel):
 class Note(NoteBase):
     id: int
     editor: Profile
+    create_time: datetime | None = None
+    update_time: datetime | None = None
 
 
 class NoteCreate(NoteBase):
