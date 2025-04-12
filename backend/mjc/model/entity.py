@@ -254,4 +254,3 @@ class LocalResourceFile(SQLModel, table=True):
     is_deleted: bool = Field(default=False, nullable=False)
 
     uploader: "Profile" = Relationship()
-
