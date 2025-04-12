@@ -78,6 +78,7 @@ const submitForm = (formEl: FormInstance | undefined) => {
       try {
         const {data} = await loginApi(param);
         userStore.setToken(data.access_token);
+        userStore.setUsername(param.username);
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {
