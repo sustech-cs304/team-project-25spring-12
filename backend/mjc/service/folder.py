@@ -5,8 +5,16 @@ from backend.mjc.crud import folder as folder_crud, page as page_crud
 from backend.mjc.crud.course import get_class, get_user_class_role
 from backend.mjc.model.schema.folder import Folder, FolderUpdate
 from backend.mjc.model.schema.user import UserInDB
-from model.entity import ClassRole
+from model.entity import ClassRole, Folder as FolderEntity
 from model.schema.folder import FolderPageItem, FolderCreate
+
+
+def entity2folder(entity: FolderEntity) -> Folder:
+    return Folder(pages=[FolderPageItem.model_validate(page.model_dump()) for page in entity.pages],
+                  **entity.model_dump())
+
+def get_folder(db: Session, folder_id: int) -> Folder:
+    return folder_crud.get_folder(db, folder_id)
 
 
 def get_class_folders(db: Session, class_id: int, visible: bool = None) -> list[Folder]:
@@ -36,13 +44,7 @@ def get_uncategorized_folder(db: Session, class_id: int, visible: bool = None) -
 
 
 def get_user_class_folders(db: Session, class_id: int, user: UserInDB) -> list[Folder]:
-    cls = get_class(db, class_id)
-    if not cls:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Class not found')
     role = get_user_class_role(db, user.username, class_id)
-    if role is None and not user.is_admin:  # 管理员也可以得到这个
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User has not enrolled')
-
     if role is ClassRole.STUDENT:
         folders = get_class_folders(db, class_id, visible=True)
         uncategorized_folder = get_uncategorized_folder(db, class_id, visible=True)
@@ -56,13 +58,18 @@ def get_user_class_folders(db: Session, class_id: int, user: UserInDB) -> list[F
     return sorted(folders, key=lambda folder: folder.index)
 
 
-def create_folder(db: Session, folder: FolderCreate, user: UserInDB) -> Folder:
-    folder_crud.create_folder(db, folder)
+def create_folder(db: Session, folder: FolderCreate) -> Folder:
+    folder_entity = folder_crud.create_folder(db, folder)
+    return entity2folder(folder_entity)
 
 
-def update_folder(db: Session, folder: FolderUpdate, user: UserInDB) -> Folder:
-    pass
+def update_folder(db: Session, folder: FolderUpdate) -> Folder:
+    folder_entity = folder_crud.update_folder(db, folder)
+    return entity2folder(folder_entity)
 
 
-def delete_folder(db: Session, folder_id: int, user: UserInDB) -> Folder:
-    pass
+def delete_folder(db: Session, folder_id: int):
+    folder = get_folder(db, folder_id)
+    if folder is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Folder not found')
+    folder_crud.delete_folder(db, folder_id)

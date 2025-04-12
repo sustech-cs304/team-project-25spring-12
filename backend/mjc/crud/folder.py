@@ -23,6 +23,12 @@ def get_class_folders(db: Session, class_id: int, ) -> list[Folder]:
     return folders
 
 
+def get_folder(db: Session, folder_id: int) -> Folder:
+    stmt = select(Folder).where(Folder.id == folder_id).where(Folder.is_deleted == False)
+    folder: Folder = db.exec(stmt).first()
+    return folder
+
+
 def create_folder(db: Session, folder: FolderCreate) -> Folder:
     folder_entity = Folder(
         name=folder.name,
