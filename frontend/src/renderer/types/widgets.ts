@@ -1,7 +1,7 @@
 export type WidgetType = 'notepdf' | 'doc' | 'assignment';
 
 interface BaseWidget {
-    id: string;
+    id: number;
     type: WidgetType;
     index: number;
     title?: string;
@@ -55,7 +55,7 @@ export interface SubmittedRecord {
 }
 
 export interface Note {
-    id: string;
+    id: number;
     page: number;
     x: number;
     y: number;
@@ -69,7 +69,6 @@ export interface Note {
 import NotePdf from '@/views/widgets/notepdf.vue';
 import Doc from '@/views/widgets/doc.vue';
 import Assignment from '@/views/widgets/assignment.vue';
-import type { WidgetType } from '@/types/widgets';
 
 export const widgetMap: Record<WidgetType, any> = {
     notepdf: NotePdf,
