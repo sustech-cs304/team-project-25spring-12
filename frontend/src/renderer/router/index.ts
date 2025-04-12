@@ -45,16 +45,6 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/pages/login.vue'),
     },
     {
-        path: '/register',
-        meta: {title: '注册', noAuth: true},
-        component: () => import('../views/pages/register.vue'),
-    },
-    {
-        path: '/reset-pwd',
-        meta: {title: '重置密码', noAuth: true},
-        component: () => import('../views/pages/reset-pwd.vue'),
-    },
-    {
         path: '/403',
         meta: {title: '没有权限', noAuth: true},
         component: () => import('../views/pages/403.vue'),
