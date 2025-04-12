@@ -4,7 +4,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script setup lang="ts" name="mark">
 import assignmentMark from "../widgets/assignment-mark.vue";
 const assignmentMarkData = {
   title: '作业批改',
