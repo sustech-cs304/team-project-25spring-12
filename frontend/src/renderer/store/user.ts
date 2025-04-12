@@ -1,17 +1,27 @@
 import { defineStore } from 'pinia'
-import type {User as UserState} from '../types/user'
-// import type {} from '../types/course'
+import type {User} from '../types/user'
+import type {Course} from '../types/course'
+
+interface UserState extends User {
+    courses: Course[]
+}
 
 export const useUserStore = defineStore('user', {
     state: (): UserState => ({
         accessToken: '',
         username: '',
+        courses: [],
     }),
 
     actions: {
         setToken(token: string) {
             this.accessToken = token
             localStorage.setItem('access_token', token)
+        },
+
+        setUsername(name: string) {
+            this.username = name
+            localStorage.setItem('username', name)
         },
 
         clearToken() {
@@ -32,9 +42,8 @@ export const useUserStore = defineStore('user', {
             }
         },
 
-        setUsername(name: string) {
-            this.username = name
-            localStorage.setItem('username', name)
+        setCourses(courseList: Course[]) {
+            this.courses = courseList
         },
     },
 })
