@@ -9,3 +9,7 @@ class File(BaseModel):
     file_name: str
     visibility: Visibility
     url: str | None = None
+
+
+class Message(BaseModel):
+    msg: str
