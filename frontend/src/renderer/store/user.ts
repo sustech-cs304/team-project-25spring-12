@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia'
 import type {User} from '../types/user'
 import type {Course} from '../types/course'
+import type {Deadline} from "../types/deadline";
 
 interface UserState extends User {
     courses: Course[]
+    deadlines: Deadline[]
 }
 
 export const useUserStore = defineStore('user', {
@@ -11,6 +13,7 @@ export const useUserStore = defineStore('user', {
         accessToken: '',
         username: '',
         courses: [],
+        deadlines: [],
     }),
 
     actions: {
@@ -45,5 +48,9 @@ export const useUserStore = defineStore('user', {
         setCourses(courseList: Course[]) {
             this.courses = courseList
         },
+
+        setDeadlines(deadlineList: Deadline[]) {
+            this.deadlines = deadlineList
+        }
     },
 })
