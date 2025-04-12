@@ -203,6 +203,10 @@ watch(collapsed, (val) => {
   overflow: hidden;
 }
 
+.widget-menu {
+  height: 100%;
+}
+
 .widget-menu-wrapper {
   display: flex;
   flex-direction: column;
