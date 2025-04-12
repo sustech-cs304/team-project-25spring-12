@@ -1,7 +1,8 @@
-import {createRouter, createWebHashHistory, RouteRecordRaw} from 'vue-router';
-import Home from '../views/home.vue';
-import NProgress from 'nprogress';
-import 'nprogress/nprogress.css';
+import {createRouter, createWebHashHistory, RouteRecordRaw} from 'vue-router'
+import Home from '../views/home.vue'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css'
+import {useUserStore} from '../store/user'
 
 const routes: RouteRecordRaw[] = [
     {
@@ -64,6 +65,14 @@ const routes: RouteRecordRaw[] = [
         component: () => import('../views/pages/404.vue'),
     },
     {
+        path: '/401',
+        meta: {
+            title: '登录状态失效',
+            noAuth: true,
+        },
+        component: () => import('../views/pages/401.vue'),
+    },
+    {
         path: '/:path(.*)',
         redirect: '/404',
     },
@@ -76,19 +85,23 @@ const router = createRouter({
 });
 
 router.beforeEach((to, from, next) => {
-    console.log({to, from, next})
-    NProgress.start();
-    const role = localStorage.getItem('vuems_name');
+    NProgress.start()
 
-    if (!role && to.meta.noAuth !== true) {
-        next('/login');
-    } else {  // 这里省略了权限检查
-        next();
+    const userStore = useUserStore()
+    userStore.loadTokenFromStorage()
+
+    const isLoggedIn = !!userStore.accessToken
+    const noAuth = to.meta.noAuth === true
+
+    if (!isLoggedIn && !noAuth) {
+        next('/401')
+    } else {
+        next()
     }
-});
+})
 
 router.afterEach(() => {
-    NProgress.done();
-});
+    NProgress.done()
+})
 
-export default router;
+export default router

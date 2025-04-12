@@ -20,20 +20,29 @@
     <template v-if="selectedDeadline">
       <div class="drawer-header">
         <h3 class="assignment-title">
-          <el-icon><Notebook /></el-icon>
+          <el-icon>
+            <Notebook/>
+          </el-icon>
           {{ selectedDeadline.widgetTitle }}
         </h3>
         <div class="deadline-countdown" :class="getCountdownClass(selectedDeadline.ddl)">
           <el-icon><Clock /></el-icon>
-          剩余 {{ calculateDaysLeft(selectedDeadline.ddl) }} 天
+          <template v-if="calculateDaysLeft(selectedDeadline.ddl) >= 0">
+            剩余 {{ calculateDaysLeft(selectedDeadline.ddl) }} 天
+          </template>
+          <template v-else>
+            已超过截止时间
+          </template>
         </div>
       </div>
 
-      <el-divider />
+      <el-divider/>
 
       <div class="assignment-details">
         <div class="detail-item">
-          <el-icon><Collection /></el-icon>
+          <el-icon>
+            <Collection/>
+          </el-icon>
           <div>
             <div class="detail-label">所属课程</div>
             <div class="detail-value">{{ selectedDeadline.courseCode }} {{ selectedDeadline.className }}</div>
@@ -41,7 +50,9 @@
         </div>
 
         <div class="detail-item">
-          <el-icon><Document /></el-icon>
+          <el-icon>
+            <Document/>
+          </el-icon>
           <div>
             <div class="detail-label">教学章节</div>
             <div class="detail-value">{{ selectedDeadline.pageName }}</div>
@@ -49,7 +60,9 @@
         </div>
 
         <div class="detail-item">
-          <el-icon><AlarmClock /></el-icon>
+          <el-icon>
+            <AlarmClock/>
+          </el-icon>
           <div>
             <div class="detail-label">截止时间</div>
             <div class="detail-value highlight">{{ formatDateTime(selectedDeadline.ddl) }}</div>
@@ -66,7 +79,9 @@
             size="large"
             class="action-button"
         >
-          <el-icon><Link /></el-icon>
+          <el-icon>
+            <Link/>
+          </el-icon>
           前往完成
         </el-button>
         <el-button
@@ -76,7 +91,9 @@
             class="action-button"
             plain
         >
-          <el-icon><BellFilled /></el-icon>
+          <el-icon>
+            <BellFilled/>
+          </el-icon>
           不再提醒
         </el-button>
       </div>
@@ -90,70 +107,49 @@ import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
 import {AlarmClock, BellFilled, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
-import {getCourseColor, getTextColor} from "@/utils";
+import {getCourseColor, getTextColor} from "@/utils/courseColorGenerator";
+import type {Deadline} from '@/types/deadline'
+import {getDeadlines} from "@/api/deadline";
+import {useUserStore} from "@/store/user";
 
-interface Deadline {
-  widgetId: string
-  widgetTitle: string
-  pageId: string
-  pageName: string
-  ddl: string
-  classId: string
-  courseCode: string
-  className: string
-}
+const deadlines = ref<Deadline[]>([])
+const userStore = useUserStore()
 
-const deadlines = ref<Deadline[]>([
-  {
-    widgetId: 'w1',
-    widgetTitle: '练习1.5',
-    pageId: 'p1',
-    pageName: '第一节 第二课',
-    ddl: '2025-04-12',
-    classId: 'c1',
-    courseCode: 'CS101',
-    className: '计算机导论'
-  },
-  {
-    widgetId: 'w2',
-    widgetTitle: '项目报告',
-    pageId: 'p2',
-    pageName: '第五节 第三课',
-    ddl: '2025-04-18',
-    classId: 'c1',
-    courseCode: 'CS101',
-    className: '计算机导论'
-  },
-  {
-    widgetId: 'w2',
-    widgetTitle: '项目报告',
-    pageId: 'p2',
-    pageName: '第五节 第三课',
-    ddl: '2025-04-28',
-    classId: 'c1',
-    courseCode: 'MATH101',
-    className: '计算机导论'
+onMounted(async () => {
+  const response = await getDeadlines();
+  console.log(response)
+  deadlines.value = response.data;
+  userStore.setDeadlines(deadlines.value);
+  if (calendar.value) {
+    const calendarApi = calendar.value.getApi();
+    const calcColor = (item: Deadline) =>
+        (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
+    const events = deadlines.value.map(item => ({
+      title: `${item.courseCode}`,
+      start: item.ddl,
+      extendedProps: item,
+      backgroundColor: calcColor(item),
+      borderColor: calcColor(item),
+      textColor: getTextColor(calcColor(item)),
+      className: 'calendar-event'
+    }))
+    calendarApi.removeAllEvents();
+    calendarApi.addEventSource(events);
+    console.log('success')
+    console.log(events)
   }
-])
+})
 
 const drawerVisible = ref(false)
 const selectedDeadline = ref<Deadline | null>(null)
 const calendar = ref()
 const calendarWrapper = ref()
 
-const calendarOptions = {
+const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
   height: '100%',
-  events: deadlines.value.map(item => ({
-    title: `${item.courseCode}`,
-    start: item.ddl,
-    extendedProps: item,
-    backgroundColor: getCourseColor(item.courseCode),
-    borderColor: getCourseColor(item.courseCode),
-    textColor: getTextColor(getCourseColor(item.courseCode)),
-    className: 'calendar-event'
-  })),
+  events: [],
   eventClick(info: any) {
     selectedDeadline.value = info.event.extendedProps
     drawerVisible.value = true
@@ -174,7 +170,7 @@ const calendarOptions = {
     info.el.style.transform = ''
     info.el.style.boxShadow = ''
   }
-}
+})
 
 function calculateDaysLeft(ddl: string): number {
   const today = new Date()
@@ -185,6 +181,7 @@ function calculateDaysLeft(ddl: string): number {
 
 function getCountdownClass(ddl: string): string {
   const daysLeft = calculateDaysLeft(ddl)
+  if (daysLeft < 0) return 'expired'
   if (daysLeft <= 3) return 'urgent'
   if (daysLeft <= 7) return 'warning'
   return 'normal'
@@ -232,7 +229,8 @@ const dismissReminder = () => {
   // TODO: 后端
 };
 
-const onDrawerOpen = () => {}
+const onDrawerOpen = () => {
+}
 
 let resizeObserver: ResizeObserver
 
@@ -302,6 +300,11 @@ onBeforeUnmount(() => {
 .deadline-countdown.urgent {
   background-color: #ffebee;
   color: #c62828;
+}
+
+.deadline-countdown.expired {
+  background-color: #eeeeee;
+  color: #9e9e9e;
 }
 
 .assignment-details {

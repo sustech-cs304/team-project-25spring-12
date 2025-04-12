@@ -66,12 +66,6 @@
                   项目仓库
                 </el-dropdown-item>
               </a>
-              <el-dropdown-item command="settings">
-                <el-icon>
-                  <Setting/>
-                </el-icon>
-                设置
-              </el-dropdown-item>
               <el-dropdown-item divided command="logout">
                 <el-icon>
                   <SwitchButton/>
@@ -87,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted} from 'vue';
+import {ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {
   HomeFilled,
@@ -96,19 +90,17 @@ import {
   Bell,
   ArrowDown,
   Link,
-  Setting,
   SwitchButton
 } from '@element-plus/icons-vue';
+import {useUserStore} from "@/store/user";
 
-// 用户数据
-const username = ref(localStorage.getItem('vuems_name') || '用户');
-const userAvatar = ref('../assets/img/img.jpg'); // TODO: 从用户信息获取头像
+const userStore = useUserStore()
+const router = useRouter()
+
+const username = ref(userStore.username);
+const userAvatar = ref('../assets/img/img.jpg');
 const unreadCount = ref(1); // TODO: 从API获取未读消息数
 
-// 路由和状态管理
-const router = useRouter();
-
-// 导航功能
 const goToHome = () => {
   router.push('/')
 };
@@ -122,15 +114,10 @@ const goToMessages = () => {
   router.push('/messages');
 };
 
-// 用户菜单操作
 const handleCommand = (command: string) => {
   if (command === 'logout') {
-    // TODO: 登出逻辑
-    // localStorage.removeItem('vuems_name');
-    // router.push('/login');
-  } else if (command === 'settings') {
-    // TODO: 跳转到设置页面
-    // router.push('/settings');
+    userStore.clearToken()
+    router.push('/login')
   }
 };
 

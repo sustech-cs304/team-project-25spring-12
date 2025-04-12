@@ -1,77 +1,69 @@
 <template>
   <div class="main-container">
     <el-tabs v-model="activeSemester" type="border-card" tab-position="left" style="height: 100%;">
-    <el-tab-pane
-        v-for="semester in sortedSemesters"
-        :key="semester"
-        :label="semester"
-        :name="semester"
-    >
-      <el-scrollbar max-height="800px" wrap-style="padding-right: 4px;">
-        <div class="course-scroll">
-          <el-card
-              v-for="course in coursesBySemester[semester]"
-              :key="course.id"
-              shadow="hover"
-              class="course-card"
-          >
-            <div class="card-header">
-              <div class="course-title">{{ course.courseCode }} - {{ course.name }}</div>
-              <div class="course-semester">{{ course.semester }}</div>
-            </div>
+      <el-tab-pane
+          v-for="semester in sortedSemesters"
+          :key="semester"
+          :label="semester"
+          :name="semester"
+      >
+        <el-scrollbar max-height="800px" wrap-style="padding-right: 4px;">
+          <div class="course-scroll">
+            <el-card
+                v-for="course in coursesBySemester[semester]"
+                :key="course.id"
+                shadow="hover"
+                class="course-card"
+            >
+              <div class="card-header">
+                <div class="course-title">{{ course.courseCode }} - {{ course.name }}</div>
+                <div class="course-semester">{{ course.semester }}</div>
+              </div>
 
-            <div class="card-body">
-              <div class="course-info">
-                <el-icon>
-                  <User/>
-                </el-icon>
-                <span>授课教师：{{ course.lecturer }}</span>
+              <div class="card-body">
+                <div class="course-info">
+                  <el-icon>
+                    <User/>
+                  </el-icon>
+                  <span>授课教师：{{ course.lecturer }}</span>
+                </div>
+                <div class="course-info">
+                  <el-icon>
+                    <Place/>
+                  </el-icon>
+                  <span>授课地点：{{ course.location }}</span>
+                </div>
+                <div class="course-info">
+                  <el-icon>
+                    <Timer/>
+                  </el-icon>
+                  <span>授课时间：{{ course.time }}</span>
+                </div>
+                <div class="course-info">
+                  <el-icon>
+                    <Avatar/>
+                  </el-icon>
+                  <span>您在本课程作为：{{ roleDisplayMap[course.role] }}</span>
+                </div>
               </div>
-              <div class="course-info">
-                <el-icon>
-                  <Place/>
-                </el-icon>
-                <span>授课地点：{{ course.location }}</span>
-              </div>
-              <div class="course-info">
-                <el-icon>
-                  <Timer/>
-                </el-icon>
-                <span>授课时间：{{ course.time }}</span>
-              </div>
-              <div class="course-info">
-                <el-icon>
-                  <Avatar/>
-                </el-icon>
-                <span>您在本课程作为：{{ roleDisplayMap[course.role] }}</span>
-              </div>
-            </div>
 
-            <div class="card-footer">
-              <el-button type="primary" icon="Right" @click="enterCourse(course.id)">进入课程</el-button>
-            </div>
-          </el-card>
-        </div>
-      </el-scrollbar>
-    </el-tab-pane>
-  </el-tabs>
+              <div class="card-footer">
+                <el-button type="primary" icon="Right" @click="enterCourse(course.id)">进入课程</el-button>
+              </div>
+            </el-card>
+          </div>
+        </el-scrollbar>
+      </el-tab-pane>
+    </el-tabs>
   </div>
 </template>
 
 <script setup lang="ts">
-import {ref, computed} from 'vue'
-import {User, Place, Timer, Avatar} from '@element-plus/icons-vue'
-
-interface Course {
-  id: string
-  courseCode: string
-  name: string
-  semester: string
-  location: string
-  time: string
-  lecturer: string
-  role: 'student' | 'teacher' | 'ta'
-}
+import {computed, onMounted, ref} from 'vue'
+import {Avatar, Place, Timer, User} from '@element-plus/icons-vue'
+import type {Course} from "@/types/course";
+import {useUserStore} from "@/store/user";
+import {getCourses} from "@/api/course";
 
 const roleDisplayMap: Record<Course['role'], string> = {
   student: 'Student',
@@ -79,48 +71,20 @@ const roleDisplayMap: Record<Course['role'], string> = {
   ta: 'Teaching Assistant'
 }
 
-const courses = ref<Course[]>([
-  {
-    id: '1',
-    courseCode: 'CS101',
-    name: 'Intro to Programming',
-    semester: '2025 Fall',
-    location: 'Room A101',
-    time: 'Mon 10:00-11:30',
-    lecturer: 'Dr. Alice',
-    role: 'student'
-  },
-  {
-    id: '2',
-    courseCode: 'CS202',
-    name: 'Data Structures',
-    semester: '2025 Summer',
-    location: 'Room B201',
-    time: 'Tue 14:00-15:30',
-    lecturer: 'Prof. Bob',
-    role: 'ta'
-  },
-  {
-    id: '3',
-    courseCode: 'CS303',
-    name: 'Algorithms',
-    semester: '2024 Fall',
-    location: 'Room C301',
-    time: 'Wed 10:00-11:30',
-    lecturer: 'Dr. Charlie',
-    role: 'teacher'
-  },
-  {
-    id: '3',
-    courseCode: 'CS309',
-    name: 'Algorithms',
-    semester: '2025 Fall',
-    location: 'Room C301',
-    time: 'Wed 10:00-11:30',
-    lecturer: 'Dr. Charlie',
-    role: 'teacher'
+const userStore = useUserStore()
+const courses = ref<Course[]>([])
+const activeSemester = ref('')
+
+onMounted(async () => {
+  try {
+    const response = await getCourses()
+    userStore.setCourses(response.data)
+    courses.value = response.data
+    activeSemester.value = sortedSemesters.value[0] || ''
+  } catch (err) {
+    console.error('获取课程失败', err)
   }
-])
+})
 
 const getSemesterValue = (semester: string): number => {
   const [yearStr, season] = semester.split(' ')
@@ -144,8 +108,6 @@ const coursesBySemester = computed(() => {
   }
   return map
 })
-
-const activeSemester = ref(sortedSemesters.value[0] || '')
 
 const enterCourse = (id: string) => {
   // TODO: 跳转课程详情页
