@@ -3,24 +3,29 @@
     <el-menu
         class="widget-menu"
         :default-active="activeWidgetId"
+        :collapse="collapsed"
         @select="handleMenuSelect"
+        :collapse-transition="true"
+        mode="vertical"
     >
-      <!-- 顶部标题 -->
-      <el-menu-item index="__title" disabled style="cursor: default; font-weight: bold; opacity: 1;">
-        {{ title }}
+      <el-menu-item index="__toggle" @click="toggleCollapse" style="cursor: pointer;">
+        <el-icon>
+          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'" />
+        </el-icon>
+        <span v-if="!collapsed">{{ title }}</span>
       </el-menu-item>
 
-      <!-- 动态菜单项 -->
       <el-menu-item
           v-for="widget in widgetsSortedByIndex"
           :key="widget.id"
           :index="widget.id"
           :style="getMenuItemStyle(widget)"
+          class="hoverable-item"
       >
         <el-icon v-if="getIconComponent(widget)">
           <component :is="getIconComponent(widget)" />
         </el-icon>
-        {{ widget.title }}
+        <span v-if="!collapsed">{{ widget.title }}</span>
       </el-menu-item>
     </el-menu>
 
@@ -38,14 +43,21 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, resolveComponent} from 'vue';
-import { useRoute } from 'vue-router';
-import type { WidgetUnion } from '@/types/widgets';
-import DynamicWidget from '@/views/widgets/dynamic-widget.vue';
+import { ref, computed, onMounted, resolveComponent } from 'vue'
+import { useRoute } from 'vue-router'
+import type { WidgetUnion } from '@/types/widgets'
+import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import { getWidgetStyle, getHeaderColor, getBodyColor } from '@/utils/widgetColorIconManager'
 
-const route = useRoute();
+// 路由实例
+const route = useRoute()
 
+// 响应式状态
+const activeWidgetId = ref('')
+const collapsed = ref(false)
+const widgetRefs = new Map<string, any>()
+
+// 模拟数据 - TODO: 从后端获取
 const widgets: WidgetUnion[] = [
   {
     id: '1',
@@ -98,47 +110,17 @@ const widgets: WidgetUnion[] = [
     status: 'pending',
   },
 ];
-const title: string = '课程资源';
 
-const activeWidgetId = ref('');
-const widgetRefs = new Map<string, any>();
+const title: string = '课程资源区'
 
 const widgetsSortedByIndex = computed(() => {
-  return [...widgets].sort((a, b) => a.index - b.index);
-});
+  return [...widgets].sort((a, b) => a.index - b.index)
+})
 
 const activeWidget = computed(() => {
-  return widgets.find(w => w.id === activeWidgetId.value);
-});
+  return widgets.find(w => w.id === activeWidgetId.value)
+})
 
-const setWidgetRef = (id: string, el: any) => {
-  if (el) widgetRefs.set(id, el);
-};
-
-const initActiveWidget = () => {
-  const widgetId = route.query.widget as string;
-  const matched = widgets.find(w => w.id === widgetId);
-  if (matched) {
-    activeWidgetId.value = matched.id;
-  } else if (widgets.length > 0) {
-    const minWidget = widgetsSortedByIndex.value[0];
-    activeWidgetId.value = minWidget.id;
-  }
-};
-
-const handleMenuSelect = (widgetId: string) => {
-  activeWidgetId.value = widgetId;
-  setTimeout(() => {
-    widgetRefs.get(widgetId)?.init?.();
-  }, 50);
-};
-
-onMounted(() => {
-  initActiveWidget();
-  setTimeout(() => {
-    widgetRefs.get(activeWidgetId.value)?.init?.();
-  }, 50);
-});
 const getMenuItemStyle = (widget: WidgetUnion) => {
   const color = getWidgetStyle(widget.type).color
   return {
@@ -152,6 +134,8 @@ const getMenuItemStyle = (widget: WidgetUnion) => {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
+    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    transition: 'all 0.2s',
   }
 }
 
@@ -159,7 +143,43 @@ const getIconComponent = (widget: WidgetUnion) => {
   const iconName = getWidgetStyle(widget.type).icon
   return resolveComponent(iconName)
 }
+
+const toggleCollapse = () => {
+  collapsed.value = !collapsed.value
+}
+
+const setWidgetRef = (id: string, el: any) => {
+  if (el) widgetRefs.set(id, el)
+}
+
+const initActiveWidget = () => {
+  const widgetId = route.query.widget as string
+  const matched = widgets.find(w => w.id === widgetId)
+  if (matched) {
+    activeWidgetId.value = matched.id
+  } else if (widgets.length > 0) {
+    const minWidget = widgetsSortedByIndex.value[0]
+    activeWidgetId.value = minWidget.id
+  }
+}
+
+const handleMenuSelect = (widgetId: string) => {
+  if (widgetId === '__toggle') return
+
+  activeWidgetId.value = widgetId
+  setTimeout(() => {
+    widgetRefs.get(widgetId)?.init?.()
+  }, 50)
+}
+
+onMounted(() => {
+  initActiveWidget()
+  setTimeout(() => {
+    widgetRefs.get(activeWidgetId.value)?.init?.()
+  }, 50)
+})
 </script>
+
 <style scoped>
 .widget-layout {
   display: flex;
@@ -168,10 +188,27 @@ const getIconComponent = (widget: WidgetUnion) => {
 }
 
 .widget-menu {
-  width: 200px;
   height: 100%;
   border-right: 1px solid #ebeef5;
-  padding-top: 8px;
+  transition: width 0.3s ease-in-out;
+  will-change: width;
+}
+
+.widget-menu:not(.el-menu--collapse) {
+  width: 300px;
+}
+
+:deep(.el-menu--collapse) {
+  width: 64px;
+  transition: width 0.3s ease-in-out;
+}
+
+:deep(.el-menu-item), :deep(.el-sub-menu__title) {
+  transition: padding 0.3s ease-in-out;
+}
+
+.el-menu--collapse {
+  transition: width 0.3s ease-in-out !important;
 }
 
 .widget-content {
@@ -185,5 +222,10 @@ const getIconComponent = (widget: WidgetUnion) => {
 .widget-scroll-wrapper {
   height: 100%;
   overflow: auto;
+}
+
+.hoverable-item:hover {
+  filter: brightness(1.08);
+  cursor: pointer;
 }
 </style>
