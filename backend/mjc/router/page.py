@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.page import Page, PageCreate, PageUpdate
 
 from backend.mjc.service import page as page_service
@@ -21,6 +22,6 @@ async def update_page(db:SessionDep, page: PageUpdate):
     return page_service.update_page(db, page)
 
 
-@router.delete(path="/class/page/{id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(path="/class/page/{id}", response_model=Message, status_code=status.HTTP_204_NO_CONTENT)
 async def delete_page(db:SessionDep, id:int):
     return page_service.delete_page(db, id)

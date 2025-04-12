@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.page import Page, PageCreate, PageUpdate
 from backend.mjc.model.entity import Page as PageEntity, WidgetType
 from backend.mjc.crud import page as crud_page
@@ -37,7 +38,8 @@ def update_page(db: Session, page_update: PageUpdate) -> Page:
     return entity2page(page)
 
 
-def delete_page(db: Session, page_id: int):
+def delete_page(db: Session, page_id: int) -> Message:
     page = crud_page.delete_page(db, page_id)
-    if not page:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete page failed")
+    if page:
+        return Message(msg="Page deleted successfully")
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete page failed")

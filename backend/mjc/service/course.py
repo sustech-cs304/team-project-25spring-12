@@ -4,7 +4,7 @@ from sqlmodel import Session
 from backend.mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
                                              SemesterUpdate, Class, Semester, ClassCard,
                                              ClassUserEnroll, ClassUserUpdate)
-from backend.mjc.model.schema.common import File
+from backend.mjc.model.schema.common import File, Message
 from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.crud import course as crud_course
 from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
@@ -128,12 +128,12 @@ def update_class(db: Session, cls: ClassUpdate) -> Class:
     return cls
 
 
-def delete_class(db: Session, cls_id: int) -> Class:
+def delete_class(db: Session, cls_id: int) -> Message:
     cls_entity = crud_course.delete_class(db, cls_id)
-    if cls_entity is None:
-        raise HTTPException(status_code=404, detail="Delete class failed")
-    cls = entity2cls(cls_entity, 'teacher')
-    return cls
+    if cls_entity:
+        return Message(msg="Class deleted successfully")
+    raise HTTPException(status_code=404, detail="Delete class failed")
+
 
 
 def get_semesters(db: Session) -> list[Semester] | None:
@@ -163,12 +163,11 @@ def update_semester(db: Session, semester: SemesterUpdate) -> Semester:
     return semester
 
 
-def delete_semester(db: Session, semester_id: int) -> Semester:
+def delete_semester(db: Session, semester_id: int) -> Message:
     semester_entity = crud_course.delete_semester(db,semester_id)
-    if semester_entity is None:
-        raise HTTPException(status_code=404, detail="Delete semester failed")
-    semester = entity2semester(semester_entity)
-    return semester
+    if semester_entity:
+        return Message(msg="Semester deleted successfully")
+    raise HTTPException(status_code=404, detail="Delete semester failed")
 
 
 def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:

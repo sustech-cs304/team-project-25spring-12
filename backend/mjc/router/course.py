@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
 from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.service import course as course_service
@@ -71,7 +72,7 @@ async def update_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.delete(path="/class/semester/{semester_id}", response_model=Semester)
+@router.delete(path="/class/semester/{semester_id}", response_model=Message)
 async def delete_semester(db: SessionDep,
                           semester_id: int,
                           current_user: UserInDB = Depends(get_current_user)):

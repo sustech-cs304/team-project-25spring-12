@@ -3,10 +3,11 @@ from sqlmodel import Session
 
 from backend.mjc.crud import folder as folder_crud, page as page_crud
 from backend.mjc.crud.course import get_class, get_user_class_role
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.folder import Folder, FolderUpdate
 from backend.mjc.model.schema.user import UserInDB
-from model.entity import ClassRole, Folder as FolderEntity
-from model.schema.folder import FolderPageItem, FolderCreate
+from backend.mjc.model.entity import ClassRole, Folder as FolderEntity
+from backend.mjc.model.schema.folder import FolderPageItem, FolderCreate
 
 
 def entity2folder(entity: FolderEntity) -> Folder:
@@ -73,3 +74,4 @@ def delete_folder(db: Session, folder_id: int):
     if folder is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Folder not found')
     folder_crud.delete_folder(db, folder_id)
+    return Message(msg="Folder deleted successfully")

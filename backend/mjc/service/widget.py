@@ -6,7 +6,7 @@ from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
-from backend.mjc.model.schema.common import File
+from backend.mjc.model.schema.common import File, Message
 from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
 
 
@@ -148,10 +148,10 @@ def update_note_pdf_widget(db: Session, editor:UserInDB, note_pdf_widget_update:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Update note pdf widget failed")
 
 
-def delete_widget(db: Session, widget_id: int):
+def delete_widget(db: Session, widget_id: int) -> Message:
     widget_entity = crud_widget.delete_widget(db, widget_id)
     if widget_entity:
-        return
+        return Message(msg="Widget deleted successfully")
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete widget failed")
 
 

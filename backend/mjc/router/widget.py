@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.widget import DocWidget, DocWidgetCreate, DocWidgetUpdate, \
     AssignmentWidget, AssignmentWidgetCreate, AssignmentWidgetUpdate, \
     NotePdfWidget, NotePdfWidgetCreate, NotePdfWidgetUpdate
@@ -56,6 +57,6 @@ async def update_note_pdf_widget(db: SessionDep,
     return widget_service.update_note_pdf_widget(db, current_user, widget)
 
 
-@router.delete(path="/class/widget/{widget_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(path="/class/widget/{widget_id}", response_model=Message, status_code=status.HTTP_200_OK)
 async def delete_widget(db: SessionDep, widget_id: int):
     return widget_service.delete_widget(db, widget_id)
