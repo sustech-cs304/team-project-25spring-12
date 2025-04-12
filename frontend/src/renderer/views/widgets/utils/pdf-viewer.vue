@@ -196,7 +196,9 @@ onMounted(async () => {
 });
 
 onBeforeUnmount(() => {
-  submit(props.pdfFile, pdfViewer.pdfDocument);
+  if (props.isMarking) {
+    submit(props.pdfFile, pdfViewer.pdfDocument);
+  }
 });
 
 onUnmounted(() => {

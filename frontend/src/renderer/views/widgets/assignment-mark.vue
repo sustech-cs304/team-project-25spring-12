@@ -25,7 +25,7 @@
             type="primary"
             :icon="Check"
             @click="submit"
-            :disabled="error || score === undefined"
+            :disabled="error || score === undefined || score === null"
             style="width: 120px; margin-left: auto"
         >
           确认
@@ -58,11 +58,12 @@ const score = ref();
 const error = ref(false);
 
 watch(score, (newVal) => {
+  console.log(newVal);
   error.value = newVal < 0 || newVal > props.data.maxScore;
 });
 
 const errorMessage = computed(() => {
-  if (score.value === undefined) return "请输入分数";
+  if (score.value === undefined || score.value === null) return "请输入分数";
   if (error.value) return "分数超出范围";
   return "";
 });
