@@ -284,6 +284,7 @@ class SubmittedAssignmentFeedback(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     score: float
     content: str | None = Field(nullable=False)
+    create_time: datetime | None = Field(default=None, nullable=True)
     submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
 
     attachments: list["FeedbackAttachment"] = Relationship(back_populates="feedback")
@@ -301,6 +302,7 @@ class SubmittedAssignment(SQLModel, table=True):
     content: str | None = Field(default=None, nullable=True)
     code: str | None = Field(default=None, nullable=True)
     language: str | None = Field(default=None, nullable=True)
+    marked: str | None = Field(default=None, nullable=True)
 
     feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="submitted_assignment")
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")
