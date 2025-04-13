@@ -1,3 +1,5 @@
+import uuid
+
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
@@ -199,15 +201,17 @@ def delete_widget(db: Session, widget_id: int) -> Message:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete widget failed")
 
 
-def add_widget_attachment(db: Session, attachment: WidgetAttachmentCreate) -> DocWidget | AssignmentWidget | NotePdfWidget:
+def add_widget_attachment(db: Session, attachment: WidgetAttachmentCreate) -> Message:
+    entity = crud_widget.create_widget_attachment(db, attachment)
+    if entity:
+        return Message(msg="Widget added successfully")
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Add widget failed")
 
-    pass
 
-
-def delete_attachment(db: Session, attachment_id: int):
-    attachment_entity = crud_widget.delete_widget(db, attachment_id)
+def delete_attachment(db: Session, attachment_id: uuid.UUID) -> Message:
+    attachment_entity = crud_widget.delete_widget_attachment(db, attachment_id)
     if attachment_entity:
-        return attachment_entity
+        return Message(msg="Attachment deleted successfully")
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete attachment failed")
 
 

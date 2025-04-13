@@ -1,9 +1,12 @@
+import uuid
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.widget import DocWidget, DocWidgetCreate, DocWidgetUpdate, \
     AssignmentWidget, AssignmentWidgetCreate, AssignmentWidgetUpdate, \
+    WidgetAttachmentCreate, \
     NotePdfWidget, NotePdfWidgetCreate, NotePdfWidgetUpdate, Note, NoteCreate, NoteUpdate
 from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.service import user as user_service
@@ -54,6 +57,16 @@ async def update_note_pdf_widget(db: SessionDep,
                                  widget: NotePdfWidgetUpdate,
                                  current_user: UserInDB = Depends(user_service.get_current_user)):
     return widget_service.update_note_pdf_widget(db, current_user, widget)
+
+
+@router.post(path="/class/widget/attachment", response_model=Message)
+async def add_widget_attachment(db: SessionDep, attach: WidgetAttachmentCreate):
+    return widget_service.add_widget_attachment(db, attach)
+
+
+@router.delete(path="/class/widget/attachment/{file_id}", response_model=Message)
+async def delete_widget_attachment(db: SessionDep, file_id: uuid.UUID):
+    return widget_service.delete_attachment(db, file_id)
 
 
 @router.post(path="/class/widget/notepdf/note", response_model=Note)
