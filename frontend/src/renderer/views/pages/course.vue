@@ -13,7 +13,7 @@
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
-          :default-active="activeFolderId.toString()"
+          :default-active="activeFolderId"
           :collapse="collapsed"
           :collapse-transition="true"
           mode="vertical"
@@ -33,7 +33,7 @@
         </el-menu-item>
       </el-menu>
       <el-popover
-          :visible="showCreateFolderPopover"
+          :visible="dialogVisible"
           placement="top"
           :width="180"
           v-if="canEdit"
@@ -42,11 +42,11 @@
           <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
         </p>
         <div style="text-align:center; margin-top: 5px;">
-          <el-button size="small" @click="showCreateFolderPopover = false">取消</el-button>
+          <el-button size="small" @click="dialogVisible = false">取消</el-button>
           <el-button size="small" type="primary" @click="handleCreateFolder" :disabled="newFolderTitle === ''">确认</el-button>
         </div>
         <template #reference>
-          <el-button @click="handleShowCreateFolderPopover">
+          <el-button @click="showCreateFolderDialog">
             <el-icon>
               <Plus/>
             </el-icon>
@@ -59,42 +59,50 @@
     <!-- 主体内容区域 -->
     <div class="widget-content">
       <el-scrollbar class="widget-scroll-wrapper">
-        <folder-widget :folder="activeFolder" v-if="activeFolder" :canEdit="canEdit"/>
+        <folder-widget
+            :folder="activeFolder"
+            v-if="activeFolder"
+            :can-edit="canEdit"
+            :course-id="courseId"
+            @create-page="handleCreatePage"
+        />
       </el-scrollbar>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, watch} from 'vue'
+import {computed, ComputedRef, nextTick, onMounted, ref, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
-import type {Folder} from '@/types/folder'
-import {getFolders} from "@/api/course";
+import type {Folder, FolderPageItem} from '@/types/folder'
+import {createFolder, getFolders} from "@/api/course";
 import {useUserStore} from "@/store/user";
+import type {Page} from "@/types/page";
 
 const route = useRoute()
 const userStore = useUserStore()
 
 const folders = ref<Folder[]>([])
 const role = ref<string>(null)
+const courseId = ref<number>(0)
 const canEdit = computed(() => role.value == 'ta' || role.value == 'teacher')
 
 onMounted(async () => {
-  const courseId = route.params.courseId
+  courseId.value = Number(route.params.courseId)
 
-  const response = await getFolders(courseId)
+  const response = await getFolders(courseId.value)
   folders.value = response.data as Folder[]
 
   initActiveFolder()
-  role.value = await userStore.getRoleByCourseId(courseId)
+  role.value = await userStore.getRoleByCourseId(courseId.value)
 })
 
-const hoveredFolderId = ref<number>(-1)
+const hoveredFolderId = ref<string>('')
 
 const getMenuItemStyle = (folder: Folder) => {
   const isActive = folder.id.toString() == activeFolderId.value
-  const isHovered = folder.id == hoveredFolderId.value
+  const isHovered = folder.id.toString() == hoveredFolderId.value
 
   const baseColor = '#f9f9f9'
   const hoverColor = '#e6f0ff'
@@ -120,11 +128,8 @@ const showTitle = ref(true)
 const foldersSorted = computed(() =>
     [...folders.value].sort((a, b) => a.index - b.index)
 )
-const activeFolderId = ref(-1)
-const activeFolder = computed(() => {
-    return folders.value.find(f => f.id == activeFolderId.value)
-}
-)
+const activeFolderId = ref('')
+const activeFolder: ComputedRef<Folder | null> = computed(() => folders.value.find(f => f.id == activeFolderId.value))
 
 const toggleCollapse = async () => {
   collapsed.value = !collapsed.value
@@ -133,16 +138,16 @@ const toggleCollapse = async () => {
 
 const initActiveFolder = () => {
   const id = route.query.folder as string
-  const matched = folders.value.find((f) => f.id.toString() == id)
+  const matched = folders.value.find((f) => f.id.toString() === id)
   if (matched) {
-    activeFolderId.value = matched.id
+    activeFolderId.value = matched.id.toString()
   } else if (foldersSorted.value.length > 0) {
-    activeFolderId.value = foldersSorted.value[0].id
+    activeFolderId.value = foldersSorted.value[0].id.toString()
   }
   console.log(activeFolderId.value)
 }
 
-const handleMenuSelect = (folderId: number) => {
+const handleMenuSelect = (folderId: string) => {
   activeFolderId.value = folderId
 }
 
@@ -156,15 +161,25 @@ watch(collapsed, (val) => {
   }
 })
 
-const showCreateFolderPopover = ref<boolean>(false)
+const dialogVisible = ref<boolean>(false)
 const newFolderTitle = ref<string>('')
 
-const handleCreateFolder = () => {
-
+const showCreateFolderDialog = () => {
+  dialogVisible.value = true
+  newFolderTitle.value = ''
 }
 
-const handleShowCreateFolderPopover = () => {
+const handleCreateFolder = async () => {
+  dialogVisible.value = false
+  const response = await createFolder({
+    name: newFolderTitle.value,
+    index: folders.value.length,
+  } as Folder, courseId.value)
+  folders.value.push(response.data as Folder)
+}
 
+const handleCreatePage = (page: Page) => {
+  activeFolder.value.pages?.push({id: page.id, name: page.name} as FolderPageItem)
 }
 
 </script>

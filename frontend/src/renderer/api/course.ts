@@ -11,12 +11,14 @@ export function getFolders(classId: number) {
 
 interface FolderCreate extends Folder {
     order: number[],  // 包含的所有有序 pageId
+    classId: number,
 }
 
-export function createFolder(folder: Folder) {
+export function createFolder(folder: Folder, classId: number) {
     const payload: FolderCreate = {
         ...folder,
         order: [],
+        classId,
     }
 
     return request.post('/class/folder', payload)

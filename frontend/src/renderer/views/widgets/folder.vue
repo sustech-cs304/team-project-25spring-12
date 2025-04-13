@@ -30,17 +30,22 @@
 </template>
 
 <script setup lang="ts">
-import {computed, onMounted, ref} from 'vue'
+import {computed, ref} from 'vue'
 import type { Folder, FolderPageItem } from '@/types/folder'
 import WidgetCard from '@/views/widgets/utils/widget-card.vue'
 import { Document } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
-import axios from 'axios'
-import {Page} from "@/types/page";
+import type {Page} from "@/types/page";
+import {createPage} from "@/api/courseMaterial"
 
 const props = defineProps<{
   folder: Folder
+  courseId: number
   canEdit: boolean
+}>()
+
+const emit = defineEmits<{
+  (e: 'create-page', page: Page): void
 }>()
 
 const router = useRouter()
@@ -50,9 +55,7 @@ const newPageTitle = ref('')
 const callback = computed(() => props.canEdit ? showCreatePageDialog : null)
 
 const handlePageClick = (page: FolderPageItem) => {
-  // TODO: 替换为实际的路由跳转逻辑
-  // e.g. router.push(`/page/${page.id}`)
-  console.log('Clicked page:', page)
+  router.push('/course/' + props.courseId + '/page/' + page.id)
 }
 
 const showCreatePageDialog = () => {
@@ -60,21 +63,13 @@ const showCreatePageDialog = () => {
   newPageTitle.value = ''
 }
 
-const createPage = async () => {
-  try {
-    const payload = {
-      // TODO
-    }
-    const response = await axios.post("https://example.com/api/class/page", payload) // TODO: 替换为正确的 api 请求
-    // pages.push(response.data)
-  } catch(error) {
-    console.error(error)
-  }
-}
-
-const handleCreatePage = () => {
+const handleCreatePage = async () => {
   dialogVisible.value = false
-  createPage()
+  const response = await createPage({
+    name: newPageTitle.value,
+    index: props.folder.pages.length,
+  } as Page, props.courseId, props.folder.id)
+  emit('create-page', response.data as Page)
 }
 </script>
 
