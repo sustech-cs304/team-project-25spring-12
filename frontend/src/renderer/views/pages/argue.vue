@@ -3,14 +3,15 @@
     <!-- <argue :data="argueDataPending"></argue> -->
     <!-- <argue :data="argueDataSubmitted"></argue> -->
     <argue :data="argueDataReturned"></argue>
-    <forum></forum>
+    <comment :data="{}"></comment>
   </div>
 </template>
 
 
 <script setup lang="ts">
   import argue from "../widgets/argue.vue"
-  import forum from "../widgets/forum.vue"
+  import comment from "../widgets/comment.vue"
+  // import forum from "../widgets/forum.vue"
 
   const argueDataPending = {
     title: 'ArguePending',
