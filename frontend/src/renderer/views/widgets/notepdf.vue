@@ -68,6 +68,7 @@ import { Download } from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import { downloadFile } from '@/utils/useDownloader';
 import type { NotePdfWidget, Note } from '@/types/widgets';
+import {createNote} from "@/api/note";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -189,14 +190,15 @@ const addNote = () => {
   const text = newNoteText.value.trim();
   if (!text) return;
 
-  notes.value.push({
+  const newNote: Note = {
     page: contextMenu.value.page,
     x: contextMenu.value.x,
     y: contextMenu.value.y,
     text,
-  });
+  } as Note;
 
-  // TODO: 上传到后端
+  notes.value.push(newNote);
+  createNote(newNote, props.data.id);
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
