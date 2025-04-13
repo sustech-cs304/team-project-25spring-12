@@ -7,7 +7,8 @@ from backend.mjc.model.entity import ArguePost, Widget, Profile, Page, Class, \
         ClassStudentLink, ArguePostVote, ArguePostWatch, ClassTeacherLink, ArguePostStatus, \
         ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment
 from backend.mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, ArguePostFeedback, \
-        ArguePostVoteCreate, ArguePostFeedbackCreate, ArguePostAttachmentCreate, ArguePostFeedbackAttachmentCreate
+        ArguePostVoteCreate, ArguePostFeedbackCreate, ArguePostAttachmentCreate, ArguePostFeedbackAttachmentCreate, \
+        ArguePostWatchCreate
 from backend.mjc.model.schema.user import UserInDB
 
 
@@ -190,3 +191,31 @@ def create_argue_vote(db: Session, argue: ArguePostVoteCreate, voter: UserInDB) 
     db.commit()
     db.refresh(argue_vote)
     return argue_vote
+
+
+def get_argue_watch(db: Session, argue_post_id: int, watcher: UserInDB) -> ArguePostWatch:
+    stmt = select(ArguePostWatch).where(ArguePostWatch.argue_post_id == argue_post_id) \
+                                 .where(ArguePostWatch.watcher_username == watcher.username) \
+                                 .where(ArguePostWatch.is_deleted == False)
+    watch = db.exec(stmt).first()
+    return watch
+
+
+def create_argue_watch(db: Session, watch: ArguePostWatchCreate, watcher: UserInDB) -> ArguePostWatch:
+    argue_watch = ArguePostWatch(
+        argue_post_id=watch.argue_post_id,
+        watcher_username=watcher.username
+    )
+    db.add(argue_watch)
+    db.commit()
+    db.refresh(argue_watch)
+    return argue_watch
+
+
+def delete_argue_watch(db: Session, argue_post_id: int, watcher: UserInDB) -> ArguePostWatch:
+    watch = get_argue_watch(db, argue_post_id, watcher)
+    if watch:
+        watch.is_deleted = True
+    db.commit()
+    db.refresh(watch)
+    return watch
