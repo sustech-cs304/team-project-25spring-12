@@ -90,7 +90,7 @@ def create_assignment_widget(db: Session, widget: AssignmentWidgetCreate, editor
     assignment = AssignmentWidget(
         widget_id=widget_entity.id,
         ddl=widget.ddl,
-        submit_types=widget.submit_types,
+        submit_types=[SubmitType(typ) for typ in widget.submit_types],
         max_score=widget.max_score,
     )
     db.add(assignment)
