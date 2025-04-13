@@ -32,6 +32,18 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/course.vue'),
             },
             {
+                path: 'argue',
+                name: 'argue-plaza',
+                meta: {title: '辩驳广场'},
+                component: () => import('../views/pages/argue-plaza.vue'),
+            },
+            {
+                path: 'argue/:argueId',
+                name: 'argue',
+                meta: {title: '辩驳'},
+                component: () => import('../views/pages/argue.vue'),
+            },
+            {
                 path: 'messages',
                 name: 'message-box',
                 meta: {title: '消息中心'},
