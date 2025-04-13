@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.assignment import FeedBack
+from backend.mjc.model.schema.assignment import Feedback
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import Profile
 
@@ -44,7 +44,7 @@ class AssignmentWidget(WidgetBase):
     ddl: datetime
     score: float | None = None
     max_score: float
-    feedback: FeedBack | None = None
+    feedback: Feedback | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):

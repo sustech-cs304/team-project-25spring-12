@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -24,6 +25,7 @@ class FeedbackCreate(FeedbackBase):
 
 class FeedbackUpdate(FeedbackBase):
     submission_id: int
+    id: int
 
 
 class SubmittedAssignmentBase(BaseModel):
@@ -40,4 +42,14 @@ class SubmittedAssignment(SubmittedAssignmentBase):
     id: int
     submitted_time: datetime
     student: Profile | None = None
-    feedback: FeedBack | None = None
+    feedback: Feedback | None = None
+
+
+class SubmissionAttachment(BaseModel):
+    submission_id: int
+    file_id: uuid.UUID
+
+
+class FeedbackAttachment(BaseModel):
+    feedback_id: int
+    file_id: uuid.UUID

@@ -263,6 +263,7 @@ class SubmittedAssignmentAttachment(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
     submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="submitted_assignments")
     file: "LocalResourceFile" = Relationship()
@@ -274,6 +275,7 @@ class FeedbackAttachment(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
     feedback_id: int = Field(foreign_key="submitted_assignment_feedback.id")
+    is_deleted: bool = Field(default=False, nullable=False)
 
     feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="attachments")
     file:"LocalResourceFile" = Relationship()
@@ -303,7 +305,7 @@ class SubmittedAssignment(SQLModel, table=True):
     content: str | None = Field(default=None, nullable=True)
     code: str | None = Field(default=None, nullable=True)
     language: str | None = Field(default=None, nullable=True)
-    marked: str | None = Field(default=None, nullable=True)
+    marked: str | None = Field(default=None, nullable=False)
 
     feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="submitted_assignment")
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")
