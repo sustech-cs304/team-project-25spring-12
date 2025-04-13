@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.widget import AssignmentWidget
 from backend.mjc.model.schema.user import Profile
+from backend.mjc.model.entity import ArguePostStatus
 
 
 class ArguePostCommentBase(BaseModel):
@@ -16,6 +17,7 @@ class ArguePostCommentBase(BaseModel):
 class ArguePostComment(ArguePostCommentBase):
     id: int
     editor: Profile
+    create_time: datetime
 
 
 class ArguePostCommentCreate(ArguePostCommentBase):
@@ -50,9 +52,8 @@ class ArguePostBase(BaseModel):
     content: str | None = None
 
 
-class ArguePost(BaseModel):
+class ArguePost(ArguePostBase):
     id: int
-    assignment: AssignmentWidget
     create_time: datetime
     update_time: datetime
     watch: int
@@ -62,9 +63,13 @@ class ArguePost(BaseModel):
     attachments: list[File] | None = None
     comments: list[ArguePostComment] | None = Field(default_factory=[])
     feedback: ArguePostFeedback | None = None
+    old_score: float
+    assignment: AssignmentWidget
+    status: ArguePostStatus = ArguePostStatus.SUBMITTED
 
 
 class ArguePostCard(ArguePostBase):
+    id: int
     create_time: datetime
     update_time: datetime
     watch: int | None = 0
@@ -72,6 +77,7 @@ class ArguePostCard(ArguePostBase):
     not_support: int | None = 0
     editor: Profile
     comments: int | None = 0
+    status: ArguePostStatus = ArguePostStatus.SUBMITTED
 
 
 class ArguePostCreate(ArguePostBase):
