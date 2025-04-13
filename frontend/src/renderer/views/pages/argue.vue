@@ -10,7 +10,6 @@
 
 
 <script setup lang="ts">
-  import assignment from "../widgets/assignment.vue"
   import argue from "../widgets/argue.vue"
   
   const assignmentDataSubmitted = {
