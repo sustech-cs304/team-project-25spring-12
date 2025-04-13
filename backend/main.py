@@ -9,7 +9,7 @@ from redis import asyncio as aioredis
 
 from backend.mjc.utils.database import create_db_and_tables
 from backend.mjc.utils.keybuilder import request_key_builder
-from backend.mjc.router import user, course, page, widget, common
+from backend.mjc.router import user, course, page, widget, common, assignment
 
 
 @asynccontextmanager
@@ -35,4 +35,5 @@ app.include_router(course.router)
 app.include_router(page.router)
 app.include_router(widget.router)
 app.include_router(common.router)
+app.include_router(assignment.router)
 
