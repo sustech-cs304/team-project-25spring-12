@@ -32,6 +32,35 @@
           <span v-if="!collapsed">{{ widget.title }}</span>
         </el-menu-item>
       </el-menu>
+      <el-popover
+          :visible="showCreateWidgetPopover"
+          placement="top"
+          :width="180"
+          v-if="authenticated"
+      >
+        <p>
+          <el-select v-model="newWidgetType" placeholder="请选择类型">
+            <el-option
+                v-for="item in widgetTypes"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+            />
+          </el-select>
+        </p>
+        <div style="text-align:center; margin-top: 5px;">
+          <el-button size="small" @click="showCreateWidgetPopover = false">取消</el-button>
+          <el-button size="small" type="primary" @click="handleCreateWidget">确认</el-button>
+        </div>
+        <template #reference>
+          <el-button @click="handleShowCreateWidgetPopover">
+            <el-icon>
+              <Plus/>
+            </el-icon>
+            <span>新建目录</span>
+          </el-button>
+        </template>
+      </el-popover>
     </div>
 
     <!-- 内容区域 -->
@@ -133,6 +162,16 @@ const handleMenuSelect = (widgetId: number) => {
   setTimeout(() => {
     widgetRefs.get(widgetId)?.init?.()
   }, 50)
+}
+
+const handleShowCreateWidgetPopover = () => {
+  showCreateWidgetPopover.value = true
+  newWidgetType.value = undefined
+}
+
+const handleCreateWidget = () => {
+  showCreateWidgetPopover.value = false
+  // TODO: 创建widget
 }
 
 watch(collapsed, (val) => {

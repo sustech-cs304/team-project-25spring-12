@@ -32,6 +32,28 @@
           <span v-if="!collapsed">{{ folder.name }}</span>
         </el-menu-item>
       </el-menu>
+      <el-popover
+          :visible="showCreateFolderPopover"
+          placement="top"
+          :width="180"
+          v-if="authenticated"
+      >
+        <p>
+          <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
+        </p>
+        <div style="text-align:center; margin-top: 5px;">
+          <el-button size="small" @click="showCreateFolderPopover = false">取消</el-button>
+          <el-button size="small" type="primary" @click="handleCreateFolder" :disabled="newFolderTitle === ''">确认</el-button>
+        </div>
+        <template #reference>
+          <el-button @click="handleShowCreateFolderPopover()">
+            <el-icon>
+              <Plus/>
+            </el-icon>
+            <span>新建目录</span>
+          </el-button>
+        </template>
+      </el-popover>
     </div>
 
     <!-- 主体内容区域 -->

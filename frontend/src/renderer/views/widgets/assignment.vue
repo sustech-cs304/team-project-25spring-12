@@ -1,7 +1,58 @@
 <template>
-  <widget-card :title="computedTitle" type="assignment">
-    <div class="container">
+  <widget-card :title="computedTitle" type="assignment" :callback="authenticated ? handleEdit : undefined">
+    <div v-if="isEditingByT">
+      <!--   作业设置   -->
+      <div>
+        <el-text class="section-title">作业设置</el-text>
+        <div class="homework-form">
+          <el-form :model="form" :rules="rules" label-width="120px">
+            <!-- 作业标题 -->
+            <el-form-item label="作业标题" prop="title">
+              <el-input v-model="form.title" placeholder="请输入作业标题"></el-input>
+            </el-form-item>
+
+            <!-- 作业类型 -->
+            <el-form-item  label="作业类型" prop="type">
+              <el-select v-model="form.type" placeholder="请选择作业类型">
+                <el-option label="文件上传" value="file"></el-option>
+                <el-option label="代码提交" value="code"></el-option>
+              </el-select>
+            </el-form-item>
+
+            <!-- 作业截止时间 -->
+            <el-form-item label="作业截止时间" prop="deadline">
+              <el-date-picker
+                v-model="form.deadline"
+                type="datetime"
+                placeholder="选择截止时间"
+                format="YYYY-MM-DD HH:mm:ss"
+                value-format="YYYY-MM-DD HH:mm:ss"
+              ></el-date-picker>
+            </el-form-item>
+
+            <!-- 作业分数上限 -->
+            <el-form-item label="分数上限" prop="maxScore">
+              <el-input-number v-model="form.maxScore" :min="0" :max="100" placeholder="请输入分数上限"></el-input-number>
+            </el-form-item>
+
+            <!-- 作业是否可见 -->
+            <el-form-item label="是否可见" prop="isVisible">
+              <el-switch v-model="form.isVisible" active-text="是" inactive-text="否"></el-switch>
+            </el-form-item>
+          </el-form>
+        </div>
+      </div>
+      <!--   作业信息   -->
+      <div>
+        <el-text class="section-title">作业信息</el-text>
+        <md-and-file-editor :fileList="props.data.attachments" :content="props.data.content"/>
+      </div>
+    </div>
+    <div class="container" v-else>
       <!--   作业状态   -->
+      <div v-if="!props.data.visible">
+        不可见
+      </div>
       <div>
         <el-text class="section-title">作业状态</el-text>
         <div class="assignment-status">
@@ -106,6 +157,16 @@
         </div>
       </div>
     </div>
+    <template #button>
+      <template v-if="isEditingByT">
+        <el-icon><Check/></el-icon>
+        <span>保存</span>
+      </template>
+      <template v-else>
+        <el-icon><Edit/></el-icon>
+        <span>编辑</span>
+      </template>
+    </template>
   </widget-card>
 </template>
 
@@ -114,13 +175,29 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
-import { computed, ref } from "vue";
+import {computed, reactive, ref} from "vue";
 import { Checked, Edit, Finished, Memo, Timer, Upload, ChatRound } from "@element-plus/icons-vue";
 import type { AssignmentWidget, SubmittedRecord } from "@/types/widgets";
 
 const props = defineProps<{
   data: AssignmentWidget;
 }>();
+
+const authenticated = ref(true);
+const form = reactive({
+  title: '',
+  type: '',
+  deadline: '',
+  maxScore: 0,
+  isVisible: false,
+});
+
+const rules = {
+  title: [{ required: true, message: '请输入作业标题', trigger: 'blur' }],
+  type: [{ required: true, message: '请选择作业类型', trigger: 'change' }],
+  deadline: [{ required: true, message: '请选择作业截止时间', trigger: 'change' }],
+  maxScore: [{ required: true, message: '请输入分数上限', trigger: 'blur' }],
+};
 
 /*
 * 代码编辑器的所有常量和方法：
@@ -208,6 +285,16 @@ const postArgue = () => {
   } else {
     // 路由到创建Argue的页面
   }
+}
+
+const isEditingByT = ref(false);
+
+// 教师编辑当前作业信息
+const handleEdit = () => {
+  if (isEditingByT.value) {
+    // TODO: 保存并上传信息
+  }
+  isEditingByT.value = !isEditingByT.value;
 }
 
 defineExpose({
