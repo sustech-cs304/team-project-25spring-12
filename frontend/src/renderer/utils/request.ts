@@ -15,7 +15,6 @@ function initUserStore() {
 
 // 请求前：camelCase 转 snake_case
 service.interceptors.request.use(config => {
-    console.log(config)
     if (!userStore) initUserStore()
     const token = userStore.accessToken;
     if (token) {
@@ -32,7 +31,6 @@ service.interceptors.request.use(config => {
 
 // 响应后：snake_case 转 camelCase
 service.interceptors.response.use(response => {
-        console.log(response.data)
         if (response.data) {
             response.data = humps.camelizeKeys(response.data)
         }

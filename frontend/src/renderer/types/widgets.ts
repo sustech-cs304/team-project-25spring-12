@@ -75,3 +75,9 @@ export const widgetMap: Record<WidgetType, any> = {
     doc: Doc,
     assignment: Assignment,
 };
+
+export const widgetNameMap: Record<WidgetType, string> = {
+    notepdf: '互动式课件',
+    doc: '文档和文件',
+    assignment: '作业',
+};

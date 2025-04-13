@@ -26,7 +26,7 @@ const props = defineProps<{
   data: DocWidget;
 }>();
 
-const computedTitle = computed(() => props.data?.title || '富文本展示区');
+const computedTitle = computed(() => props.data?.title);
 const authenticated = ref(true);
 const isEditing = ref(false);
 

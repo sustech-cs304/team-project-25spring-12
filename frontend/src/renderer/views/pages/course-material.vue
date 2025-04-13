@@ -85,16 +85,22 @@ import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
 import {getPage} from "@/api/courseMaterial"
+import {useUserStore} from "@/store/user";
 
 const route = useRoute()
+const userStore = useUserStore()
 
-const activeWidgetId = ref('')
+const activeWidgetId = ref<string>('')
 const collapsed = ref(false)
 const widgetRefs = new Map<string, any>()
 const showTitle = ref(!collapsed.value)
 
 const widgets = ref<WidgetUnion[]>([])
 const title = ref('')
+
+const courseId = ref<number>(-1)
+const role = ref<string>('')
+const canEdit = computed(() => role.value === 'ta' || role.value === 'teacher')
 
 onMounted(async () => {
   const response = await getPage()
@@ -105,6 +111,8 @@ onMounted(async () => {
   setTimeout(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.()
   }, 50)
+  courseId.value = Number(route.params.courseId)
+  role.value = await userStore.getRoleByCourseId(courseId.value)
 })
 
 const widgetsSortedByIndex = computed(() => {
@@ -112,15 +120,14 @@ const widgetsSortedByIndex = computed(() => {
 })
 
 const activeWidget = computed(() => {
-  return widgets.value.find(w => w.id === activeWidgetId.value)
+  return widgets.value.find(w => w.id.toString() === activeWidgetId.value)
 })
 
 const getMenuItemStyle = (widget: WidgetUnion) => {
   const color = getWidgetStyle(widget.type).color
   return {
-    backgroundColor: widget.id == activeWidgetId.value
-        ? getHeaderColor(color) : getBodyColor(color),
-    color: widget.id == activeWidgetId.value ? 'white' : 'black',
+    backgroundColor: widget.id.toString() === activeWidgetId.value ? getHeaderColor(color) : getBodyColor(color),
+    color: widget.id.toString() === activeWidgetId.value ? 'white' : 'black',
     fontWeight: 'bold',
     borderRadius: '6px',
     margin: '4px 8px',
@@ -148,21 +155,24 @@ const setWidgetRef = (id: string, el: any) => {
 
 const initActiveWidget = () => {
   const widgetId = route.query.widget as string
-  const matched = widgets.value.find(w => w.id == widgetId)
+  const matched = widgets.value.find(w => w.id.toString() === widgetId)
   if (matched) {
-    activeWidgetId.value = matched.id
+    activeWidgetId.value = matched.id.toString()
   } else if (widgets.value.length > 0) {
     const minWidget = widgetsSortedByIndex.value[0]
-    activeWidgetId.value = minWidget.id
+    activeWidgetId.value = minWidget.id.toString()
   }
 }
 
 const handleMenuSelect = (widgetId: number) => {
-  activeWidgetId.value = widgetId
+  activeWidgetId.value = widgetId.toString()
   setTimeout(() => {
-    widgetRefs.get(widgetId)?.init?.()
+    widgetRefs.get(widgetId.toString())?.init?.()
   }, 50)
 }
+
+const showCreateWidgetPopover = ref(false)
+const newWidgetType = ref('')
 
 const handleShowCreateWidgetPopover = () => {
   showCreateWidgetPopover.value = true
