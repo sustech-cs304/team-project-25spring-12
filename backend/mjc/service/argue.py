@@ -3,19 +3,19 @@ import uuid
 from sqlmodel import Session
 from fastapi import HTTPException
 
-from backend.mjc.crud import argue as crud_argue
-from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.schema.widget import AssignmentWidget
-from backend.mjc.model.schema.user import UserInDB, Profile
-from backend.mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
+from mjc.crud import argue as crud_argue
+from mjc.model.schema.common import File, Message
+from mjc.model.schema.widget import AssignmentWidget
+from mjc.model.schema.user import UserInDB, Profile
+from mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
     ArguePostUpdate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedbackCreate, \
     ArguePostFeedbackAttachmentCreate, ArguePostCreate
-from backend.mjc.model.schema.assignment import SubmittedAssignment, Feedback
-from backend.mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
+from mjc.model.schema.assignment import SubmittedAssignment, Feedback
+from mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
     SubmittedAssignmentAttachment, ArguePost as ArguePostEntity
-from backend.mjc.crud.argue import count_argue_votes
-from backend.mjc.model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
-from backend.mjc.service.assignment import entity2feedback
+from mjc.crud.argue import count_argue_votes
+from mjc.model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
+from mjc.service.assignment import entity2feedback
 
 
 def argue2comments(argue: ArguePostEntity) -> list[ArguePostComment]:

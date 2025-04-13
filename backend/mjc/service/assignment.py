@@ -4,16 +4,16 @@ from fileinput import filename
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from backend.mjc.crud import assignment as crud_assignment
-from backend.mjc.crud.user import get_profile
+from mjc.crud import assignment as crud_assignment
+from mjc.crud.user import get_profile
 
-from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
-from backend.mjc.model.entity import SubmittedAssignmentFeedback
-from backend.mjc.model.entity import Visibility
-from backend.mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
+from mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
+from mjc.model.entity import SubmittedAssignmentFeedback
+from mjc.model.entity import Visibility
+from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment
-from backend.mjc.model.schema.common import Message, File, Code
-from backend.mjc.model.schema.user import UserInDB, Profile
+from mjc.model.schema.common import Message, File, Code
+from mjc.model.schema.user import UserInDB, Profile
 
 
 def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> SubmittedAssignment:

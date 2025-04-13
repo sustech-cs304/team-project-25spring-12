@@ -1,13 +1,13 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from backend.mjc.crud import folder as folder_crud, page as page_crud
-from backend.mjc.crud.course import get_class, get_user_class_role
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.folder import Folder, FolderUpdate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.entity import ClassRole, Folder as FolderEntity
-from backend.mjc.model.schema.folder import FolderPageItem, FolderCreate
+from mjc.crud import folder as folder_crud, page as page_crud
+from mjc.crud.course import get_class, get_user_class_role
+from mjc.model.schema.common import Message
+from mjc.model.schema.folder import Folder, FolderUpdate
+from mjc.model.schema.user import UserInDB
+from mjc.model.entity import ClassRole, Folder as FolderEntity
+from mjc.model.schema.folder import FolderPageItem, FolderCreate
 
 
 def entity2folder(entity: FolderEntity) -> Folder:

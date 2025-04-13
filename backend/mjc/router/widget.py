@@ -3,15 +3,15 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.widget import DocWidget, DocWidgetCreate, DocWidgetUpdate, \
+from mjc.model.schema.common import Message
+from mjc.model.schema.widget import DocWidget, DocWidgetCreate, DocWidgetUpdate, \
     AssignmentWidget, AssignmentWidgetCreate, AssignmentWidgetUpdate, \
     WidgetAttachmentCreate, \
     NotePdfWidget, NotePdfWidgetCreate, NotePdfWidgetUpdate, Note, NoteCreate, NoteUpdate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.service import user as user_service
-from backend.mjc.service import widget as widget_service
-from backend.mjc.utils.database import SessionDep
+from mjc.model.schema.user import UserInDB
+from mjc.service import user as user_service
+from mjc.service import widget as widget_service
+from mjc.utils.database import SessionDep
 
 
 router = APIRouter()

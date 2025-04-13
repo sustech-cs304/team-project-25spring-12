@@ -1,13 +1,13 @@
 import uuid
 from fastapi import APIRouter, Depends
 
-from backend.mjc.utils.database import SessionDep
-from backend.mjc.service.user import get_current_user
-from backend.mjc.service import argue as argue_service
-from backend.mjc.model.schema.argue import ArguePost, ArguePostCard, ArguePostCreate, ArguePostUpdate, ArguePostComment, \
+from mjc.utils.database import SessionDep
+from mjc.service.user import get_current_user
+from mjc.service import argue as argue_service
+from mjc.model.schema.argue import ArguePost, ArguePostCard, ArguePostCreate, ArguePostUpdate, ArguePostComment, \
     ArguePostCommentCreate, ArguePostWatchCreate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedback, \
     ArguePostFeedbackCreate, ArguePostFeedbackAttachmentCreate
-from backend.mjc.model.schema.common import Message
+from mjc.model.schema.common import Message
 
 router = APIRouter()
 

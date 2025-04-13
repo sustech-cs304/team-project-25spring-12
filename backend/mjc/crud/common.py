@@ -3,9 +3,9 @@ from datetime import datetime
 
 from sqlmodel import Session, select
 
-from backend.mjc.model.schema.common import LocalResourceFileCreate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.entity import LocalResourceFile
+from mjc.model.schema.common import LocalResourceFileCreate
+from mjc.model.schema.user import UserInDB
+from mjc.model.entity import LocalResourceFile
 
 
 def create_local_resource_file(db: Session, file: LocalResourceFileCreate, uploader: UserInDB) -> LocalResourceFile:

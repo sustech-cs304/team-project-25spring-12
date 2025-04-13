@@ -3,12 +3,12 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.page import Page, PageCreate, PageUpdate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.service import page as page_service
-from backend.mjc.service.user import get_current_user
-from backend.mjc.utils.database import SessionDep
+from mjc.model.schema.common import Message
+from mjc.model.schema.page import Page, PageCreate, PageUpdate
+from mjc.model.schema.user import UserInDB
+from mjc.service import page as page_service
+from mjc.service.user import get_current_user
+from mjc.utils.database import SessionDep
 
 router = APIRouter()
 
