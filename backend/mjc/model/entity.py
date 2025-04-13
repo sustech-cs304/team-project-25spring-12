@@ -310,7 +310,7 @@ class SubmittedAssignment(SQLModel, table=True):
     profile: "Profile" = Relationship()
 
 
-class ArguePostStatus(Enum, str):
+class ArguePostStatus(str, Enum):
     SUBMITTED = "submitted"
     PROCESSED = "processed"
 
@@ -384,7 +384,7 @@ class ArguePostWatch(SQLModel, table=True):
 
 
 class ArguePostFeedbackAttachment(SQLModel, table=True):
-    __tablename__ = 'argue_post_attachment'
+    __tablename__ = 'argue_post_feedback_attachment'
 
     id: int | None = Field(default=None, primary_key=True)
     file_id: uuid.UUID = Field(foreign_key="local_resource_file.id")
@@ -403,7 +403,6 @@ class ArguePostFeedback(SQLModel, table=True):
     content: str | None = Field(default=None, nullable=True)
     score: float | None = Field(default=None, nullable=True)
     marker_username: str = Field(foreign_key="profile.username")
-    submitted_assignment_id: int
     create_time: datetime | None = Field(default=None, nullable=True)
 
     argue_post: "ArguePost" = Relationship(back_populates="feedback")
