@@ -2,12 +2,12 @@
   <div class="attachments">
     <el-row justify="space-between">
       <el-text size="large" class="attachment-title">{{ title }}</el-text>
-      <el-upload
-          :http-request="uploadFile"
-          :show-file-list="false"
-      >
-        <el-button type="primary">上传文件</el-button>
-      </el-upload>
+<!--      <el-upload-->
+<!--          :http-request="uploadFile"-->
+<!--          :show-file-list="false"-->
+<!--      >-->
+<!--        <el-button type="primary">上传文件</el-button>-->
+<!--      </el-upload>-->
     </el-row>
     <el-divider></el-divider>
     <el-row
