@@ -5,16 +5,17 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from backend.mjc.model.schema.common import Message
 from backend.mjc.model.schema.page import Page, PageCreate, PageUpdate
-
+from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.service import page as page_service
+from backend.mjc.service.user import get_current_user
 from backend.mjc.utils.database import SessionDep
 
 router = APIRouter()
 
 
 @router.get(path="/class/page/{page_id}", response_model=Page)
-async def get_page(db:SessionDep, page_id:int):
-    return page_service.get_page(db, page_id)
+async def get_page(db:SessionDep, page_id:int, current_user: UserInDB = Depends(get_current_user)):
+    return page_service.get_page(db, page_id, current_user)
 
 
 @router.post(path="/class/page", response_model=Page)

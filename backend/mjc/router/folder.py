@@ -1,11 +1,10 @@
 from fastapi import APIRouter, Depends
-from sqlmodel import Session
 
 from backend.mjc.utils.database import SessionDep
 from backend.mjc.service import folder as folder_service
 from backend.mjc.service.user import get_current_user
-from model.schema.folder import FolderCreate, FolderUpdate
-from model.schema.user import UserInDB
+from backend.mjc.model.schema.folder import FolderCreate, FolderUpdate
+from backend.mjc.model.schema.user import UserInDB
 
 router = APIRouter()
 
@@ -19,15 +18,15 @@ async def get_class_folders(db: SessionDep, class_id: int,
 @router.post('/class/folder')
 async def create_class_folder(db: SessionDep, folder: FolderCreate,
                               current_user: UserInDB = Depends(get_current_user)):
-    folder_service.create_folder(db, folder)
+    return folder_service.create_folder(db, folder)
 
 
 @router.patch('/class/folder')
 async def update_folder(db: SessionDep, folder: FolderUpdate,
                         current_user: UserInDB = Depends(get_current_user)):
-    folder_service.update_folder(db, folder)
+    return folder_service.update_folder(db, folder)
 
 
 @router.delete('/class/folder/{folder_id}')
-async def delete_folder(db: Session, folder_id: int):
-    folder_service.delete_folder(db, folder_id)
+async def delete_folder(db: SessionDep, folder_id: int):
+    return folder_service.delete_folder(db, folder_id)

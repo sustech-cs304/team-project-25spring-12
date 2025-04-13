@@ -1,8 +1,9 @@
+import uuid
 from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.assignment import FeedBack, SubmittedAssignment
+from backend.mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import Profile
 
@@ -44,7 +45,7 @@ class AssignmentWidget(WidgetBase):
     ddl: datetime
     score: float | None = None
     max_score: float
-    feedback: FeedBack | None = None
+    feedback: Feedback | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
@@ -96,17 +97,17 @@ class NotePdfWidget(WidgetBase):
 
 class NotePdfWidgetCreate(WidgetBase):
     index: int
-    pdf_file: File
+    pdf_file: uuid.UUID
     page_id: int
     visible: bool | None = True
 
 
 class NotePdfWidgetUpdate(WidgetBase):
     id: int
-    pdf_file: File
+    pdf_file: uuid.UUID
     visible: bool | None = True
 
 
 class WidgetAttachmentCreate(BaseModel):
     widget_id: int
-    file: File
+    file_id: uuid.UUID

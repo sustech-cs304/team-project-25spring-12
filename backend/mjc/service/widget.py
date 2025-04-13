@@ -1,21 +1,28 @@
+import uuid
+
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
+import backend.mjc.crud.assignment
 from backend.mjc.crud import widget as crud_widget
 from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, Note, NoteCreate, NoteUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
+from backend.mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
+from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType, Note as NoteEntity
+from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
+from backend.mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
+from backend.mjc.service.assignment import entity2submission
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
     attach: list[File] = []
     if entity.attachments:
-        for attachment in entity.attachment:
+        for attachment in entity.attachments:
             file: File = File(id=attachment.file_id,
-                              filename=attachment.name,
+                              filename=attachment.file.filename,
                               visibility=attachment.file.visibility,
                               url=None)
             attach.append(file)
@@ -34,15 +41,19 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
     return doc_widget
 
 
+def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
+    entity: FeedbackEntity = backend.mjc.crud.assignment.get_last_feedback(db, widget_id, username)
+    if entity:
+        feedback = Feedback(score=entity.score,
+                            content=entity.content,
+                            attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+                            create_time=entity.create_time,
+                            id=entity.id)
+        return feedback
+    return None
+
+
 def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
-    attach: list[File] = []
-    if entity.attachments:
-        for attachment in entity.attachment:
-            file: File = File(id=attachment.file_id,
-                              filename=attachment.name,
-                              visibility=attachment.file.visibility,
-                              url=None)
-            attach.append(file)
     assignment_widget = AssignmentWidget(
         title=entity.title,
         index=entity.index,
@@ -54,15 +65,22 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         id=entity.id,
         content=entity.content if entity.content else None,
         submit_types=entity.assignment_widget.submit_types,
-        submitted_assignment=None,  # TODO: 已提交作业
-        status='',  # TODO: 提交与批改的状态
+        submitted_assignment=None,
+        status='not submitted',
         ddl=entity.assignment_widget.ddl,
-        score=None,  # TODO: 已批改作业的分数
+        score=None,
         max_score=entity.assignment_widget.max_score,
         feedback=None,
-        attachments=attach
+        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments]
     )
     return assignment_widget
+
+
+def entity2note(entity: NoteEntity) -> Note:
+    return Note(
+        editor=Profile.model_validate(entity.editor.model_dump()),
+        **entity.model_dump(),
+    )
 
 
 def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
@@ -81,6 +99,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
         ),
+        notes=[entity2note(note) for note in entity.note_pdf_widget.notes],
     )
     return note_pdf_widget
 
@@ -92,6 +111,41 @@ def entity2widget(entity: WidgetEntity) -> AssignmentWidget | NotePdfWidget | Do
         return entity2assignment(entity)
     elif entity.type == WidgetType.note_pdf:
         return entity2notepdf(entity)
+
+
+def get_student_submissions(db: Session,
+                            assignment_widget_entity: WidgetEntity,
+                            username: str):
+    assigment_widget: AssignmentWidget = entity2assignment(assignment_widget_entity)
+    if assigment_widget:
+        submissions = backend.mjc.crud.assignment.get_user_assignment_submissions(db, assigment_widget.id, username)
+        if submissions:
+            assigment_widget.status = 'submitted'
+            assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
+        feedback = get_feedback(db, assignment_widget_entity.id, username)
+        if feedback:
+            assigment_widget.status = 'marked'
+            assigment_widget.score = feedback.score
+            assigment_widget.feedback = feedback
+        return assigment_widget
+    return None
+
+
+def get_all_student_submissions(db: Session, widget_id: int) -> list[SubmittedAssignment] | None:
+    entities: list[SubmittedAssignmentEntity] = backend.mjc.crud.assignment.get_all_assignments_submissions(db, widget_id)
+    submissions: list[SubmittedAssignment] =[]
+    if entities:
+        for entity in entities:
+            submission = entity2submission(db, entity)
+            submission.feedback = Feedback(score=entity.feedback.score,
+                                           content=entity.feedback.content,
+                                           attachments=[File(url=None, **file.model_dump()) \
+                                                        for file in entity.feedback.attachments if entity.feedback.attachments],
+                                           create_time=entity.create_time,
+                                           id=entity.feedback.id) if entity.feedback else None
+            submissions.append(submission)
+        return submissions
+    return None
 
 
 def create_doc_widget(db: Session, editor: UserInDB, doc_widget_create: DocWidgetCreate) -> DocWidget:
@@ -155,21 +209,24 @@ def delete_widget(db: Session, widget_id: int) -> Message:
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete widget failed")
 
 
-def add_widget_attachment(db: Session, attachment: WidgetAttachmentCreate) -> DocWidget | AssignmentWidget | NotePdfWidget:
-    # TODO:
-    pass
+def add_widget_attachment(db: Session, attachment: WidgetAttachmentCreate) -> Message:
+    entity = crud_widget.create_widget_attachment(db, attachment)
+    if entity:
+        return Message(msg="Widget added successfully")
+    raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Add widget failed")
 
 
-def delete_attachment(db: Session, attachment_id: int):
-    attachment_entity = crud_widget.delete_widget(db, attachment_id)
+def delete_attachment(db: Session, attachment_id: uuid.UUID) -> Message:
+    attachment_entity = crud_widget.delete_widget_attachment(db, attachment_id)
     if attachment_entity:
-        return attachment_entity
+        return Message(msg="Attachment deleted successfully")
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete attachment failed")
 
 
 def create_note(db: Session, note: NoteCreate, editor: UserInDB) -> Note:
     note_entity = crud_widget.create_note(db, note, editor)
-    return Note.model_validate(note_entity.model_dump())
+    return Note(editor=Profile.model_validate(note_entity.editor.model_dump()),
+                **note_entity.model_dump())
 
 
 def update_note(db: Session, note: NoteUpdate, editor: UserInDB) -> Note:

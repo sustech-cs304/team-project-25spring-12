@@ -24,5 +24,5 @@ class Message(BaseModel):
 
 
 class Code(BaseModel):
-    content: str
+    code: str
     language: str
