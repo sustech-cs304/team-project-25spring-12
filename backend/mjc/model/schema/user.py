@@ -18,14 +18,14 @@ class UserInDB(UserBase):
 class UserCreate(UserBase):
     password: str
     name: str
-    department: str | None
-    email: str | None
+    department: str | None = None
+    email: str | None = None
 
 
 class Profile(UserBase):
     name: str
-    department: str | None
-    email: str | None
+    department: str | None = None
+    email: str | None = None
 
 
 class ChangePassword(BaseModel):

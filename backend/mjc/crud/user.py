@@ -1,8 +1,8 @@
 from sqlmodel import Session, select
 
-from ..model.entities import User, Profile
-from ..model.schemas import UserCreate, ChangePassword
-from ..utils import security
+from backend.mjc.model.entity import User, Profile
+from backend.mjc.model.schema.user import UserCreate, ChangePassword
+from backend.mjc.utils import security
 
 
 def get_user(db: Session, username: str) -> User:
@@ -13,6 +13,11 @@ def get_user(db: Session, username: str) -> User:
     :return: 用户实体
     """
     stmt = select(User).where(User.username == username)
+    return db.exec(stmt).first()
+
+
+def get_profile(db: Session, username: str) -> Profile:
+    stmt = select(Profile).where(Profile.username == username)
     return db.exec(stmt).first()
 
 
