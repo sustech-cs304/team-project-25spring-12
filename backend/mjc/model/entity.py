@@ -313,6 +313,7 @@ class SubmittedAssignment(SQLModel, table=True):
 class ArguePostStatus(str, Enum):
     SUBMITTED = "submitted"
     PROCESSED = "processed"
+    CLOSED = "closed"
 
 
 class ArguePost(SQLModel, table=True):
@@ -334,6 +335,9 @@ class ArguePost(SQLModel, table=True):
     widget: "Widget" = Relationship(back_populates="argue_posts")
     feedback: "ArguePostFeedback" = Relationship(back_populates="argue_post")
     editor: "Profile" = Relationship()
+    attachments: list["ArguePostAttachment"] = Relationship(back_populates="argue_post")
+    comments: list["ArguePostComment"] = Relationship(back_populates="argue_post")
+    submitted_assignment: "SubmittedAssignment" = Relationship()
 
 
 class ArguePostAttachment(SQLModel, table=True):
@@ -357,6 +361,10 @@ class ArguePostComment(SQLModel, table=True):
     editor_username: str = Field(foreign_key="profile.username")
     content: str | None = Field(default=None, nullable=True)
     create_time: datetime | None = Field(default=None, nullable=True)
+
+    argue_post: "ArguePost" = Relationship(back_populates="comments")
+    reply_to_comment: "ArguePostComment" = Relationship()
+    editor: "Profile" = Relationship()
 
 
 class ArguePostVote(SQLModel, table=True):
