@@ -2,7 +2,7 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.assignment import FeedBack
+from backend.mjc.model.schema.assignment import FeedBack, SubmittedAssignment
 from backend.mjc.model.schema.common import File
 from backend.mjc.model.schema.user import Profile
 
