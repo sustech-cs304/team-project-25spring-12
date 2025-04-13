@@ -68,7 +68,8 @@ import { Download } from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import { downloadFile } from '@/utils/useDownloader';
 import type { NotePdfWidget, Note } from '@/types/widgets';
-import {createNote} from "@/api/note";
+
+import {createNote} from "@/api/courseMaterial";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
