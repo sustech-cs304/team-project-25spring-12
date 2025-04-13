@@ -6,7 +6,7 @@
     </div>
 
     <!-- 下载文件列表 -->
-    <download-upload-file-list :fileList="props.data.attachments" title="下载附件"/>
+    <download-upload-file-list :fileList="props.fileList" title="下载附件"/>
   </div>
 </template>
 
@@ -14,16 +14,23 @@
 import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
+import {PropType} from "vue";
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps({
-  data: {
-    type: Object,
+  content: {
+    type: String,
     required: true,
+  },
+  fileList: {
+    type: Array as PropType<FileMeta[]>,
+    required: false,
+    default: () => []
   },
 });
 
 const editorProps = {
-  modelValue: props.data.content,
+  modelValue: props.content,
   readOnly: true,
   toolbars: [],
   footers: [],

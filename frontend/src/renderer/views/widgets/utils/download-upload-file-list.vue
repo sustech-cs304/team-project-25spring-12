@@ -2,14 +2,12 @@
   <div class="attachments">
     <el-row justify="space-between">
       <el-text size="large" class="attachment-title">{{ title }}</el-text>
-      <el-button
-          v-if="props.upload"
-          type="primary"
-          :icon="Upload"
-          @click="uploadFile"
-      >
-        添加附件
-      </el-button>
+<!--      <el-upload-->
+<!--          :http-request="uploadFile"-->
+<!--          :show-file-list="false"-->
+<!--      >-->
+<!--        <el-button type="primary">上传文件</el-button>-->
+<!--      </el-upload>-->
     </el-row>
     <el-divider></el-divider>
     <el-row
@@ -20,18 +18,18 @@
     >
       <el-col :span="2">
         <el-icon :size="20">
-          <component :is="getFileIcon(file.fileName)"/>
+          <component :is="getFileIcon(file.filename)"/>
         </el-icon>
       </el-col>
       <el-col :span="16">
-        <el-text truncated>{{ file.fileName }}</el-text>
+        <el-text truncated>{{ file.filename }}</el-text>
       </el-col>
       <el-col :span="6" class="download-btn">
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click="downloadFile(file.url, file.fileName)"
+            @click="handleDownloadFile(file.url, file.filename)"
         >
           下载
         </el-button>
@@ -41,14 +39,17 @@
 </template>
 
 <script setup lang="ts">
-import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download, Upload} from "@element-plus/icons-vue";
-import {ref} from "vue";
+import {Box, Document, Download, Folder, Headset, Picture, Tools, VideoCamera} from "@element-plus/icons-vue";
+import {PropType, ref} from "vue";
+import {downloadFile} from '@/utils/useDownloader';
+import {FileMeta} from "@/types/fileMeta";
+import {uploadFile as apiUploadFile} from "@/api/file"
 
 const props = defineProps({
   fileList: {
-    type: Object,
+    type: Array as PropType<FileMeta[]>,
     required: false,
-    default: [],
+    default: () => [],
   },
   upload: {
     type: Boolean,
@@ -61,7 +62,7 @@ const props = defineProps({
   },
 });
 
-const fileList = ref(JSON.parse(JSON.stringify(props.fileList)));
+const fileList = ref<FileMeta[]>([...props.fileList]);
 
 // 根据文件后缀返回对应的 Element Plus 图标
 const getFileIcon = (fileName: string) => {
@@ -76,26 +77,36 @@ const getFileIcon = (fileName: string) => {
 };
 
 // 下载文件
-const downloadFile = (url: string, fileName: string) => {
-  // TODO
-  // 判断当前平台（web/desktop），将url对应的文件下载到本地，与后端无关。
+const handleDownloadFile = async (url: string, fileName: string): Promise<void> => {
+  try {
+    await downloadFile(url, fileName);
+  } catch (error) {
+    console.error('下载失败：', error);
+  }
 };
 
 // 上传文件
-const uploadFile = () => {
-  // TODO
-  // 判断当前平台，弹出上传文件窗口，然后将文件上传到服务器，得到服务器返回的url，然后将url和文件名加入fileList。
-  // 仅测试：
-  fileList.value.push({
-    url: "example.com",
-    fileName: "upload.txt",
-  })
-};
+const uploadFile = async (options: any) => {
+  const { file, onSuccess, onError } = options
+
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('visibility', '')
+
+  try {
+    const response = await apiUploadFile(formData)
+    console.log('yeah')
+    // TODO
+    onSuccess(response.data)
+  } catch (err) {
+    onError(err)
+  }
+}
 
 // 返回文件列表
 defineExpose({
-  getFileList: () => JSON.parse(JSON.stringify(fileList.value)),
-})
+  getFileList: (): FileMeta[] => [...fileList.value],
+});
 </script>
 
 <style scoped>

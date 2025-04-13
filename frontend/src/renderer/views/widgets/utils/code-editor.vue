@@ -3,7 +3,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from "vue";
+import {ref, watch, onMounted} from "vue";
 import * as monaco from "monaco-editor";
 
 const props = defineProps({
@@ -49,6 +49,7 @@ watch(() => props.code, (initCode) => {
 });
 
 defineExpose({
+  layout: () => editorInstance?.layout(),
   getCode: () => editorInstance?.getValue() || "",
 });
 </script>
