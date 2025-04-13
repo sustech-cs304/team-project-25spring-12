@@ -1,7 +1,8 @@
 import request from '../utils/request'
 import {Note} from "../types/widgets";
+import {Page} from "../types/page";
 
-export function getCourseMaterials(id: number) {
+export function getPage(id: number) {
     return request.get('/class/page/' + id)
 }
 
@@ -16,4 +17,19 @@ export function createNote(note: Note, widgetId: number) {
     }
 
     return request.post('/class/widget/notepdf/note', payload)
+}
+
+interface pageCreate extends Page {
+    classId: number,
+    folderId: number,
+}
+
+export function createPage(page: Page, classId: number, folderId: number) {
+    const payload: pageCreate = {
+        ...page,
+        classId,
+        folderId,
+    }
+
+    return request.post('/class/page', payload)
 }

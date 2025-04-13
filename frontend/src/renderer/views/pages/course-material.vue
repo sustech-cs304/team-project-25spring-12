@@ -55,7 +55,7 @@ import type {Page} from "@/types/page"
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
-import {getCourseMaterials} from "@/api/courseMaterial"
+import {getPage} from "@/api/courseMaterial"
 
 const route = useRoute()
 
@@ -68,7 +68,7 @@ const widgets = ref<WidgetUnion[]>([])
 const title = ref('')
 
 onMounted(async () => {
-  const response = await getCourseMaterials()
+  const response = await getPage()
   const data = response.data as Page
   title.value = data.name
   widgets.value = data.widgets
