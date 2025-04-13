@@ -90,3 +90,7 @@ class ArguePostAttachmentCreate(BaseModel):
 class ArguePostFeedbackAttachmentCreate(BaseModel):
     argue_post_feedback_id: int
     file_id: uuid.UUID
+
+
+class ArguePostWatchCreate(BaseModel):
+    argue_post_id: int
