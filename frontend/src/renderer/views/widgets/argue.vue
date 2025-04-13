@@ -81,7 +81,7 @@
           <el-col :span="16">
             <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
           </el-col>
-          <!-- <el-col :span="6" class="edit-button">
+          <el-col :span="6" class="edit-button">
             <el-button
                 type="primary"
                 link
@@ -90,7 +90,7 @@
             >
               编辑
             </el-button>
-          </el-col> -->
+          </el-col>
         </el-row>
         <div class="container">
           <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
@@ -116,8 +116,8 @@
           <el-table-column label="投票">
             <div style="display: flex; align-items: center">
               <!-- <el-button-group> -->
-                <el-button type="success">支持</el-button>
-                <el-button type="warning">反对</el-button>
+                <el-button onclick="vote(true)" type="success">支持</el-button>
+                <el-button onclick="vote(false)" type="warning">反对</el-button>
               <!-- </el-button-group> -->
             </div>
           </el-table-column>
@@ -226,6 +226,22 @@
       const fileList = contentEditor.value.getFileList();
       console.log(fileList);
     }
+  }
+
+  const submitArgue = () => {
+
+  }
+
+  const editArgue = () =>{
+
+  }
+
+  const reviseArgue = () => {
+
+  }
+
+  const vote = (isSupport) => {
+    
   }
 </script>
 

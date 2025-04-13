@@ -38,7 +38,8 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/argue-plaza.vue'),
             },
             {
-                path: 'argue/:argueId',
+                // path: 'argue/:argueId',
+                path: 'argue/example',
                 name: 'argue',
                 meta: {title: '辩驳'},
                 component: () => import('../views/pages/argue.vue'),
