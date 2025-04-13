@@ -84,7 +84,7 @@ const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
 const bottomObserver = ref<HTMLElement | null>(null);
 const pdfContainer = ref<HTMLElement | null>(null);
 
-const notes = ref<Note[]>(structuredClone(props.data.notes));
+const notes = ref<Note[]>(props.data.notes);
 const contextMenuRef = ref<HTMLElement | null>(null);
 const activeNote = ref<Note | null>(null);
 const contextMenu = ref({

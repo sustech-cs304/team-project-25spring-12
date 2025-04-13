@@ -49,11 +49,12 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, resolveComponent, nextTick, watch} from 'vue'
+import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
-import {getWidgetStyle, getHeaderColor, getBodyColor} from '@/utils/widgetColorIconManager'
+import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
+import {getCourseMaterials} from "@/api/courseMaterial";
 
 const route = useRoute()
 
@@ -62,67 +63,27 @@ const collapsed = ref(false)
 const widgetRefs = new Map<string, any>()
 const showTitle = ref(!collapsed.value)
 
-// 模拟数据 - TODO: 从后端获取
-const widgets: WidgetUnion[] = [
-  {
-    id: '1',
-    index: 1,
-    type: 'notepdf',
-    title: '互动式课件 [自定义title]',
-    createTime: '2025-03-01T12:00:00Z',
-    updateTime: '2025-03-02T12:00:00Z',
-    visible: true,
-    editor: null,
-    pdfFile: {
-      fileName: '为什么开水和凉水听起来不一样.pdf',
-      url: 'https://arxiv.org/pdf/2403.14740',
-    },
-    notes: [
-      {page: 1, x: 100, y: 100, text: '毕导：为什么开水和凉水听起来不一样'},
-    ],
-  },
-  {
-    id: '2',
-    index: 2,
-    type: 'doc',
-    title: '富文本文档 [自定义title]',
-    createTime: '2025-03-01T12:00:00Z',
-    updateTime: '2025-03-02T12:00:00Z',
-    visible: true,
-    editor: null,
-    content: '# 本项目 UI 组件为\n\n<img src="https://element-plus.org/images/element-plus-logo.svg" width="75"/>',
-    attachments: [
-      {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-      {fileName: '伪7zip.pdf', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    ],
-  },
-  {
-    id: '3',
-    index: 3,
-    type: 'assignment',
-    title: '作业 [自定义title]',
-    createTime: '2025-03-01T12:00:00Z',
-    updateTime: '2025-03-02T12:00:00Z',
-    visible: true,
-    argueId: 0,
-    editor: null,
-    content: '# 我是作业\n\n请完成作业',
-    attachments: [
-      {fileName: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    ],
-    submitTypes: ['file', 'code'],
-    submittedAssignment: null,
-    status: 'pending',
-  },
-];
-const title: string = '课程资源区'
+const widgets = ref<WidgetUnion[]>([])
+const title = ref('')
+
+onMounted(async () => {
+  const response = await getCourseMaterials()
+  console.log(response.data)
+  title.value = response.data.name
+  widgets.value = response.data.widgets
+  initActiveWidget()
+  console.log(activeWidgetId.value)
+  setTimeout(() => {
+    widgetRefs.get(activeWidgetId.value)?.init?.()
+  }, 50)
+})
 
 const widgetsSortedByIndex = computed(() => {
-  return [...widgets].sort((a, b) => a.index - b.index)
+  return [...widgets.value].sort((a, b) => a.index - b.index)
 })
 
 const activeWidget = computed(() => {
-  return widgets.find(w => w.id === activeWidgetId.value)
+  return widgets.value.find(w => w.id === activeWidgetId.value)
 })
 
 const getMenuItemStyle = (widget: WidgetUnion) => {
@@ -159,10 +120,10 @@ const setWidgetRef = (id: string, el: any) => {
 
 const initActiveWidget = () => {
   const widgetId = route.query.widget as string
-  const matched = widgets.find(w => w.id === widgetId)
+  const matched = widgets.value.find(w => w.id == widgetId)
   if (matched) {
     activeWidgetId.value = matched.id
-  } else if (widgets.length > 0) {
+  } else if (widgets.value.length > 0) {
     const minWidget = widgetsSortedByIndex.value[0]
     activeWidgetId.value = minWidget.id
   }
@@ -176,13 +137,6 @@ const handleMenuSelect = (widgetId: string) => {
     widgetRefs.get(widgetId)?.init?.()
   }, 50)
 }
-
-onMounted(() => {
-  initActiveWidget()
-  setTimeout(() => {
-    widgetRefs.get(activeWidgetId.value)?.init?.()
-  }, 50)
-})
 
 watch(collapsed, (val) => {
   if (val) { // 收起菜单：立即隐藏文字
