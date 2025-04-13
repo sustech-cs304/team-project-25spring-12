@@ -6,12 +6,24 @@ from backend.mjc.model.schema.common import File, Code
 from backend.mjc.model.schema.user import Profile
 
 
-class FeedBack(BaseModel):
+class FeedbackBase(BaseModel):
     score: float | None = None
     content: str | None = None
     attachments: list[File] | None = None
     create_time: datetime | None = None
     marker: str | None = None
+
+
+class Feedback(FeedbackBase):
+    id: int
+
+
+class FeedbackCreate(FeedbackBase):
+    submission_id: int
+
+
+class FeedbackUpdate(FeedbackBase):
+    submission_id: int
 
 
 class SubmittedAssignmentBase(BaseModel):
