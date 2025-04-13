@@ -51,7 +51,7 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
 import {useRoute} from 'vue-router'
-import type {Page} from "@/types/page";
+import type {Page} from "@/types/page"
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
@@ -89,10 +89,9 @@ const activeWidget = computed(() => {
 const getMenuItemStyle = (widget: WidgetUnion) => {
   const color = getWidgetStyle(widget.type).color
   return {
-    backgroundColor: widget.id === activeWidgetId.value
-        ? getHeaderColor(color)
-        : getBodyColor(color),
-    color: widget.id === activeWidgetId.value ? 'white' : 'black',
+    backgroundColor: widget.id == activeWidgetId.value
+        ? getHeaderColor(color) : getBodyColor(color),
+    color: widget.id == activeWidgetId.value ? 'white' : 'black',
     fontWeight: 'bold',
     borderRadius: '6px',
     margin: '4px 8px',
@@ -129,9 +128,7 @@ const initActiveWidget = () => {
   }
 }
 
-const handleMenuSelect = (widgetId: string) => {
-  if (widgetId === '__toggle') return
-
+const handleMenuSelect = (widgetId: number) => {
   activeWidgetId.value = widgetId
   setTimeout(() => {
     widgetRefs.get(widgetId)?.init?.()
