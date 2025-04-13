@@ -1,3 +1,4 @@
+import uuid
 from datetime import datetime
 
 from sqlmodel import Session, select
@@ -63,7 +64,7 @@ def create_widget_attachment(db: Session, widget_attachment: WidgetAttachmentCre
     return attach
 
 
-def delete_widget_attachment(db: Session, file_id: int) -> WidgetAttachment:
+def delete_widget_attachment(db: Session, file_id: uuid.UUID) -> WidgetAttachment:
     stmt = select(WidgetAttachment).where(WidgetAttachment.file_id == file_id)
     attachment: WidgetAttachment = db.exec(stmt).first()
     if attachment:
