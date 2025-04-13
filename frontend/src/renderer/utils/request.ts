@@ -14,7 +14,6 @@ service.interceptors.request.use(config => {
     const token = userStore.accessToken;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
-        console.log('token added')
     }
     if (config.data) {
         config.data = humps.decamelizeKeys(config.data)
@@ -22,7 +21,6 @@ service.interceptors.request.use(config => {
     if (config.params) {
         config.params = humps.decamelizeKeys(config.params)
     }
-    console.log(config)
     return config
 })
 
