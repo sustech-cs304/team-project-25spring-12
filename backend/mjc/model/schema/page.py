@@ -25,5 +25,5 @@ class PageUpdate(PageBase):
     id: int
     folder_id : int | None = None
     index: int
-    order: list[int] | None
+    order: list[int] | None = None
     visible: bool | None = True

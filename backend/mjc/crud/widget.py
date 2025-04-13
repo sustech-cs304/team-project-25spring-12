@@ -8,8 +8,8 @@ from backend.mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from backend.mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
 from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
 from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, \
-                                     AssignmentWidget, NotePDFWidget, SubmitType,\
-                                     Note
+    AssignmentWidget, NotePDFWidget, SubmitType, \
+    Note
 
 
 def get_widget(db: Session, widget_id: int) -> Widget:

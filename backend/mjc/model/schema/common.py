@@ -21,3 +21,8 @@ class LocalResourceFileCreate(FileBase):
 
 class Message(BaseModel):
     msg: str
+
+
+class Code(BaseModel):
+    content: str
+    language: str
