@@ -12,6 +12,7 @@ from backend.mjc.model.schema.common import File, Message
 from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
 from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
 from backend.mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
+from backend.mjc.service.assignment import entity2submission
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
@@ -36,18 +37,6 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
         attachments=attach
     )
     return doc_widget
-
-
-def entity2submission(entity: SubmittedAssignmentEntity) -> SubmittedAssignment:
-    submission = SubmittedAssignment(
-        id=entity.id,
-        content=entity.content,
-        code= entity.code,
-        submitted_time=entity.submitted_time,
-        student=None,
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
-    )
-    return submission
 
 
 def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
@@ -122,7 +111,7 @@ def get_student_submissions(db: Session,
         submissions = backend.mjc.crud.assignment.get_user_assignment_submissions(db, assigment_widget.id, username)
         if submissions:
             assigment_widget.status = 'submitted'
-            assigment_widget.submitted_assignment =[entity2submission(submission) for submission in submissions]
+            assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
         feedback = get_feedback(db, assignment_widget_entity.id, username)
         if feedback:
             assigment_widget.status = 'marked'
@@ -137,7 +126,7 @@ def get_all_student_submissions(db: Session, widget_id: int) -> list[SubmittedAs
     submissions: list[SubmittedAssignment] =[]
     if entities:
         for entity in entities:
-            submission = entity2submission(entity)
+            submission = entity2submission(db, entity)
             submission.feedback = Feedback(score=entity.feedback.score,
                                            content=entity.feedback.content,
                                            attachments=[File(url=None, **file.model_dump()) \

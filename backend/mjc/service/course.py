@@ -5,7 +5,7 @@ from backend.mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterC
                                              SemesterUpdate, Class, Semester, ClassCard,
                                              ClassUserEnroll, ClassUserUpdate)
 from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.schema.user import UserInDB, Profile
+from backend.mjc.model.schema.user import UserInDB
 from backend.mjc.crud import course as crud_course
 from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
 
@@ -20,7 +20,7 @@ def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
                 id=cls_entity.id,
                 syllabus=File(
                     id=cls_entity.syllabus.id,
-                    file_name=cls_entity.syllabus.filename,
+                    filename=cls_entity.syllabus.filename,
                     visibility=cls_entity.syllabus.visibility,
                     url=None
                 ) if cls_entity.syllabus else None,
