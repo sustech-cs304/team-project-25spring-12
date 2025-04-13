@@ -64,6 +64,7 @@ import {Avatar, Place, Timer, User} from '@element-plus/icons-vue'
 import type {Course} from "@/types/course";
 import {useUserStore} from "@/store/user";
 import {getCourses} from "@/api/course";
+import {useRouter} from "vue-router";
 
 const roleDisplayMap: Record<Course['role'], string> = {
   student: 'Student',
@@ -71,6 +72,7 @@ const roleDisplayMap: Record<Course['role'], string> = {
   ta: 'Teaching Assistant'
 }
 
+const router = useRouter()
 const userStore = useUserStore()
 const courses = ref<Course[]>([])
 const activeSemester = ref('')
@@ -78,8 +80,9 @@ const activeSemester = ref('')
 onMounted(async () => {
   try {
     const response = await getCourses()
-    userStore.setCourses(response.data)
-    courses.value = response.data
+    const data: Course[] = response.data as Course[]
+    userStore.setCourses(data)
+    courses.value = data
     activeSemester.value = sortedSemesters.value[0] || ''
   } catch (err) {
     console.error('获取课程失败', err)
@@ -110,7 +113,7 @@ const coursesBySemester = computed(() => {
 })
 
 const enterCourse = (id: string) => {
-  // TODO: 跳转课程详情页
+  router.push('/course/' + id)
 }
 </script>
 

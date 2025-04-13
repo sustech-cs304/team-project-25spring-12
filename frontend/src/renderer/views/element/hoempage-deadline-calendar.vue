@@ -111,20 +111,23 @@ import {getCourseColor, getTextColor} from "@/utils/courseColorGenerator";
 import type {Deadline} from '@/types/deadline'
 import {getDeadlines} from "@/api/deadline";
 import {useUserStore} from "@/store/user";
+import {useRouter} from "vue-router";
 
 const deadlines = ref<Deadline[]>([])
+const router = useRouter()
 const userStore = useUserStore()
 
 onMounted(async () => {
   const response = await getDeadlines();
-  console.log(response)
-  deadlines.value = response.data;
-  userStore.setDeadlines(deadlines.value);
+  const data: Deadline[] = response.data as Deadline[];
+  deadlines.value = data;
+  userStore.setDeadlines(data);
   if (calendar.value) {
     const calendarApi = calendar.value.getApi();
     const calcColor = (item: Deadline) =>
         (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
     const events = deadlines.value.map(item => ({
+      id: item.widgetId,
       title: `${item.courseCode}`,
       start: item.ddl,
       extendedProps: item,
@@ -141,10 +144,14 @@ onMounted(async () => {
 })
 
 const drawerVisible = ref(false)
-const selectedDeadline = ref<Deadline | null>(null)
+const selectedDeadline = ref<Deadline>(null)
 const calendar = ref()
 const calendarWrapper = ref()
 
+/*
+* AI generated
+* 我要求ChatGPT生成了一份FullCalendar的基本配置
+* */
 const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
@@ -200,36 +207,27 @@ function formatDateTime(dateString: string): string {
 }
 
 const goToTask = () => {
-  // TODO: 前往完成
+  if (selectedDeadline.value) {
+    router.push('/course/' + selectedDeadline.value.classId
+        + '/page/' + selectedDeadline.value.pageId
+        + '?widget=' + selectedDeadline.value.widgetId)
+  }
 }
 
 const dismissReminder = () => {
-  if (!selectedDeadline.value) return;
-  deadlines.value = deadlines.value.filter(
-      item => item.widgetId !== selectedDeadline.value?.widgetId ||
-          item.ddl !== selectedDeadline.value?.ddl
-  );
   drawerVisible.value = false;
-  if (calendar.value) {
+  if (calendar.value && selectedDeadline.value) {
     const calendarApi = calendar.value.getApi();
-    calendarApi.removeAllEvents();
-    calendarApi.addEventSource(
-        deadlines.value.map(item => ({
-          title: `${item.courseCode}`,
-          start: item.ddl,
-          extendedProps: item,
-          backgroundColor: getCourseColor(item.courseCode),
-          borderColor: getCourseColor(item.courseCode),
-          textColor: getTextColor(getCourseColor(item.courseCode)),
-          className: 'calendar-event'
-        }))
-    );
+    const eventToRemove = calendarApi.getEventById(selectedDeadline.value.widgetId);
+    eventToRemove?.remove();
   }
 
   // TODO: 后端
 };
 
 const onDrawerOpen = () => {
+  // Nothing
+  // 保留此方法以确保动画正常展示
 }
 
 let resizeObserver: ResizeObserver
