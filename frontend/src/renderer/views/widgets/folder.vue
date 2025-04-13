@@ -1,10 +1,10 @@
 <template>
-  <widget-card :title="folder.name" type="folder" style="height: 100%" :callback="authenticated ? showCreatePageDialog : undefined">
+  <widget-card :title="folder.name" type="folder" style="height: 100%" :callback="callback">
     <el-scrollbar>
       <div class="page-list">
         <div
             class="page-item"
-            v-for="page in pages"
+            v-for="page in folder.pages"
             :key="page.id"
             @click="handlePageClick(page)"
         >
@@ -30,23 +30,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import {computed, onMounted, ref} from 'vue'
 import type { Folder, FolderPageItem } from '@/types/folder'
 import WidgetCard from '@/views/widgets/utils/widget-card.vue'
 import { Document } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import axios from 'axios'
+import {Page} from "@/types/page";
 
 const props = defineProps<{
   folder: Folder
+  canEdit: boolean
 }>()
 
 const router = useRouter()
 
-const authenticated = ref<boolean>(true) // TODO: 鉴权
-const pages = props.folder.pages
 const dialogVisible = ref(false)
 const newPageTitle = ref('')
+const callback = computed(() => props.canEdit ? showCreatePageDialog : null)
 
 const handlePageClick = (page: FolderPageItem) => {
   // TODO: 替换为实际的路由跳转逻辑
@@ -65,7 +66,7 @@ const createPage = async () => {
       // TODO
     }
     const response = await axios.post("https://example.com/api/class/page", payload) // TODO: 替换为正确的 api 请求
-    pages.push(response.data)
+    // pages.push(response.data)
   } catch(error) {
     console.error(error)
   }

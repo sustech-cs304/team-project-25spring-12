@@ -69,6 +69,14 @@ export const useUserStore = defineStore('user', {
                 this.deadlines = response.data as Deadline[]
             }
             return this.deadlines
+        },
+
+        async getRoleByCourseId(courseId: number): Promise<string> {
+            if (this.courses === null) {
+                const response = await getCourses()
+                this.courses = response.data as Course[]
+            }
+            return this.courses.find(c => c.id == courseId)?.role ?? null
         }
     },
 })

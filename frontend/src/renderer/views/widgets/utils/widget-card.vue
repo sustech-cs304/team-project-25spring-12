@@ -8,7 +8,7 @@
           </el-icon>
           <span>{{ title }}</span>
         </div>
-        <el-button style="color: white" :color="headerColor" @click="callback" v-if="callback !== undefined">
+        <el-button style="color: white" :color="headerColor" @click="callback" v-if="callback">
           <slot name="button" />
         </el-button>
       </div>
@@ -29,6 +29,7 @@
   @props {String} icon - Element Plus 图标名称
   @props {String} color - 预设颜色 (red, green, blue, purple, orange, teal, gray)
   @props {String} type - 使用 @/utils/widgetColorIconManager.ts 中的配色方案，方便在其他位置复用
+  @props {Function} callback - 和 slot #button 一起启用后，右上角会有一个按钮
 -->
 
 <script setup lang="ts">

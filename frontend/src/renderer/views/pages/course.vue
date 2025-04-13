@@ -13,7 +13,7 @@
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
-          :default-active="activeFolderId"
+          :default-active="activeFolderId.toString()"
           :collapse="collapsed"
           :collapse-transition="true"
           mode="vertical"
@@ -36,7 +36,7 @@
           :visible="showCreateFolderPopover"
           placement="top"
           :width="180"
-          v-if="authenticated"
+          v-if="canEdit"
       >
         <p>
           <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
@@ -46,7 +46,7 @@
           <el-button size="small" type="primary" @click="handleCreateFolder" :disabled="newFolderTitle === ''">确认</el-button>
         </div>
         <template #reference>
-          <el-button @click="handleShowCreateFolderPopover()">
+          <el-button @click="handleShowCreateFolderPopover">
             <el-icon>
               <Plus/>
             </el-icon>
@@ -59,7 +59,7 @@
     <!-- 主体内容区域 -->
     <div class="widget-content">
       <el-scrollbar class="widget-scroll-wrapper">
-        <folder-widget :folder="activeFolder" v-if="activeFolder"/>
+        <folder-widget :folder="activeFolder" v-if="activeFolder" :canEdit="canEdit"/>
       </el-scrollbar>
     </div>
   </div>
@@ -71,14 +71,23 @@ import {useRoute} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder} from '@/types/folder'
 import {getFolders} from "@/api/course";
+import {useUserStore} from "@/store/user";
 
 const route = useRoute()
+const userStore = useUserStore()
+
 const folders = ref<Folder[]>([])
+const role = ref<string>(null)
+const canEdit = computed(() => role.value == 'ta' || role.value == 'teacher')
 
 onMounted(async () => {
-  const response = await getFolders(route.params.courseId)
+  const courseId = route.params.courseId
+
+  const response = await getFolders(courseId)
   folders.value = response.data as Folder[]
+
   initActiveFolder()
+  role.value = await userStore.getRoleByCourseId(courseId)
 })
 
 const hoveredFolderId = ref<number>(-1)
@@ -111,9 +120,10 @@ const showTitle = ref(true)
 const foldersSorted = computed(() =>
     [...folders.value].sort((a, b) => a.index - b.index)
 )
-const activeFolderId = ref('')
-const activeFolder = computed(() =>
-    folders.value.find((f) => f.id.toString() === activeFolderId.value)
+const activeFolderId = ref(-1)
+const activeFolder = computed(() => {
+    return folders.value.find(f => f.id == activeFolderId.value)
+}
 )
 
 const toggleCollapse = async () => {
@@ -125,10 +135,11 @@ const initActiveFolder = () => {
   const id = route.query.folder as string
   const matched = folders.value.find((f) => f.id.toString() == id)
   if (matched) {
-    activeFolderId.value = matched.id.toString()
+    activeFolderId.value = matched.id
   } else if (foldersSorted.value.length > 0) {
-    activeFolderId.value = foldersSorted.value[0].id.toString()
+    activeFolderId.value = foldersSorted.value[0].id
   }
+  console.log(activeFolderId.value)
 }
 
 const handleMenuSelect = (folderId: number) => {
@@ -144,6 +155,18 @@ watch(collapsed, (val) => {
     }, 300)
   }
 })
+
+const showCreateFolderPopover = ref<boolean>(false)
+const newFolderTitle = ref<string>('')
+
+const handleCreateFolder = () => {
+
+}
+
+const handleShowCreateFolderPopover = () => {
+
+}
+
 </script>
 
 <style scoped>

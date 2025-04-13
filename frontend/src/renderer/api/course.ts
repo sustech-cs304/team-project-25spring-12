@@ -16,7 +16,7 @@ interface FolderCreate extends Folder {
 export function createFolder(folder: Folder) {
     const payload: FolderCreate = {
         ...folder,
-        [],
+        order: [],
     }
 
     return request.post('/class/folder', payload)

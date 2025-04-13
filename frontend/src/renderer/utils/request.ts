@@ -7,10 +7,15 @@ const service = axios.create({
     timeout: 10000,
 })
 
-const userStore = useUserStore();
+let userStore = null;
+
+function initUserStore() {
+    userStore = useUserStore();
+}
 
 // 请求前：camelCase 转 snake_case
 service.interceptors.request.use(config => {
+    if (!userStore) initUserStore()
     const token = userStore.accessToken;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`
@@ -25,8 +30,7 @@ service.interceptors.request.use(config => {
 })
 
 // 响应后：snake_case 转 camelCase
-service.interceptors.response.use(
-    response => {
+service.interceptors.response.use(response => {
         if (response.data) {
             response.data = humps.camelizeKeys(response.data)
         }
