@@ -39,8 +39,6 @@ const props = defineProps({
   color: {
     type: String,
     default: 'blue',
-    validator: (value: String) =>
-        ['red', 'green', 'blue', 'purple', 'orange', 'teal', 'gray'].includes(value),
   },
   type: {
     type: String,
