@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {Note} from "../types/course";
+import {Note} from "../types/widgets";
 
 export function getCourseMaterials(id: number) {
     return request.get('/class/page/' + id)
