@@ -49,29 +49,31 @@
       }"
     >
       <template #reference>
-        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef" />
+        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"/>
       </template>
 
       <div class="context-menu-content">
-        <el-input v-model="newNoteText" placeholder="输入笔记内容..." />
+        <el-input v-model="newNoteText" placeholder="输入笔记内容..."/>
         <el-button type="primary" size="small" @click="addNote">添加笔记</el-button>
       </div>
     </el-popover>
     <template #button>
-      <el-icon><Upload/></el-icon>
+      <el-icon>
+        <Upload/>
+      </el-icon>
       <span>上传</span>
     </template>
   </widget-card>
 </template>
 
 <script setup lang="ts">
-import { onMounted, ref, nextTick, toRaw, computed } from 'vue';
+import {computed, nextTick, onMounted, ref, toRaw} from 'vue';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
-import { Download } from '@element-plus/icons-vue';
+import {Download} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
-import { downloadFile } from '@/utils/useDownloader';
-import type { NotePdfWidget, Note } from '@/types/widgets';
+import {downloadFile} from '@/utils/useDownloader';
+import type {Note, NotePdfWidget} from '@/types/widgets';
 
 import {createNote} from "@/api/courseMaterial";
 
@@ -100,7 +102,7 @@ const contextMenu = ref({
   y: 0,
   page: 1,
 });
-const popoverPosition = ref({ x: 0, y: 0 });
+const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref('');
 let totalPages = 0;
 const pageBatchSize = 5;
@@ -116,7 +118,7 @@ const renderPage = async (pageNumber: number) => {
   try {
     const page = await rawPdf.getPage(pageNumber);
     const scale = 1.5;
-    const viewport = page.getViewport({ scale });
+    const viewport = page.getViewport({scale});
     const canvas = canvasRefs.value[pageNumber - 1];
     if (!canvas) return;
 
@@ -126,7 +128,7 @@ const renderPage = async (pageNumber: number) => {
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({canvasContext: context, viewport}).promise;
   } catch (error) {
     console.error(`Error rendering page ${pageNumber}:`, error);
   }
@@ -188,7 +190,7 @@ const openContextMenu = (event, page) => {
 
   // 设置弹窗位置
   nextTick(() => {
-    popoverPosition.value = { x: event.clientX, y: event.clientY };
+    popoverPosition.value = {x: event.clientX, y: event.clientY};
   });
 };
 
@@ -220,7 +222,7 @@ const observeBottom = () => {
           loadMorePages();
         }
       },
-      { rootMargin: "100px" }
+      {rootMargin: "100px"}
   );
 
   observer.observe(bottomObserver.value);
@@ -228,7 +230,7 @@ const observeBottom = () => {
 
 const handleDownloadFile = async () => {
   try {
-    await downloadFile(props.data.pdfFile.url, props.data.pdfFile.fileName);
+    await downloadFile(props.data.pdfFile.url, props.data.pdfFile.filename);
   } catch (error) {
     console.error('下载失败：', error);
   }
@@ -244,7 +246,8 @@ onMounted(() => {
 });
 
 defineExpose({
-  init: () => {}
+  init: () => {
+  }
 });
 </script>
 

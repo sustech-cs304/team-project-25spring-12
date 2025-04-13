@@ -33,3 +33,17 @@ export function createPage(page: Page, classId: number, folderId: number) {
 
     return request.post('/class/page', payload)
 }
+
+export interface Code {
+    code: string,
+    language: string,
+}
+
+export interface Submission {
+    widgetId: integer,
+    content: string,
+    attachments: File[],
+    code: Code,
+}
+
+export function createSubmission()

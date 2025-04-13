@@ -1,6 +1,6 @@
 <template>
-  <widget-card :title="computedTitle" type="assignment" :callback="authenticated ? handleEdit : undefined">
-    <div v-if="isEditingByT">
+  <widget-card :title="computedTitle" type="assignment" :callback="callback">
+    <div v-if="isEditingHomework">
       <!--   作业设置   -->
       <div>
         <el-text class="section-title">作业设置</el-text>
@@ -12,32 +12,32 @@
             </el-form-item>
 
             <!-- 作业类型 -->
-            <el-form-item  label="作业类型" prop="type">
-              <el-select v-model="form.type" placeholder="请选择作业类型">
-                <el-option label="文件上传" value="file"></el-option>
-                <el-option label="代码提交" value="code"></el-option>
+            <el-form-item label="作业类型" prop="type">
+              <el-select v-model="form.submitType" placeholder="请选择作业类型">
+                <el-option v-for="item in AssignmentType" :label="item.label" :value="item.value"/>
               </el-select>
             </el-form-item>
 
             <!-- 作业截止时间 -->
-            <el-form-item label="作业截止时间" prop="deadline">
+            <el-form-item label="作业截止时间" prop="ddl">
               <el-date-picker
-                v-model="form.deadline"
-                type="datetime"
-                placeholder="选择截止时间"
-                format="YYYY-MM-DD HH:mm:ss"
-                value-format="YYYY-MM-DD HH:mm:ss"
+                  v-model="form.ddl"
+                  type="datetime"
+                  placeholder="选择截止时间"
+                  format="YYYY-MM-DD HH:mm:ss"
+                  value-format="YYYY-MM-DD HH:mm:ss"
               ></el-date-picker>
             </el-form-item>
 
             <!-- 作业分数上限 -->
             <el-form-item label="分数上限" prop="maxScore">
-              <el-input-number v-model="form.maxScore" :min="0" :max="100" placeholder="请输入分数上限"></el-input-number>
+              <el-input-number v-model="form.maxScore" :min="0" :max="100"
+                               placeholder="请输入分数上限"></el-input-number>
             </el-form-item>
 
             <!-- 作业是否可见 -->
             <el-form-item label="是否可见" prop="isVisible">
-              <el-switch v-model="form.isVisible" active-text="是" inactive-text="否"></el-switch>
+              <el-switch v-model="form.visible" active-text="是" inactive-text="否"></el-switch>
             </el-form-item>
           </el-form>
         </div>
@@ -45,9 +45,13 @@
       <!--   作业信息   -->
       <div>
         <el-text class="section-title">作业信息</el-text>
-        <md-and-file-editor :fileList="props.data.attachments" :content="props.data.content"/>
+        <md-and-file-editor
+            :fileList="props.data.attachments"
+            :content="props.data.content"
+        />
       </div>
     </div>
+
     <div class="container" v-else>
       <!--   作业状态   -->
       <div v-if="!props.data.visible">
@@ -70,7 +74,7 @@
             <!-- 得分展示 -->
             <el-col :span="12" class="score-display">
               <span class="score" :style="{ color: scoreColor }">{{ displayScore }}</span>
-              <span class="total-score"> / {{ displayTotalScore }}</span>
+              <span class="total-score"> / {{ props.data.maxScore }}</span>
             </el-col>
           </el-row>
         </div>
@@ -116,7 +120,8 @@
       <div v-if="props.data.status === 'pending' || isEditing">
         <el-text class="section-title">提交作业</el-text>
         <div class="container">
-          <div class="code-editor" v-if="props.data.submitTypes.includes('code')">
+          <!--   提交代码   -->
+          <div class="code-editor" v-if="props.data.submitType === 'code'">
             <div class="toolbar">
               <span class="el-text">选择语言：</span>
               <el-select v-model="selectedLanguage" size="small" @change="updateMode">
@@ -127,8 +132,13 @@
               <code-editor ref="codeEditor" :language="selectedLanguage" :code="code"/>
             </div>
           </div>
-          <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
-            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+          <!--   提交文本或文件   -->
+          <div class="homework-editor" v-else>
+            <md-and-file-editor
+                :content="content"
+                :fileList="fileList"
+                ref="contentEditor"
+            />
           </div>
           <el-button
               type="primary"
@@ -158,12 +168,16 @@
       </div>
     </div>
     <template #button>
-      <template v-if="isEditingByT">
-        <el-icon><Check/></el-icon>
+      <template v-if="isEditingHomework">
+        <el-icon>
+          <Check/>
+        </el-icon>
         <span>保存</span>
       </template>
       <template v-else>
-        <el-icon><Edit/></el-icon>
+        <el-icon>
+          <Edit/>
+        </el-icon>
         <span>编辑</span>
       </template>
     </template>
@@ -175,28 +189,27 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
-import {computed, reactive, ref} from "vue";
-import { Checked, Edit, Finished, Memo, Timer, Upload, ChatRound } from "@element-plus/icons-vue";
-import type { AssignmentWidget, SubmittedRecord } from "@/types/widgets";
+import {computed, ref} from "vue";
+import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+import type {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
+import {AssignmentType} from "@/types/widgets"
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps<{
   data: AssignmentWidget;
+  canEdit: boolean;
 }>();
 
-const authenticated = ref(true);
-const form = reactive({
-  title: '',
-  type: '',
-  deadline: '',
-  maxScore: 0,
-  isVisible: false,
-});
+const isEditingHomework = ref(false);
+const callback = computed(() => props.canEdit ? toggleEditingSituation : null)
+
+const form = ref<AssignmentWidget>(null);
 
 const rules = {
-  title: [{ required: true, message: '请输入作业标题', trigger: 'blur' }],
-  type: [{ required: true, message: '请选择作业类型', trigger: 'change' }],
-  deadline: [{ required: true, message: '请选择作业截止时间', trigger: 'change' }],
-  maxScore: [{ required: true, message: '请输入分数上限', trigger: 'blur' }],
+  title: [{required: true, message: '请输入作业标题', trigger: 'blur'}],
+  type: [{required: true, message: '请选择作业类型', trigger: 'change'}],
+  ddl: [{required: true, message: '请选择作业截止时间', trigger: 'change'}],
+  maxScore: [{required: true, message: '请输入分数上限', trigger: 'blur'}],
 };
 
 /*
@@ -207,10 +220,10 @@ const rules = {
 * updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
 * */
 const languages = [
-  { label: "C++", value: "cpp" },
-  { label: "C", value: "c" },
-  { label: "Java", value: "java" },
-  { label: "Python", value: "python" },
+  {label: "C++", value: "cpp"},
+  {label: "C", value: "c"},
+  {label: "Java", value: "java"},
+  {label: "Python", value: "python"},
 ];
 const selectedLanguage = ref("cpp");
 const code = ref('');
@@ -243,12 +256,11 @@ const scoreColor = computed(() => {
   return `rgb(${red}, ${green}, 0)`;
 });
 const statusText = computed(() => {
-  if (props.data.status === "pending") return "未提交";
+  if (props.data.status === "pending") return "未提交，截止时间：" + props.data.ddl;
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
-const displayTotalScore = computed(() => (props.data.status === "returned" ? props.data.maxScore : "--"));
 
 // 编辑提交记录
 const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
@@ -263,7 +275,12 @@ const editSubmittedAssignment = (record: SubmittedRecord) => {
 }
 
 // 提交作业
+const uploadFile = (file: FileMeta) => {
+
+}
+
 const submit = () => {
+
   // TODO
   if (codeEditor.value) {
     const code = codeEditor.value.getCode();
@@ -287,19 +304,18 @@ const postArgue = () => {
   }
 }
 
-const isEditingByT = ref(false);
-
 // 教师编辑当前作业信息
-const handleEdit = () => {
-  if (isEditingByT.value) {
-    // TODO: 保存并上传信息
+const toggleEditingSituation = () => {
+  if (isEditingHomework.value) {  // 保存并上传信息
+    console.log(form)
+  } else {  // 将现有信息填入表单
+    form.value = JSON.parse(JSON.stringify(props.data))
   }
-  isEditingByT.value = !isEditingByT.value;
+  isEditingHomework.value = !isEditingHomework.value;
 }
 
 defineExpose({
   init: () => {
-    console.log('ass')
     codeEditor.value?.layout()
   }
 });

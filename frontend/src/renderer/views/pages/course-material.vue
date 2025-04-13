@@ -70,6 +70,7 @@
             v-if="activeWidget"
             :key="activeWidget.id"
             :data="activeWidget"
+            :can-edit="canEdit"
             :ref="el => setWidgetRef(activeWidget.id, el)"
         />
       </el-scrollbar>
@@ -81,11 +82,12 @@
 import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
-import type {WidgetUnion} from '@/types/widgets'
+import type {AssignmentWidget, WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
 import {getPage} from "@/api/courseMaterial"
 import {useUserStore} from "@/store/user";
+import {FileMeta} from "@/types/fileMeta";
 
 const route = useRoute()
 const userStore = useUserStore()
@@ -182,6 +184,11 @@ const handleShowCreateWidgetPopover = () => {
 const handleCreateWidget = () => {
   showCreateWidgetPopover.value = false
   // TODO: 创建widget
+}
+
+const handleUploadAttachment: void = (file: FileMeta) => {
+  console.log('here');
+  (activeWidget.value as AssignmentWidget).attachments.push(file);
 }
 
 watch(collapsed, (val) => {

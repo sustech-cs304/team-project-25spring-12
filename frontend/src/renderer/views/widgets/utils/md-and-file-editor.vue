@@ -6,7 +6,12 @@
     </div>
 
     <!-- 附加文件列表 -->
-    <download-upload-file-list title="已上传文件" :upload="true" :fileList="files" ref="fileUploader"/>
+    <download-upload-file-list
+        title="已上传文件"
+        :upload="true"
+        :fileList="files"
+        ref="fileUploader"
+    />
   </div>
 </template>
 
@@ -15,7 +20,7 @@ import 'md-editor-v3/lib/style.css';
 import {MdEditor} from "md-editor-v3";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
 import {PropType, ref} from "vue";
-import {FileMeta} from "@/types/widgets";
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps({
   content: {

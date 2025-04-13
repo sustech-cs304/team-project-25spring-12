@@ -1,7 +1,7 @@
 <template>
   <component
       :is="Component"
-      v-bind="{ data }"
+      v-bind="{ data, canEdit }"
       ref="innerWidgetRef"
   />
 </template>
@@ -13,6 +13,7 @@ import type {WidgetUnion} from '@/types/widgets'
 
 const props = defineProps<{
   data: WidgetUnion;
+  canEdit: boolean;
 }>()
 
 const Component = computed(() => widgetMap[props.data.type]);

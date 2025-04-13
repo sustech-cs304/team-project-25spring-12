@@ -15,7 +15,7 @@ import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import DownloadUploadFileList from "./download-upload-file-list.vue";
 import {PropType} from "vue";
-import {FileMeta} from "@/types/widgets";
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps({
   content: {

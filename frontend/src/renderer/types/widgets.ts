@@ -1,3 +1,8 @@
+import {FileMeta} from "./fileMeta";
+import NotePdf from '@/views/widgets/notepdf.vue';
+import Doc from '@/views/widgets/doc.vue';
+import Assignment from '@/views/widgets/assignment.vue';
+
 export type WidgetType = 'notepdf' | 'doc' | 'assignment';
 
 interface BaseWidget {
@@ -26,13 +31,13 @@ export interface DocWidget extends BaseWidget {
 export interface AssignmentWidget extends BaseWidget {
     type: 'assignment';
     content: string;
-    attachments?: FileMeta[];
-    submitTypes: string[];
+    attachments: FileMeta[];
+    submitType: 'file' | 'code';
     submittedAssignment: SubmittedRecord[] | null;
     status: 'pending' | 'submitted' | 'returned';
-    ddl?: string;
-    score?: number;
-    maxScore?: number;
+    ddl: string;
+    score: number;
+    maxScore: number;
     feedback?: string;
     argueId?: number;
 }
@@ -42,11 +47,6 @@ export type WidgetUnion = NotePdfWidget | DocWidget | AssignmentWidget;
 /*
 * Util interfaces:
 * */
-export interface FileMeta {
-    fileName: string;
-    url: string;
-}
-
 export interface SubmittedRecord {
     content: string;
     attachments?: FileMeta[];
@@ -66,10 +66,6 @@ export interface Note {
  * End of util interfaces.
  */
 
-import NotePdf from '@/views/widgets/notepdf.vue';
-import Doc from '@/views/widgets/doc.vue';
-import Assignment from '@/views/widgets/assignment.vue';
-
 export const widgetMap: Record<WidgetType, any> = {
     notepdf: NotePdf,
     doc: Doc,
@@ -81,3 +77,12 @@ export const widgetNameMap: Record<WidgetType, string> = {
     doc: '文档和文件',
     assignment: '作业',
 };
+
+export const AssignmentType = [
+    {label: "文本及附件", value: "file"},
+    {label: "评测代码", value: "code"},
+]
+
+export interface AssignmentCreate extends AssignmentWidget {
+    pageId: number,
+}
