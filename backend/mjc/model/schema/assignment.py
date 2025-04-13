@@ -11,7 +11,7 @@ class FeedBack(BaseModel):
     content: str | None = None
     attachments: list[File] | None = None
     create_time: datetime | None = None
-    maker: str | None = None
+    marker: str | None = None
 
 
 class SubmittedAssignmentBase(BaseModel):

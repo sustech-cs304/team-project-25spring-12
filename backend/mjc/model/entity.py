@@ -286,7 +286,7 @@ class SubmittedAssignmentFeedback(SQLModel, table=True):
     content: str | None = Field(nullable=False)
     create_time: datetime | None = Field(default=None, nullable=True)
     submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
-    maker: str | None = Field(foreign_key="profile.username")
+    marker: str | None = Field(foreign_key="profile.username")
 
     attachments: list["FeedbackAttachment"] = Relationship(back_populates="feedback")
     submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="feedback")
