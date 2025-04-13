@@ -123,6 +123,12 @@
           </el-table-column>
         </el-table>
       </div>
+
+      <!-- 讨论区 -->
+      <!-- <div v-if="props.data.status !== 'pending'">
+        <el-text class="section-title">讨论区</el-text>
+        
+      </div> -->
     </div>
   </widget-card>
 </template>
@@ -132,7 +138,8 @@
   import MdAndFile from "./utils/md-and-file.vue";
   import MdAndFileEditor from "./utils/md-and-file-editor.vue";
   import {computed, ref} from "vue";
-  import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
+  import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+  import axios from "axios";
   
   const props = defineProps({
     data: {
@@ -229,7 +236,7 @@
   }
 
   const submitArgue = () => {
-
+    
   }
 
   const editArgue = () =>{
@@ -240,8 +247,14 @@
 
   }
 
-  const vote = (isSupport) => {
-    
+  const vote = (isSupport: boolean) => {
+    axios.post(
+      '/argue/vote',
+      {
+        argue_post_id: props.data.argueId,
+        is_support: isSupport,
+      },
+    )
   }
 </script>
 

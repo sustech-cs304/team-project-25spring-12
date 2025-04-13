@@ -1,46 +1,16 @@
 <template>
-    <div class="page">
-      <!-- <assignment :data="assignmentDataSubmitted"></assignment>
-      <assignment :data="assignmentDataReturned"></assignment> -->
-      <argue :data="argueDataPending"></argue>
-      <argue :data="argueDataSubmitted"></argue>
-      <argue :data="argueDataReturned"></argue>
-    </div>
+  <div class="page">
+    <!-- <argue :data="argueDataPending"></argue> -->
+    <!-- <argue :data="argueDataSubmitted"></argue> -->
+    <argue :data="argueDataReturned"></argue>
+    <forum></forum>
+  </div>
 </template>
 
 
 <script setup lang="ts">
   import argue from "../widgets/argue.vue"
-  
-  const assignmentDataSubmitted = {
-    title: 'Assignment',
-    content: '# 芝士作业\n\n请完成',
-    attachments: [
-      {
-        fileName: '附件.pdf',
-        url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
-      },
-    ],
-    status: 'returned',
-    submitTypes: ['file', 'code'],
-    score: 90,
-    maxScore: 100,
-  }
-
-  const assignmentDataReturned = {
-    title: 'Assignment',
-    content: '# 芝士作业\n\n请完成',
-    attachments: [
-      {
-        fileName: '附件.pdf',
-        url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
-      },
-    ],
-    status: 'returned',
-    submitTypes: ['file', 'code'],
-    score: 90,
-    maxScore: 100,
-  }
+  import forum from "../widgets/forum.vue"
 
   const argueDataPending = {
     title: 'ArguePending',
