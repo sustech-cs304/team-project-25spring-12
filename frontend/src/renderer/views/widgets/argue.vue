@@ -99,31 +99,34 @@
 
       <!-- 投票结果 -->
       <div v-if="props.data.status !== 'pending'">
-        <!-- <el-text class="section-title">投票结果</el-text> -->
-        <el-table :data="tableVote">
-          <el-table-column label="投票结果">
-            <el-progress
-              :percentage=votePercentage
-              color="#49CD62"
-              :stroke-width="20"
-              :show-text=true
-              :status=voteStatus
-              :indeterminate=voteIndeterminate
-            >
-            <el-button size="small" type="primary" disabled>{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-button>
-            </el-progress>
-          </el-table-column>
-          <el-table-column label="投票">
-            <div style="display: flex; align-items: center">
-              <!-- <el-button-group> -->
-                <el-button onclick="vote(true)" type="success">支持</el-button>
-                <el-button onclick="vote(false)" type="warning">反对</el-button>
-              <!-- </el-button-group> -->
-            </div>
-          </el-table-column>
-        </el-table>
+        <el-text class="section-title">讨论区</el-text>
+        <el-row>
+          <el-table :data="tableVote">
+            <el-table-column label="投票结果">
+              <el-progress
+                :percentage=votePercentage
+                color="#49CD62"
+                :stroke-width="20"
+                :show-text=true
+                :status=voteStatus
+                :indeterminate=voteIndeterminate
+              >
+              <el-text type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-text>
+              </el-progress>
+            </el-table-column>
+            <el-table-column label="投票">
+              <div style="display: flex; align-items: center">
+                <!-- <el-button-group> -->
+                  <el-button onclick="vote(true)" type="success">支持</el-button>
+                  <el-button onclick="vote(false)" type="warning">反对</el-button>
+                <!-- </el-button-group> -->
+              </div>
+            </el-table-column>
+          </el-table>
+        </el-row>
       </div>
     </div>
+    <comment :data="{}"></comment>
   </widget-card>
 </template>
   
@@ -133,7 +136,8 @@
   import MdAndFileEditor from "./utils/md-and-file-editor.vue";
   import {computed, ref} from "vue";
   import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
-  
+  import comment from "./comment.vue";
+
   const props = defineProps({
     data: {
       type: Object,
@@ -204,6 +208,7 @@
       indeterminate: props.data.voteTotal === 0 ? true : false,
     },
   ]
+
 
   
   // 编辑提交记录
@@ -278,11 +283,11 @@
     height: 100%;
   }
   
-  .el-text {
+  /* .el-text {
     margin-right: 8px;
     font-size: 14px;
     color: #606266;
-  }
+  } */
   
   .el-select {
     width: 120px;

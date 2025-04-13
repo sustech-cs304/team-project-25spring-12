@@ -40,9 +40,9 @@ const routes: RouteRecordRaw[] = [
             {
                 // path: 'argue/:argueId',
                 path: 'argue/example',
-                name: 'argue',
+                name: 'argue-example',
                 meta: {title: '辩驳'},
-                component: () => import('../views/pages/argue.vue'),
+                component: () => import('../views/pages/argue-example.vue'),
             },
             {
                 path: 'messages',
