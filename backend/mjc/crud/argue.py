@@ -5,11 +5,13 @@ from sqlmodel import select, Session, func
 
 from backend.mjc.model.entity import ArguePost, Widget, Profile, Page, Class, \
         ClassStudentLink, ArguePostVote, ArguePostWatch, ClassTeacherLink, ArguePostStatus, \
-        ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment
-from backend.mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, ArguePostFeedback, \
+        ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment, \
+        ClassTeachingAssistantLink
+from backend.mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, \
         ArguePostVoteCreate, ArguePostFeedbackCreate, ArguePostAttachmentCreate, ArguePostFeedbackAttachmentCreate, \
         ArguePostWatchCreate
 from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.crud.assignment import get_submitted_assignment
 
 
 def get_teacher_class_argues(db: Session, username: str) -> list[ArguePost]:
@@ -24,6 +26,13 @@ def get_teacher_class_argues(db: Session, username: str) -> list[ArguePost]:
                             .where(ClassStudentLink.username == username)
     argues: list[ArguePost] = db.exec(stmt).all()
     return argues
+
+
+def get_ta_class_argues(db: Session, username: str) -> list[ArguePost]:
+    stmt = select(ArguePost).join(ArguePost.widget).join(Widget.page).join(Page.class_) \
+        .join(ClassTeachingAssistantLink, Class.id == ClassTeachingAssistantLink.class_id) \
+        .where(ClassTeachingAssistantLink.username == username)
+    argues: list[ArguePost] = db.exec(stmt).all()
 
 
 def get_student_class_argues(db: Session, username: str) -> list[ArguePost]:
@@ -44,25 +53,25 @@ def get_argue(db: Session, argue_id: int) -> ArguePost:
     return argue
 
 
-def count_argue_votes(db: Session, argue: ArguePost) -> (int, int):
-    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue.id) \
+def count_argue_votes(db: Session, argue_id: int) -> (int, int):
+    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue_id) \
                                                .where(ArguePostVote.is_support == True)
     support = db.exec(stmt).scalar()
-    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue.id) \
+    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue_id) \
                                                .where(ArguePostVote.is_support == False)
     not_support = db.exec(stmt).scalar()
     return support, not_support
 
 
-def count_argue_watch(db: Session, argue: ArguePost) -> int:
-    stmt = select(func.count(ArguePostWatch.id)).where(ArguePostWatch.argue_id == argue.id) \
+def count_argue_watch(db: Session, argue_id: int) -> int:
+    stmt = select(func.count(ArguePostWatch.id)).where(ArguePostWatch.argue_id == argue_id) \
                                                 .where(ArguePostWatch.is_deleted == False)
     watch = db.exec(stmt).scalar()
     return watch
 
 
 def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
-    # TODO: 添加创建 Argue 时的分数
+    submission = get_submitted_assignment(argue.submitted_assignment_id)
     argue_post = ArguePost(
         widget_id=argue.widget_id,
         submitted_assignment_id=argue.submitted_assignment_id,
@@ -71,7 +80,7 @@ def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePo
         update_time=datetime.now(),
         content=argue.content,
         status=ArguePostStatus.SUBMITTED,
-        old_score=0,
+        old_score=submission.feedback.score if submission and submission.feedback else 0,
         editor_username=user.username,
     )
     db.add(argue_post)
@@ -125,6 +134,12 @@ def delete_argue(db: Session, argue_id: int) -> ArguePost:
     return argue_post
 
 
+def count_argue_comment(db: Session, argue_id: int) -> int:
+    stmt = select(func.count(ArguePostComment.id)).where(ArguePostComment.argue_post_id == argue_id)
+    count = db.exec(stmt).scalar()
+    return count
+
+
 def create_comment(db: Session, comment: ArguePostCommentCreate, editor: UserInDB) -> ArguePostComment:
     cmt = ArguePostComment(
         argue_post_id=comment.argue_post_id,
@@ -167,7 +182,8 @@ def delete_feedback_attachment(db: Session, file_id: uuid.UUID) -> ArguePostFeed
 
 
 def create_feedback(db: Session, feedback: ArguePostFeedbackCreate, marker: UserInDB) -> ArguePostFeedback:
-    # TODO: 添加 Argue feedback 修改原始分数
+    argue_post = get_argue(db, feedback.argue_post_id)
+    submission_feedback = get_submitted_assignment(db, argue_post.submitted_assignment_id).feedback
     feedback_entity = ArguePostFeedback(
         argue_post_id=feedback.argue_post_id,
         content=feedback.content,
@@ -176,6 +192,7 @@ def create_feedback(db: Session, feedback: ArguePostFeedbackCreate, marker: User
         marker_username=marker.username,
     )
     db.add(feedback_entity)
+    submission_feedback.score = submission_feedback.score
     db.commit()
     db.refresh(feedback_entity)
     return feedback_entity
