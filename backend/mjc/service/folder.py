@@ -22,7 +22,7 @@ def get_class_folders(db: Session, class_id: int, visible: bool = None) -> list[
     folder_entities = folder_crud.get_class_folders(db, class_id)
     folders: list[Folder] = []
     for folder_entity in folder_entities:
-        if folder_entity.visible == visible:
+        if folder_entity.visible == visible or visible is None:
             folder = Folder(
                 **folder_entity.model_dump(),
                 pages=[FolderPageItem.model_validate(page.model_dump()) for page in folder_entity.pages

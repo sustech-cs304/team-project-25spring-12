@@ -19,7 +19,7 @@ def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> Submitt
         id=entity.id,
         content=entity.content,
         code= entity.code,
-        submitted_time=entity.submitted_time,
+        submitted_time=entity.create_time,
         student=get_profile(db, entity.username),
         attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
     )

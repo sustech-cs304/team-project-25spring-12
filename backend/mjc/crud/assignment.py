@@ -3,6 +3,7 @@ from datetime import datetime
 
 from sqlmodel import Session, select
 
+from backend.mjc.crud.widget import get_widget
 from backend.mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
 from backend.mjc.model.schema.assignment import SubmissionAttachment , FeedbackAttachment
 from backend.mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback
@@ -35,12 +36,13 @@ def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAs
 
 
 def create_submission(db: Session, submission: SubmittedAssignmentCreate, username: str) -> SubmittedAssignment:
+    widget = get_widget(db, submission.widget_id)
     submission_entity = SubmittedAssignment(
         create_time=datetime.now(),
-        assignment_widget_id=submission.widget_id,
+        assignment_widget_id=widget.assignment_widget.id,
         username=username,
         content=submission.content,
-        code=submission.code.content,
+        code=submission.code.code,
         language=submission.code.language
     )
     db.add(submission_entity)

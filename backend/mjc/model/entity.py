@@ -232,7 +232,7 @@ class AssignmentWidget(SQLModel, table=True):
     max_score: float
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
-    submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment")
+    submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment_widget")
 
 
 class Visibility(str, Enum):
@@ -265,7 +265,7 @@ class SubmittedAssignmentAttachment(SQLModel, table=True):
     submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
     is_deleted: bool = Field(default=False, nullable=False)
 
-    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="submitted_assignments")
+    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="attachment")
     file: "LocalResourceFile" = Relationship()
 
 
@@ -305,7 +305,7 @@ class SubmittedAssignment(SQLModel, table=True):
     content: str | None = Field(default=None, nullable=True)
     code: str | None = Field(default=None, nullable=True)
     language: str | None = Field(default=None, nullable=True)
-    marked: str | None = Field(default=None, nullable=False)
+    marked: bool = Field(default=False)
 
     feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="submitted_assignment")
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")

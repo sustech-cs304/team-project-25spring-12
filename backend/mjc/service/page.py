@@ -72,7 +72,7 @@ def get_page(db: Session, page_id: int, current_user: UserInDB) -> Page | None:
             if widget.type == WidgetType.assignment:
                 if role == ClassRole.STUDENT:
                     widgets.append(widget_service.get_student_submissions(db, widget, current_user.username))
-                elif role == ClassRole.TEACHER or role == ClassRole.STUDENT:
+                elif role == ClassRole.TEACHER or role == ClassRole.TA:
                     widgets.append(widget_service.entity2assignment(widget))
             elif widget.type == WidgetType.note_pdf:
                 widgets.append(widget_service.entity2notepdf(widget))

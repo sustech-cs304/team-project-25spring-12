@@ -11,7 +11,7 @@ from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, Doc
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from backend.mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType
+from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType, Note as NoteEntity
 from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
 from backend.mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
 from backend.mjc.service.assignment import entity2submission
@@ -20,9 +20,9 @@ from backend.mjc.service.assignment import entity2submission
 def entity2doc(entity: WidgetEntity) -> DocWidget:
     attach: list[File] = []
     if entity.attachments:
-        for attachment in entity.attachment:
+        for attachment in entity.attachments:
             file: File = File(id=attachment.file_id,
-                              filename=attachment.name,
+                              filename=attachment.file.filename,
                               visibility=attachment.file.visibility,
                               url=None)
             attach.append(file)
@@ -76,6 +76,13 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
     return assignment_widget
 
 
+def entity2note(entity: NoteEntity) -> Note:
+    return Note(
+        editor=Profile.model_validate(entity.editor.model_dump()),
+        **entity.model_dump(),
+    )
+
+
 def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
     note_pdf_widget = NotePdfWidget(
         title=entity.title,
@@ -92,6 +99,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
         ),
+        notes=[entity2note(note) for note in entity.note_pdf_widget.notes],
     )
     return note_pdf_widget
 
@@ -217,7 +225,8 @@ def delete_attachment(db: Session, attachment_id: uuid.UUID) -> Message:
 
 def create_note(db: Session, note: NoteCreate, editor: UserInDB) -> Note:
     note_entity = crud_widget.create_note(db, note, editor)
-    return Note.model_validate(note_entity.model_dump())
+    return Note(editor=Profile.model_validate(note_entity.editor.model_dump()),
+                **note_entity.model_dump())
 
 
 def update_note(db: Session, note: NoteUpdate, editor: UserInDB) -> Note:

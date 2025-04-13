@@ -87,5 +87,5 @@ async def delete_widget(db: SessionDep, widget_id: int):
 
 
 @router.delete(path="/class/widget/notepdf/note/note_id}", status_code=status.HTTP_200_OK)
-async def delete_note(db: SessionDep, note_id: int):
-    return widget_service.delete_note(db, note_id)
+async def delete_note(db: SessionDep, note_id: int, current_user: UserInDB = Depends(user_service.get_current_user)):
+    return widget_service.delete_note(db, note_id, current_user)

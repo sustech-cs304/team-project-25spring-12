@@ -25,11 +25,11 @@ def create_widget(db, widget: DocWidgetCreate | AssignmentWidgetCreate | NotePdf
     widget_entity = Widget(
         title=widget.title,
         index=widget.index,
-        type=WidgetType[widget.type].value,
+        type=WidgetType(widget.type),
         create_time=datetime.now(),
         update_time=datetime.now(),
         editor_username=editor.username,
-        content=widget.content,
+        content=widget.content if hasattr(widget, "content") else None,
         page_id=widget.page_id,
         visible=widget.visible
     )
@@ -55,7 +55,7 @@ def update_widget(db: Session,
 
 def create_widget_attachment(db: Session, widget_attachment: WidgetAttachmentCreate) -> WidgetAttachment:
     attach = WidgetAttachment(
-        file_id=widget_attachment.file.id,
+        file_id=widget_attachment.file_id,
         widget_id=widget_attachment.widget_id,
     )
     db.add(attach)
@@ -115,7 +115,7 @@ def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: Use
     widget_entity = create_widget(db, widget, editor)
     note_pdf = NotePDFWidget(
         widget_id=widget_entity.id,
-        pdf_file_id=widget.pdf_file.id
+        pdf_file_id=widget.pdf_file
     )
     db.add(note_pdf)
     db.commit()
@@ -125,7 +125,7 @@ def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: Use
 
 def update_note_pdf_widget(db: Session, widget: NotePdfWidgetUpdate, editor: UserInDB) -> Widget:
     widget_entity = update_widget(db, widget, editor)
-    widget_entity.note_pdf_widget.pdf_file_id = widget.pdf_file.id
+    widget_entity.note_pdf_widget.pdf_file_id = widget.pdf_file
     db.commit()
     db.refresh(widget_entity)
     return widget_entity
