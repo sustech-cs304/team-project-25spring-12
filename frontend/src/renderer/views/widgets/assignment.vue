@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" color="orange" icon="Notebook">
+  <widget-card :title="computedTitle" type="assignment">
     <div class="container">
       <!--   作业状态   -->
       <div>
@@ -94,7 +94,7 @@
       <div v-if="props.data.status === 'returned'">
         <el-text class="section-title">批改建议</el-text>
         <div class="container">
-          <md-and-file :file-list="props.data.returned_files" :content="props.data.feedback"/>
+          <md-and-file :file-list="props.data.returnedFiles" :content="props.data.feedback"/>
           <el-button
               type="primary"
               :icon="ChatRound"
@@ -114,15 +114,13 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
-import {computed, ref} from "vue";
-import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
+import { computed, ref } from "vue";
+import { Checked, Edit, Finished, Memo, Timer, Upload, ChatRound } from "@element-plus/icons-vue";
+import type { AssignmentWidget, SubmittedRecord } from "@/types/widgets";
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
-});
+const props = defineProps<{
+  data: AssignmentWidget;
+}>();
 
 /*
 * 代码编辑器的所有常量和方法：
@@ -132,10 +130,10 @@ const props = defineProps({
 * updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
 * */
 const languages = [
-  {label: "C++", value: "cpp"},
-  {label: "C", value: "c"},
-  {label: "Java", value: "java"},
-  {label: "Python", value: "python"},
+  { label: "C++", value: "cpp" },
+  { label: "C", value: "c" },
+  { label: "Java", value: "java" },
+  { label: "Python", value: "python" },
 ];
 const selectedLanguage = ref("cpp");
 const code = ref('');
@@ -179,12 +177,11 @@ const displayTotalScore = computed(() => (props.data.status === "returned" ? pro
 const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
 const content = ref("");
 const fileList = ref([]);
-const editSubmittedAssignment = (record: any) => {
+const editSubmittedAssignment = (record: SubmittedRecord) => {
   content.value = JSON.parse(JSON.stringify(record.content));
   code.value = JSON.parse(JSON.stringify(record.code.content));
   selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
   fileList.value = JSON.parse(JSON.stringify(record.attachments));
-  // updateMode();
   isEditing.value = true;
 }
 
@@ -212,6 +209,13 @@ const postArgue = () => {
     // 路由到创建Argue的页面
   }
 }
+
+defineExpose({
+  init: () => {
+    console.log('ass')
+    codeEditor.value?.layout()
+  }
+});
 </script>
 
 <style scoped>

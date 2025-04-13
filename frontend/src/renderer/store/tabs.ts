@@ -7,25 +7,21 @@ interface ListItem {
 }
 
 export const useTabsStore = defineStore('tabs', {
-	state: () => {
-		return {
-			list: <ListItem[]>[]
-		};
-	},
+	state: () => ({
+		list: <ListItem[]>[]
+	}),
 	getters: {
-		show: state => {
-			return state.list.length > 0;
-		},
-		nameList: state => {
-			return state.list.map(item => item.name);
-		}
+		show: state => state.list.length > 0,
+		nameList: state => state.list.map(item => item.name)
 	},
 	actions: {
 		delTabsItem(index: number) {
 			this.list.splice(index, 1);
 		},
 		setTabsItem(data: ListItem) {
-			this.list.push(data);
+			if (!this.list.find(item => item.path === data.path)) {
+				this.list.push(data);
+			}
 		},
 		clearTabs() {
 			this.list = [];
@@ -33,20 +29,13 @@ export const useTabsStore = defineStore('tabs', {
 		closeTabsOther(data: ListItem[]) {
 			this.list = data;
 		},
-		closeCurrentTag(data: any) {
-			for (let i = 0, len = this.list.length; i < len; i++) {
-				const item = this.list[i];
-				if (item.path === data.$route.fullPath) {
-					if (i < len - 1) {
-						data.$router.push(this.list[i + 1].path);
-					} else if (i > 0) {
-						data.$router.push(this.list[i - 1].path);
-					} else {
-						data.$router.push('/');
-					}
-					this.list.splice(i, 1);
-					break;
-				}
+		closeCurrentTag(router: any, currentPath: string) {
+			const index = this.list.findIndex(item => item.path === currentPath);
+			if (index !== -1) {
+				const isLast = index === this.list.length - 1;
+				const next = isLast ? this.list[index - 1] : this.list[index + 1];
+				this.list.splice(index, 1);
+				router.push(next?.path || '/');
 			}
 		}
 	}

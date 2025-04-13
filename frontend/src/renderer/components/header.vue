@@ -1,204 +1,235 @@
 <template>
-    <div class="header">
-        <!-- 折叠按钮 -->
-        <div class="header-left">
-            <img class="logo" src="../assets/img/logo.svg" alt="" />
-            <div class="web-title">母鸡黑板</div>
-            <div class="collapse-btn" @click="collapseChage">
-                <el-icon v-if="sidebar.collapse">
-                    <Expand />
-                </el-icon>
-                <el-icon v-else>
-                    <Fold />
-                </el-icon>
-            </div>
-        </div>
-        <div class="header-right">
-            <div class="header-user-con">
-                <div class="btn-icon" @click="router.push('/theme')">
-                    <el-tooltip effect="dark" content="设置主题" placement="bottom">
-                        <i class="el-icon-lx-skin"></i>
-                    </el-tooltip>
-                </div>
-                <div class="btn-icon" @click="router.push('/user-center')">
-                    <el-tooltip
-                        effect="dark"
-                        :content="message ? `有${message}条未读消息` : `消息中心`"
-                        placement="bottom"
-                    >
-                        <i class="el-icon-lx-notice"></i>
-                    </el-tooltip>
-                    <span class="btn-bell-badge" v-if="message"></span>
-                </div>
-                <div class="btn-icon" @click="setFullScreen">
-                    <el-tooltip effect="dark" content="全屏" placement="bottom">
-                        <i class="el-icon-lx-full"></i>
-                    </el-tooltip>
-                </div>
-                <!-- 用户头像 -->
-                <el-avatar class="user-avatar" :size="30" :src="imgurl" />
-                <!-- 用户名下拉菜单 -->
-                <el-dropdown class="user-name" trigger="click" @command="handleCommand">
+  <div class="header">
+    <!-- 左侧区域 -->
+    <div class="header-left">
+      <img class="logo" src="../assets/img/logo.svg" alt="Logo"/>
+      <div class="web-title">后台管理系统</div>
+
+      <!-- 导航按钮 -->
+      <div class="nav-buttons">
+        <el-tooltip effect="dark" content="首页" placement="bottom">
+          <div class="btn-icon" @click="goToHome">
+            <el-icon>
+              <HomeFilled/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip effect="dark" content="反馈" placement="bottom">
+          <div class="btn-icon" @click="goToArguePost">
+            <el-icon>
+              <ChatRound/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+      </div>
+    </div>
+
+    <!-- 右侧区域 -->
+    <div class="header-right">
+      <div class="header-user-con">
+        <!-- 全屏按钮 -->
+        <el-tooltip effect="dark" content="全屏" placement="bottom">
+          <div class="btn-icon" @click="setFullScreen">
+            <el-icon>
+              <FullScreen/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+
+        <!-- 消息通知 -->
+        <el-tooltip effect="dark" content="消息" placement="bottom">
+          <div class="btn-icon" @click="goToMessages">
+            <el-icon>
+              <Bell/>
+            </el-icon>
+            <span v-if="unreadCount > 0" class="btn-bell-badge"></span>
+          </div>
+        </el-tooltip>
+
+        <!-- 用户信息 -->
+        <el-avatar class="user-avatar" :size="30" :src="userAvatar"/>
+        <el-dropdown class="user-name" trigger="click" @command="handleCommand">
                     <span class="el-dropdown-link">
                         {{ username }}
                         <el-icon class="el-icon--right">
-                            <arrow-down />
+                            <arrow-down/>
                         </el-icon>
                     </span>
-                    <template #dropdown>
-                        <el-dropdown-menu>
-                            <a href="https://github.com/lin-xin/vue-manage-system" target="_blank">
-                                <el-dropdown-item>项目仓库</el-dropdown-item>
-                            </a>
-                            <a href="https://lin-xin.gitee.io/example/vuems-doc/" target="_blank">
-                                <el-dropdown-item>官方文档</el-dropdown-item>
-                            </a>
-                            <el-dropdown-item command="user">个人中心</el-dropdown-item>
-                            <el-dropdown-item divided command="loginout">退出登录</el-dropdown-item>
-                        </el-dropdown-menu>
-                    </template>
-                </el-dropdown>
-            </div>
-        </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <a href="https://github.com/sustech-cs304/team-project-25spring-12" target="_blank">
+                <el-dropdown-item>
+                  <el-icon>
+                    <Link/>
+                  </el-icon>
+                  项目仓库
+                </el-dropdown-item>
+              </a>
+              <el-dropdown-item divided command="logout">
+                <el-icon>
+                  <SwitchButton/>
+                </el-icon>
+                退出登录
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
     </div>
+  </div>
 </template>
+
 <script setup lang="ts">
-import { onMounted } from 'vue';
-import { useSidebarStore } from '../store/sidebar';
-import { useRouter } from 'vue-router';
-import imgurl from '../assets/img/img.jpg';
+import {ref} from 'vue';
+import {useRouter} from 'vue-router';
+import {
+  HomeFilled,
+  ChatRound,
+  FullScreen,
+  Bell,
+  ArrowDown,
+  Link,
+  SwitchButton
+} from '@element-plus/icons-vue';
+import {useUserStore} from "@/store/user";
 
-const username: string | null = localStorage.getItem('vuems_name');
-const message: number = 2;
+const userStore = useUserStore()
+const router = useRouter()
 
-const sidebar = useSidebarStore();
-// 侧边栏折叠
-const collapseChage = () => {
-    sidebar.handleCollapse();
+const username = ref(userStore.username);
+const userAvatar = ref('../assets/img/img.jpg');
+const unreadCount = ref(1); // TODO: 从API获取未读消息数
+
+const goToHome = () => {
+  router.push('/')
 };
 
-onMounted(() => {
-    if (document.body.clientWidth < 1500) {
-        collapseChage();
-    }
-});
+const goToArguePost = () => {
+  // TODO: 跳转到反馈页面
+  // router.push('/feedback');
+};
 
-// 用户名下拉菜单选择事件
-const router = useRouter();
+const goToMessages = () => {
+  router.push('/messages');
+};
+
 const handleCommand = (command: string) => {
-    if (command == 'loginout') {
-        localStorage.removeItem('vuems_name');
-        router.push('/login');
-    } else if (command == 'user') {
-        router.push('/ucenter');
-    }
+  if (command === 'logout') {
+    userStore.clearToken()
+    router.push('/login')
+  }
 };
 
+// 全屏功能
 const setFullScreen = () => {
-    if (document.fullscreenElement) {
-        document.exitFullscreen();
-    } else {
-        document.body.requestFullscreen.call(document.body);
-    }
+  if (document.fullscreenElement) {
+    document.exitFullscreen();
+  } else {
+    document.body.requestFullscreen();
+  }
 };
 </script>
+
 <style scoped>
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-sizing: border-box;
-    width: 100%;
-    height: 70px;
-    color: var(--header-text-color);
-    background-color: var(--header-bg-color);
-    border-bottom: 1px solid #ddd;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: 70px;
+  color: var(--header-text-color);
+  background-color: var(--header-bg-color);
+  border-bottom: 1px solid var(--border-color);
+  padding: 0 20px;
 }
 
 .header-left {
-    display: flex;
-    align-items: center;
-    padding-left: 20px;
-    height: 100%;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 100%;
 }
 
 .logo {
-    width: 35px;
+  width: 35px;
+  height: 35px;
 }
 
 .web-title {
-    margin: 0 40px 0 10px;
-    font-size: 22px;
+  font-size: 22px;
+  font-weight: 600;
 }
 
-.collapse-btn {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100%;
-    padding: 0 10px;
-    cursor: pointer;
-    opacity: 0.8;
-    font-size: 22px;
-}
-
-.collapse-btn:hover {
-    opacity: 1;
+.nav-buttons {
+  display: flex;
+  gap: 10px;
+  margin-left: 20px;
 }
 
 .header-right {
-    float: right;
-    padding-right: 50px;
+  display: flex;
+  align-items: center;
 }
 
 .header-user-con {
-    display: flex;
-    height: 70px;
-    align-items: center;
-}
-
-.btn-fullscreen {
-    transform: rotate(45deg);
-    margin-right: 5px;
-    font-size: 24px;
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  height: 100%;
 }
 
 .btn-icon {
-    position: relative;
-    width: 30px;
-    height: 30px;
-    text-align: center;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    color: var(--header-text-color);
-    margin: 0 5px;
-    font-size: 20px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--header-text-color);
+}
+
+.btn-icon:hover {
+  background-color: var(--hover-bg-color);
+  transform: scale(1.05);
 }
 
 .btn-bell-badge {
-    position: absolute;
-    right: 4px;
-    top: 0px;
-    width: 8px;
-    height: 8px;
-    border-radius: 4px;
-    background: #f56c6c;
-    color: var(--header-text-color);
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #f56c6c;
 }
 
 .user-avatar {
-    margin: 0 10px 0 20px;
+  cursor: pointer;
+  transition: transform 0.3s ease;
+}
+
+.user-avatar:hover {
+  transform: scale(1.1);
 }
 
 .el-dropdown-link {
-    color: var(--header-text-color);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
+  display: flex;
+  align-items: center;
+  color: var(--header-text-color);
+  cursor: pointer;
+  font-size: 14px;
+  gap: 4px;
 }
 
 .el-dropdown-menu__item {
-    text-align: center;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
 }
 </style>
