@@ -9,7 +9,7 @@ from backend.mjc.model.schema.widget import AssignmentWidget
 from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
     ArguePostUpdate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedbackCreate, \
-    ArguePostFeedbackAttachmentCreate
+    ArguePostFeedbackAttachmentCreate, ArguePostCreate
 from backend.mjc.model.schema.assignment import SubmittedAssignment
 from backend.mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
     SubmittedAssignmentAttachment, ArguePost as ArguePostEntity
@@ -129,6 +129,13 @@ def get_argue(db: Session, argue_id: int) -> ArguePost:
         assignment=argue2assignment(argue)
     )
     return post
+
+
+def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
+    argue_post = crud_argue.create_argue(db, argue, user)
+    if argue_post is None:
+        raise HTTPException(status_code=400, detail="Create argue failed")
+    return get_argue(db, argue_post.id)
 
 
 def update_argue(db: Session, argue: ArguePostUpdate) -> ArguePost:
