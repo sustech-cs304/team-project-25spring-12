@@ -33,6 +33,7 @@ def get_ta_class_argues(db: Session, username: str) -> list[ArguePost]:
         .join(ClassTeachingAssistantLink, Class.id == ClassTeachingAssistantLink.class_id) \
         .where(ClassTeachingAssistantLink.username == username)
     argues: list[ArguePost] = db.exec(stmt).all()
+    return argues
 
 
 def get_student_class_argues(db: Session, username: str) -> list[ArguePost]:
@@ -54,24 +55,24 @@ def get_argue(db: Session, argue_id: int) -> ArguePost:
 
 
 def count_argue_votes(db: Session, argue_id: int) -> (int, int):
-    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue_id) \
+    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_post_id == argue_id) \
                                                .where(ArguePostVote.is_support == True)
-    support = db.exec(stmt).scalar()
-    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_id == argue_id) \
+    support = db.exec(stmt).first()
+    stmt = select(func.count(ArguePostVote.id)).where(ArguePostVote.argue_post_id == argue_id) \
                                                .where(ArguePostVote.is_support == False)
-    not_support = db.exec(stmt).scalar()
+    not_support = db.exec(stmt).first()
     return support, not_support
 
 
 def count_argue_watch(db: Session, argue_id: int) -> int:
-    stmt = select(func.count(ArguePostWatch.id)).where(ArguePostWatch.argue_id == argue_id) \
+    stmt = select(func.count(ArguePostWatch.id)).where(ArguePostWatch.argue_post_id == argue_id) \
                                                 .where(ArguePostWatch.is_deleted == False)
-    watch = db.exec(stmt).scalar()
+    watch = db.exec(stmt).first()
     return watch
 
 
 def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
-    submission = get_submitted_assignment(argue.submitted_assignment_id)
+    submission = get_submitted_assignment(db, argue.submitted_assignment_id)
     argue_post = ArguePost(
         widget_id=argue.widget_id,
         submitted_assignment_id=argue.submitted_assignment_id,
@@ -119,8 +120,8 @@ def delete_argue_attachment(db: Session, file_id: uuid.UUID):
 def update_argue(db: Session, argue: ArguePostUpdate) -> ArguePost:
     argue_post = get_argue(db, argue.id)
     if argue_post:
-        argue.title = argue.title
-        argue.content = argue.content
+        argue_post.title = argue.title
+        argue_post.content = argue.content
     db.commit()
     db.refresh(argue_post)
     return argue_post
@@ -136,7 +137,7 @@ def delete_argue(db: Session, argue_id: int) -> ArguePost:
 
 def count_argue_comment(db: Session, argue_id: int) -> int:
     stmt = select(func.count(ArguePostComment.id)).where(ArguePostComment.argue_post_id == argue_id)
-    count = db.exec(stmt).scalar()
+    count = db.exec(stmt).first()
     return count
 
 

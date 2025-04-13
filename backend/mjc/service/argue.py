@@ -10,17 +10,18 @@ from backend.mjc.model.schema.user import UserInDB, Profile
 from backend.mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
     ArguePostUpdate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedbackCreate, \
     ArguePostFeedbackAttachmentCreate, ArguePostCreate
-from backend.mjc.model.schema.assignment import SubmittedAssignment
+from backend.mjc.model.schema.assignment import SubmittedAssignment, Feedback
 from backend.mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
     SubmittedAssignmentAttachment, ArguePost as ArguePostEntity
-from crud.argue import count_argue_votes
-from model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
+from backend.mjc.crud.argue import count_argue_votes
+from backend.mjc.model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
+from backend.mjc.service.assignment import entity2feedback
 
 
 def argue2comments(argue: ArguePostEntity) -> list[ArguePostComment]:
     comments = [ArguePostComment(
                     **comment.model_dump(),
-                    editor=Profile.model_validate(comment.editor)
+                    editor=Profile.model_validate(comment.editor.model_dump())
                 ) for comment in argue.comments]
     return comments
 
@@ -35,9 +36,10 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
             SubmittedAssignment(
                 id=argue.submitted_assignment_id,
                 content=argue.submitted_assignment.content,
-                attachments=attachments2files(argue.submitted_assignment.attachment),
+                attachments=attachments2files(argue.submitted_assignment.attachments),
                 code=argue.submitted_assignment.code,
                 submitted_time=argue.submitted_assignment.create_time,
+                feedback=entity2feedback(None, argue.submitted_assignment.feedback)
             )
         ],
         index=argue.widget.index,
@@ -46,7 +48,10 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
         submit_types=argue.widget.assignment_widget.submit_types,
         status=' ',  # TODO: 批改状态
         ddl=argue.widget.assignment_widget.ddl,
-        max_score=argue.widget.assignment_widget.max_score
+        max_score=argue.widget.assignment_widget.max_score,
+        create_time=argue.widget.create_time,
+        update_time=argue.widget.update_time,
+        editor=Profile.model_validate(argue.widget.editor.model_dump()),
     )
     return assignment
 
@@ -180,6 +185,7 @@ def delete_argue_watch(db: Session, argue_id: int, user: UserInDB) -> Message:
 
 
 def create_argue_vote(db: Session, vote: ArguePostVoteCreate, user: UserInDB) -> Message:
+    # TODO: 检查是否已投过票
     vote = crud_argue.create_argue_vote(db, vote, user)
     if vote is None:
         raise HTTPException(status_code=400, detail="Create vote failed")

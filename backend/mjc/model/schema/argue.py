@@ -84,8 +84,10 @@ class ArguePostCreate(ArguePostBase):
     submitted_assignment_id: int
 
 
-class ArguePostUpdate(ArguePostBase):
+class ArguePostUpdate(BaseModel):
     id: int
+    title: str
+    content: str
 
 
 class ArguePostAttachmentCreate(BaseModel):

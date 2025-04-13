@@ -335,7 +335,7 @@ class ArguePost(SQLModel, table=True):
     old_score: float = Field(default=0.0, nullable=False)
     editor_username: str | None = Field(foreign_key="profile.username")
 
-    widget: "Widget" = Relationship(back_populates="argue_posts")
+    widget: "Widget" = Relationship()
     feedback: "ArguePostFeedback" = Relationship(back_populates="argue_post")
     editor: "Profile" = Relationship()
     attachments: list["ArguePostAttachment"] = Relationship(back_populates="argue_post")
@@ -403,7 +403,7 @@ class ArguePostFeedbackAttachment(SQLModel, table=True):
     is_deleted: bool = Field(default=False)
 
     file: "LocalResourceFile" = Relationship()
-    argue_post: "ArguePost" = Relationship(back_populates="feedback")
+    argue_post_feedback: "ArguePostFeedback" = Relationship(back_populates="attachments")
 
 
 class ArguePostFeedback(SQLModel, table=True):
@@ -418,4 +418,4 @@ class ArguePostFeedback(SQLModel, table=True):
 
     argue_post: "ArguePost" = Relationship(back_populates="feedback")
     marker: "Profile" = Relationship()
-    attachments: list["ArguePostFeedbackAttachment"] = Relationship(back_populates="argue_post")
+    attachments: list["ArguePostFeedbackAttachment"] = Relationship(back_populates="argue_post_feedback")

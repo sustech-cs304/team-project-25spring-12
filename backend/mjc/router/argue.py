@@ -28,7 +28,7 @@ async def get_argue(db: SessionDep, argue_id: int):
     return argue_service.get_argue(db, argue_id)
 
 
-@router.patch('/argue/{argue_id}', response_model=ArguePost)
+@router.patch('/argue', response_model=ArguePost)
 async def update_argue(db: SessionDep, argue: ArguePostUpdate):
     return argue_service.update_argue(db, argue)
 
@@ -50,7 +50,7 @@ async def create_argue_watch(db: SessionDep, comment: ArguePostWatchCreate,
     return argue_service.create_argue_watch(db, comment, current_user)
 
 
-@router.post('/argue/{argue_id}/watch', response_model=Message)
+@router.delete('/argue/{argue_id}/watch', response_model=Message)
 async def delete_argue_watch(db: SessionDep, argue_id: int,
                              current_user = Depends(get_current_user)):
     return argue_service.delete_argue_watch(db, argue_id, current_user)
