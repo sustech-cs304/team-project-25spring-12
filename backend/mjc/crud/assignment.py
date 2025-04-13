@@ -6,12 +6,14 @@ from sqlmodel import Session, select
 from backend.mjc.crud.widget import get_widget
 from backend.mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
 from backend.mjc.model.schema.assignment import SubmissionAttachment , FeedbackAttachment
-from backend.mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback
+from backend.mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback, AssignmentWidget
 from backend.mjc.model.entity import SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
 
 
 def get_all_assignments_submissions(db: Session, widget_id: int) -> list[SubmittedAssignment]:
-    stmt = select(SubmittedAssignment).where(SubmittedAssignment.widget_id == widget_id).join(Widget).where(Widget.is_deleted == False)
+    widget = get_widget(db, widget_id)
+    stmt = select(SubmittedAssignment).where(SubmittedAssignment.assignment_widget_id == widget.assignment_widget.id). \
+        join(SubmittedAssignment.assignment_widget).join(AssignmentWidget.widget).where(Widget.is_deleted == False)
     submissions: list[SubmittedAssignment] = db.exec(stmt).all()
     return submissions
 
@@ -42,8 +44,8 @@ def create_submission(db: Session, submission: SubmittedAssignmentCreate, userna
         assignment_widget_id=widget.assignment_widget.id,
         username=username,
         content=submission.content,
-        code=submission.code.code,
-        language=submission.code.language
+        code=submission.code.code if submission.code else None,
+        language=submission.code.language if submission.code else None,
     )
     db.add(submission_entity)
     db.commit()
@@ -57,7 +59,7 @@ def create_feedback(db: Session, feedback: FeedbackCreate, username: str) -> Sub
         content=feedback.content,
         create_time=datetime.now(),
         submitted_assignment_id=feedback.submission_id,
-        maker=username
+        marker=username
     )
     db.add(feedback_entity)
     db.commit()
@@ -79,8 +81,8 @@ def update_feedback(db: Session, feedback: FeedbackUpdate, username: str) -> Sub
 
 def create_submission_attachment(db: Session, submission_attachment: SubmissionAttachment) -> SubmittedAssignmentAttachment:
     attach = SubmittedAssignmentAttachment(
-        file_id=submission_attachment.file.id,
-        subitted_assignment_id = submission_attachment.submission_id,
+        file_id=submission_attachment.file_id,
+        submitted_assignment_id = submission_attachment.submission_id,
     )
     db.add(attach)
     db.commit()
@@ -101,8 +103,8 @@ def delete_submission_attachment(db: Session, file_id: uuid.UUID) -> SubmittedAs
 
 def create_feedback_attachment(db: Session, feedback_attachment: FeedbackAttachment) -> FeedbackAttachmentEntity:
     attach = FeedbackAttachmentEntity(
-        file_id=feedback_attachment.file.id,
-        feedback_id=feedback_attachment.id,
+        file_id=feedback_attachment.file_id,
+        feedback_id=feedback_attachment.feedback_id,
     )
     db.add(attach)
     db.commit()

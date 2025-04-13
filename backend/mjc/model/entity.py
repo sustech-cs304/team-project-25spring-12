@@ -265,7 +265,7 @@ class SubmittedAssignmentAttachment(SQLModel, table=True):
     submitted_assignment_id: int = Field(foreign_key="submitted_assignment.id")
     is_deleted: bool = Field(default=False, nullable=False)
 
-    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="attachment")
+    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="attachments")
     file: "LocalResourceFile" = Relationship()
 
 
@@ -309,4 +309,4 @@ class SubmittedAssignment(SQLModel, table=True):
 
     feedback: "SubmittedAssignmentFeedback" = Relationship(back_populates="submitted_assignment")
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")
-    attachment: list["SubmittedAssignmentAttachment"] = Relationship(back_populates="submitted_assignment")
+    attachments: list["SubmittedAssignmentAttachment"] = Relationship(back_populates="submitted_assignment")

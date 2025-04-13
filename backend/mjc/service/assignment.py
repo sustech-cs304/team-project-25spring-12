@@ -1,4 +1,5 @@
 import uuid
+from fileinput import filename
 
 from fastapi import HTTPException, status
 from sqlmodel import Session
@@ -8,20 +9,25 @@ from backend.mjc.crud.user import get_profile
 
 from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
 from backend.mjc.model.entity import SubmittedAssignmentFeedback
+from backend.mjc.model.entity import Visibility
 from backend.mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment
-from backend.mjc.model.schema.common import Message, File
-from backend.mjc.model.schema.user import UserInDB
+from backend.mjc.model.schema.common import Message, File, Code
+from backend.mjc.model.schema.user import UserInDB, Profile
 
 
 def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> SubmittedAssignment:
     submission = SubmittedAssignment(
         id=entity.id,
         content=entity.content,
-        code= entity.code,
+        code= Code(code=entity.code,
+                   language=entity.language) if entity.code else None,
         submitted_time=entity.create_time,
-        student=get_profile(db, entity.username),
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+        student=Profile.model_validate(get_profile(db, entity.username).model_dump()),
+        attachments=[File(url=None,
+                          id=file.file_id,
+                          filename=file.file.filename,
+                          visibility=Visibility.public) for file in entity.attachments if entity.attachments],
     )
     return submission
 
@@ -31,7 +37,10 @@ def entity2feedback(db: Session, entity: SubmittedAssignmentFeedback) -> Feedbac
         id=entity.id,
         score=entity.score,
         content=entity.content,
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+        attachments=[File(url=None,
+                          id=file.file_id,
+                          filename=file.file.filename,
+                          visibility=Visibility.public) for file in entity.attachments if entity.attachments],
         create_time=entity.create_time,
         marker=entity.marker
     )
