@@ -5,10 +5,25 @@
       <div class="comment-stats">
         <h3>评论 ({{ comments.length }})</h3>
       </div>
-    
+
+      <!-- 评论表单 -->
+      <div class="comment-form">
+        <h3>{{ replyToUser ? `回复 @${replyToUser}` : '发表评论' }}</h3>
+        <el-input
+          type="textarea"
+          :rows="4"
+          v-model="commentContent"
+          placeholder="请输入你的评论..."
+        ></el-input>
+        <div class="form-actions">
+          <el-button type="primary" @click="submitComment">提交</el-button>
+          <el-button v-if="replyToUser" @click="cancelReply">取消回复</el-button>
+        </div>
+      </div>
+
       <!-- 评论列表 -->
       <div class="comment-list">
-        <el-card v-for="comment in comments" :key="comment.id" class="comment-item">
+        <el-card v-for="comment in comments.reverse()" :key="comment.id" class="comment-item">
           <div class="comment-header">
           <el-avatar :size="40" :src="comment.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
           <div class="comment-user">
@@ -27,25 +42,10 @@
           </div>
         </el-card>
       </div>
-    
-      <!-- 评论表单 -->
-      <div class="comment-form">
-        <h3>{{ replyToUser ? `回复 @${replyToUser}` : '发表评论' }}</h3>
-        <el-input
-          type="textarea"
-          :rows="4"
-          v-model="commentContent"
-          placeholder="请输入你的评论..."
-        ></el-input>
-        <div class="form-actions">
-          <el-button type="primary" @click="submitComment">提交</el-button>
-          <el-button v-if="replyToUser" @click="cancelReply">取消回复</el-button>
-        </div>
-      </div>
     </div>
   </widget-card>
 </template>
-  
+
 <script setup lang="ts">
   import WidgetCard from "./utils/widget-card.vue";
   import {computed, ref, onMounted} from "vue";
@@ -62,15 +62,6 @@
   
   import { Star } from '@element-plus/icons-vue'
   import { ElMessage } from 'element-plus'
-  // 模拟帖子数据
-  const post = ref({
-    id: 1,
-    title: '这是一个示例帖子标题',
-    content: '这里是帖子的详细内容。可以包含多行文本，讨论区的实现将显示在帖子内容下方。',
-    author: '张三',
-    createdAt: new Date(),
-    views: 1024
-  })
   
   // 模拟评论数据
   const comments = ref([
@@ -97,49 +88,49 @@
   
   // 格式化日期
   const formatDate = (date) => {
-  return new Date(date).toLocaleString()
+    return new Date(date).toLocaleString()
   }
   
   // 回复评论
   const replyTo = (comment) => {
-  replyToUser.value = comment.username
-  replyCommentId.value = comment.id
-  commentContent.value = `@${comment.username} `
+    replyToUser.value = comment.username
+    replyCommentId.value = comment.id
+    commentContent.value = `@${comment.username} `
   }
   
   // 取消回复
   const cancelReply = () => {
-  replyToUser.value = null
-  replyCommentId.value = null
+    replyToUser.value = null
+    replyCommentId.value = null
   }
   
   // 提交评论
   const submitComment = () => {
-  if (!commentContent.value.trim()) {
-    ElMessage.warning('评论内容不能为空')
-    return
-  }
+    if (!commentContent.value.trim()) {
+      ElMessage.warning('评论内容不能为空')
+      return
+    }
   
-  const newComment = {
-    id: comments.value.length + 1,
-    username: '当前用户',
-    avatar: '',
-    content: commentContent.value,
-    createdAt: new Date(),
-    likes: 0
-  }
+    const newComment = {
+      id: comments.value.length + 1,
+      username: '当前用户',
+      avatar: '',
+      content: commentContent.value,
+      createdAt: new Date(),
+      likes: 0
+    }
   
-  comments.value.push(newComment)
-  commentContent.value = ''
-  replyToUser.value = null
-  replyCommentId.value = null
+    comments.value.push(newComment)
+    commentContent.value = ''
+    replyToUser.value = null
+    replyCommentId.value = null
   
-  ElMessage.success('评论发表成功')
+    ElMessage.success('评论发表成功')
   }
   
   // 可以在这里添加从API获取数据的逻辑
   onMounted(() => {
-  // fetchPostAndComments()
+    // fetchPostAndComments()
   })
 </script>
 

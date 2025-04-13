@@ -45,12 +45,6 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/argue.vue'),
             },
             {
-                path: 'comment',
-                name: 'comment',
-                meta: {title: '评论'},
-                component: () => import('../views/pages/comment-ds.vue'),
-            },
-            {
                 path: 'messages',
                 name: 'message-box',
                 meta: {title: '消息中心'},

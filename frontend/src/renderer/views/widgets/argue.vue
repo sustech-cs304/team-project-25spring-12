@@ -60,7 +60,7 @@
           <el-button
               type="primary"
               :icon="Upload"
-              @click="submit"
+              @click="submitArgument"
               style="width: 120px; margin-left: auto"
           >
             提交辩驳
@@ -125,10 +125,52 @@
       </div>
 
       <!-- 讨论区 -->
-      <!-- <div v-if="props.data.status !== 'pending'">
+      <div v-if="props.data.status !== 'pending'">
         <el-text class="section-title">讨论区</el-text>
-        
-      </div> -->
+        <div class="discussion-area">
+          <!-- 评论统计 -->
+          <div class="comment-stats">
+            评论数：{{ comments.length }}
+          </div>
+
+          <!-- 评论表单 -->
+          <div class="comment-form">
+            <h3>{{ replyToUser ? `回复 @${replyToUser}` : '发表评论' }}</h3>
+            <el-input
+              type="textarea"
+              :rows="4"
+              v-model="commentContent"
+              placeholder="请输入你的评论..."
+            ></el-input>
+            <div class="form-actions">
+              <el-button type="primary" @click="submitComment">提交</el-button>
+              <el-button v-if="replyToUser" @click="cancelReply">取消回复</el-button>
+            </div>
+          </div>
+
+          <!-- 评论列表 -->
+          <div class="comment-list">
+            <el-card v-for="comment in comments.reverse()" :key="comment.id" class="comment-item">
+              <div class="comment-header">
+              <el-avatar :size="40" :src="comment.avatar || 'https://cube.elemecdn.com/3/7c/3ea6beec64369c2642b92c6726f1epng.png'" />
+              <div class="comment-user">
+                <span class="username">{{ comment.username }}</span>
+                <span class="time">{{ formatDate(comment.createdAt) }}</span>
+              </div>
+              </div>
+              <div class="comment-content">
+              {{ comment.content }}
+              </div>
+              <div class="comment-actions">
+              <el-button type="text" @click="replyTo(comment)">回复</el-button>
+              <el-button type="text" v-if="comment.likes !== undefined">
+                <el-icon><Star/></el-icon> {{ comment.likes }}
+              </el-button>
+              </div>
+            </el-card>
+          </div>
+        </div>
+      </div>
     </div>
   </widget-card>
 </template>
@@ -138,9 +180,10 @@
   import MdAndFile from "./utils/md-and-file.vue";
   import MdAndFileEditor from "./utils/md-and-file-editor.vue";
   import {computed, ref} from "vue";
-  import {Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+  import {Checked, Edit, Finished, Memo, Timer, Upload, Star} from "@element-plus/icons-vue";
+  import { ElMessage } from 'element-plus'
   import axios from "axios";
-  
+
   const props = defineProps({
     data: {
       type: Object,
@@ -212,9 +255,8 @@
     },
   ]
 
-  
   // 编辑提交记录
-  const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
+  const isEditing = ref(false);
   const content = ref("");
   const fileList = ref([]);
   const editSubmittedArguement = (record: any) => {
@@ -225,26 +267,16 @@
   }
   
   // 提交辩驳
-  const submit = () => {
-  // TODO
-    if (contentEditor.value) {
-      const content = contentEditor.value.getContent();
-      console.log(content);
-      const fileList = contentEditor.value.getFileList();
-      console.log(fileList);
-    }
-  }
-
-  const submitArgue = () => {
+  const submitArgument = () => {
     
   }
 
-  const editArgue = () =>{
+  const editArgument = () =>{
 
   }
 
-  const reviseArgue = () => {
-
+  const reviseArgument = () => {
+    
   }
 
   const vote = (isSupport: boolean) => {
@@ -255,6 +287,70 @@
         is_support: isSupport,
       },
     )
+  }
+
+  const comments = ref([
+  {
+    id: 1,
+    username: '用户A',
+    avatar: '',
+    content: '这是一个很好的帖子，感谢分享！',
+    createdAt: new Date(Date.now() - 3600000 * 2),
+    likes: 5
+  },
+  {
+    id: 2,
+    username: '用户B',
+    avatar: '',
+    content: '我不同意作者的观点，我认为...',
+    createdAt: new Date(Date.now() - 3600000),
+    likes: 2
+  }])
+  
+  const commentContent = ref('')
+  const replyToUser = ref(null)
+  const replyCommentId = ref(null)
+  
+  // 格式化日期
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString()
+  }
+  
+  // 回复评论
+  const replyTo = (comment) => {
+    replyToUser.value = comment.username
+    replyCommentId.value = comment.id
+    commentContent.value = `@${comment.username} `
+  }
+  
+  // 取消回复
+  const cancelReply = () => {
+    replyToUser.value = null
+    replyCommentId.value = null
+  }
+  
+  // 提交评论
+  const submitComment = () => {
+    if (!commentContent.value.trim()) {
+      ElMessage.warning('评论内容不能为空')
+      return
+    }
+  
+    const newComment = {
+      id: comments.value.length + 1,
+      username: '当前用户',
+      avatar: '',
+      content: commentContent.value,
+      createdAt: new Date(),
+      likes: 0
+    }
+  
+    comments.value.push(newComment)
+    commentContent.value = ''
+    replyToUser.value = null
+    replyCommentId.value = null
+  
+    ElMessage.success('评论发表成功')
   }
 </script>
 
@@ -403,6 +499,85 @@
     font-weight: bold;
     font-size: 22px;
     transform: translateY(1px);
+  }
+
+  .discussion-area {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  .post-card {
+    margin-bottom: 20px;
+  }
+  
+  .post-header h2 {
+    margin: 0;
+    padding: 0;
+  }
+  
+  .post-meta {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #666;
+  }
+  
+  .post-meta span {
+    margin-right: 15px;
+  }
+  
+  .post-content {
+    line-height: 1.6;
+  }
+  
+  .comment-stats {
+    margin: 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #eee;
+  }
+  
+  .comment-item {
+    margin-bottom: 15px;
+  }
+  
+  .comment-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .comment-user {
+    margin-left: 10px;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .username {
+    font-weight: bold;
+  }
+  
+  .time {
+    font-size: 12px;
+    color: #999;
+  }
+  
+  .comment-content {
+    margin-left: 50px;
+    line-height: 1.5;
+  }
+  
+  .comment-actions {
+    margin-top: 10px;
+    text-align: right;
+  }
+  
+  .comment-form {
+    margin-top: 30px;
+  }
+  
+  .form-actions {
+    margin-top: 15px;
+    text-align: right;
   }
 </style>
   

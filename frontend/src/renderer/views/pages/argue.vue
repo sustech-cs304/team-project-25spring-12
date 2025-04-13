@@ -1,9 +1,9 @@
 <template>
   <div class="page">
-    <!-- <argue :data="argueDataPending"></argue> -->
-    <!-- <argue :data="argueDataSubmitted"></argue> -->
+    <argue :data="argueDataPending"></argue>
+    <argue :data="argueDataSubmitted"></argue>
     <argue :data="argueDataReturned"></argue>
-    <comment :data="{}"></comment>
+    <!-- <comment :data="{}"></comment> -->
   </div>
 </template>
 
