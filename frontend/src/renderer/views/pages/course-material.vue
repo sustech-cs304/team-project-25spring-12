@@ -51,10 +51,11 @@
 <script setup lang="ts">
 import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
 import {useRoute} from 'vue-router'
+import type {Page} from "@/types/page";
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
-import {getCourseMaterials} from "@/api/courseMaterial";
+import {getCourseMaterials} from "@/api/courseMaterial"
 
 const route = useRoute()
 
@@ -68,11 +69,10 @@ const title = ref('')
 
 onMounted(async () => {
   const response = await getCourseMaterials()
-  console.log(response.data)
-  title.value = response.data.name
-  widgets.value = response.data.widgets
+  const data = response.data as Page
+  title.value = data.name
+  widgets.value = data.widgets
   initActiveWidget()
-  console.log(activeWidgetId.value)
   setTimeout(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.()
   }, 50)
