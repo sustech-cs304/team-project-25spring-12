@@ -124,9 +124,9 @@
             </el-table-column>
           </el-table>
         </el-row>
+        <comment :data="{}"></comment>
       </div>
     </div>
-    <comment :data="{}"></comment>
   </widget-card>
 </template>
   

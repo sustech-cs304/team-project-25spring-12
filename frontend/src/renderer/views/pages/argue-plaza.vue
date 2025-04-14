@@ -4,7 +4,8 @@
       <div class="channel-container">
         <div class="scroll-container channel-scroll-container">
           <div class="content-container">
-            <div class="channel active">辩驳广场</div>
+            <div class="channel active">广场</div>
+            <div class="channel">我的</div>
           </div>
         </div>
       </div>
