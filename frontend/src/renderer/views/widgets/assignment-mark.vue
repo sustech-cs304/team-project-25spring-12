@@ -122,6 +122,10 @@ const submit = () => {
   padding: 15px;
 }
 
+.score-display {
+  text-align: right;
+}
+
 .status-row, .feedback-row {
   width: 100%;
 }
