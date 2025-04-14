@@ -2,14 +2,15 @@ from fastapi import HTTPException, Depends
 from fastapi_cache.decorator import cache
 from sqlmodel import Session
 
-from ..crud import user as crud
-from ..model import entities, schemas
-from ..utils import security, database
-from .. import config
+from mjc.crud import user as crud
+from mjc.model.entity import User
+from mjc.model.schema.user import UserInDB, Token, Profile, UserCreate
+from mjc.utils import security, database
+from mjc import config
 
 
-def pack_profile(user: entities.User) -> schemas.Profile:
-    return schemas.Profile(
+def pack_profile(user: User) -> Profile:
+    return Profile(
         username=user.username,
         name=user.profile.name,
         department=user.profile.department,
@@ -19,7 +20,7 @@ def pack_profile(user: entities.User) -> schemas.Profile:
     )
 
 
-def login(db: Session, username: str, plain_password: str) -> schemas.Token | None:
+def login(db: Session, username: str, plain_password: str) -> Token | None:
     """
     生成 access token.
     :param db: SQLAlchemy.Session
@@ -27,16 +28,16 @@ def login(db: Session, username: str, plain_password: str) -> schemas.Token | No
     :param plain_password:
     :return: access_token if verified, None otherwise
     """
-    user: entities.User = crud.get_user(db, username)
+    user: User = crud.get_user(db, username)
     if user:
         if not user.is_active:
             raise HTTPException(status_code=400, detail="未激活的用户")
         if security.verify_password(plain_password, user.encoded_password):
-            return schemas.Token(access_token=security.generate_access_jwt(username, config.TOKEN_EXPIRE_MINUTES))
+            return Token(access_token=security.generate_access_jwt(username, config.TOKEN_EXPIRE_MINUTES))
     return None
 
 
-def register(db: Session, user: schemas.UserCreate) -> schemas.Profile | None:
+def register(db: Session, user: UserCreate) -> Profile | None:
     """
     注册用户.
     :param db:
@@ -47,22 +48,23 @@ def register(db: Session, user: schemas.UserCreate) -> schemas.Profile | None:
     return pack_profile(user)
 
 
-def get_profile(db: Session, username: str) -> schemas.Profile | None:
+def get_profile(db: Session, username: str) -> Profile | None:
     """
     获取用户资料
     :param db:
     :param username:
     :return:
     """
-    user: entities.User = crud.get_user(db, username)
+    user: User = crud.get_user(db, username)
     if user:
         return pack_profile(user)
     return None
 
 
 @cache(expire=2)
-async def get_current_user(db: database.Session,
-                           token: str = Depends(security.oauth2_scheme)) -> schemas.UserInDB:
+async def get_current_user(db: Session = Depends(database.get_session),
+                           token: str = Depends(security.oauth2_scheme)) \
+        -> UserInDB:
     """
     For get current authenticated user
     :param db:
@@ -70,7 +72,7 @@ async def get_current_user(db: database.Session,
     :return:
     """
     username = security.extract_username(token)
-    user: entities.User = crud.get_user(db, username=username)
+    user: User = crud.get_user(db, username=username)
     if user is None:
-        raise HTTPException(status_code=401, detail="未认证")
-    return schemas.UserInDB.model_validate(user)
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    return UserInDB.model_validate(user.model_dump())
