@@ -1,6 +1,6 @@
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
+from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
 
 
 class PageBase(BaseModel):

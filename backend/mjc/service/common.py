@@ -6,11 +6,11 @@ from fastapi import UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import Session
 
-from backend.mjc.model.entity import Visibility, LocalResourceFile
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.schema.common import LocalResourceFileCreate, File
-from backend.mjc.crud import common as common_crud
-from backend.mjc import config
+from mjc.model.entity import Visibility, LocalResourceFile
+from mjc.model.schema.user import UserInDB
+from mjc.model.schema.common import LocalResourceFileCreate, File
+from mjc.crud import common as common_crud
+from mjc import config
 
 
 async def create_local_resource_file(db: Session, file: UploadFile, visibility: Visibility, uploader: UserInDB) -> File:

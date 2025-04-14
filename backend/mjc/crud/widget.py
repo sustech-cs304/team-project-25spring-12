@@ -3,12 +3,12 @@ from datetime import datetime
 
 from sqlmodel import Session, select
 
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.schema.widget import WidgetAttachmentCreate
-from backend.mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
-from backend.mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
-from backend.mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
-from backend.mjc.model.entity import Widget, WidgetType, WidgetAttachment, \
+from mjc.model.schema.user import UserInDB
+from mjc.model.schema.widget import WidgetAttachmentCreate
+from mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
+from mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
+from mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
+from mjc.model.entity import Widget, WidgetType, WidgetAttachment, \
     AssignmentWidget, NotePDFWidget, SubmitType, \
     Note
 

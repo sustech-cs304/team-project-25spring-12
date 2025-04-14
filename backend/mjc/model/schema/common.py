@@ -1,7 +1,7 @@
 import uuid
 
 from pydantic import BaseModel
-from backend.mjc.model.entity import Visibility
+from mjc.model.entity import Visibility
 
 
 class FileBase(BaseModel):

@@ -2,12 +2,12 @@ import uuid
 
 from fastapi import APIRouter, UploadFile, Depends, Form, File
 
-from backend.mjc.model.schema.common import File as FileSchema
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.service.user import get_current_user
-from backend.mjc.utils.database import SessionDep
-from backend.mjc.service import common as common_service
-from backend.mjc.model.entity import Visibility
+from mjc.model.schema.common import File as FileSchema
+from mjc.model.schema.user import UserInDB
+from mjc.service.user import get_current_user
+from mjc.utils.database import SessionDep
+from mjc.service import common as common_service
+from mjc.model.entity import Visibility
 
 
 router = APIRouter()

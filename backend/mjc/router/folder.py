@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends
 
-from backend.mjc.utils.database import SessionDep
-from backend.mjc.service import folder as folder_service
-from backend.mjc.service.user import get_current_user
-from backend.mjc.model.schema.folder import FolderCreate, FolderUpdate
-from backend.mjc.model.schema.user import UserInDB
+from mjc.utils.database import SessionDep
+from mjc.service import folder as folder_service
+from mjc.service.user import get_current_user
+from mjc.model.schema.folder import FolderCreate, FolderUpdate
+from mjc.model.schema.user import UserInDB
 
 router = APIRouter()
 

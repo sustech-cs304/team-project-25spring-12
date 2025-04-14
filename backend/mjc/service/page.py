@@ -1,13 +1,13 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.page import Page, PageCreate, PageUpdate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
-from backend.mjc.model.entity import Page as PageEntity, WidgetType, ClassRole
-from backend.mjc.crud import page as crud_page, course as crud_course
-from backend.mjc.service import widget as widget_service
+from mjc.model.schema.common import Message
+from mjc.model.schema.page import Page, PageCreate, PageUpdate
+from mjc.model.schema.user import UserInDB
+from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
+from mjc.model.entity import Page as PageEntity, WidgetType, ClassRole
+from mjc.crud import page as crud_page, course as crud_course
+from mjc.service import widget as widget_service
 
 
 def entity2page(entity: PageEntity) -> Page:
