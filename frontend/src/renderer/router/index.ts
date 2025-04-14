@@ -50,6 +50,12 @@ const routes: RouteRecordRaw[] = [
                 meta: {title: '消息中心'},
                 component: () => import('../views/pages/message-box.vue'),
             },
+            {
+                path: 'mark',
+                name: 'mark',
+                meta: {title: '批改'},
+                component: () => import('../views/pages/mark.vue'),
+            },
         ],
     },
     {
