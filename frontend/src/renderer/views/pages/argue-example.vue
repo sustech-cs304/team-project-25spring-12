@@ -15,10 +15,10 @@
     title: 'ArguePending',
     content: '# 要Argue的作业\n\n你觉得老师批改有误',
     attachments: [
-      {fileName: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
+      {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
     ],
     status: 'pending',
-    submitTypes: ['file'],
+    submitType: 'file',
     originalScore: 90,
     verifiedScore: 85,
     maxScore: 100,
@@ -32,12 +32,12 @@
     content: '# 要Argue的作业\n\n你觉得老师批改有误',
     attachments: [
       {
-        fileName: '您的提交.pdf',
+        filename: '您的提交.pdf',
         url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
       },
     ],
     status: 'submitted',
-    submitTypes: ['file'],
+    submitType: 'file',
     originalScore: 90,
     verifiedScore: 85,
     maxScore: 100,
@@ -45,7 +45,7 @@
     submittedArguement: {
         attachments: [
           {
-            fileName: '您的争辩附件.pdf',
+            filename: '您的争辩附件.pdf',
             url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
           },
         ],
@@ -61,10 +61,10 @@
     title: 'ArgueReturned',
     content: '# 要Argue的作业\n\n你觉得老师批改有误',
     attachments: [
-      {fileName: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
+      {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
     ],
     status: 'returned',
-    submitTypes: ['file'],
+    submitType: 'file',
     originalScore: 90,
     verifiedScore: 85,
     maxScore: 100,
@@ -72,7 +72,7 @@
     submittedArguement: {
         attachments: [
           {
-            fileName: '您的争辩附件.pdf',
+            filename: '您的争辩附件.pdf',
             url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
           },
         ],

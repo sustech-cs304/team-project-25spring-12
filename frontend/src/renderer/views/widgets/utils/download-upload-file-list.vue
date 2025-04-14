@@ -65,8 +65,8 @@ const props = defineProps({
 const fileList = ref<FileMeta[]>([...props.fileList]);
 
 // 根据文件后缀返回对应的 Element Plus 图标
-const getFileIcon = (fileName: string) => {
-  const ext = fileName.split(".").pop()?.toLowerCase();
+const getFileIcon = (filename: string) => {
+  const ext = filename.split(".").pop()?.toLowerCase();
   if (["zip", "apk", "rar", "7z", "tar", "gz", "bz2", "xz"].includes(ext || "")) return Box;
   if (["exe", "bat", "sh", "jar", "msi", "app", "com", "vbs"].includes(ext || "")) return Tools;
   if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || "")) return Picture;
@@ -77,9 +77,9 @@ const getFileIcon = (fileName: string) => {
 };
 
 // 下载文件
-const handleDownloadFile = async (url: string, fileName: string): Promise<void> => {
+const handleDownloadFile = async (url: string, filename: string): Promise<void> => {
   try {
-    await downloadFile(url, fileName);
+    await downloadFile(url, filename);
   } catch (error) {
     console.error('下载失败：', error);
   }

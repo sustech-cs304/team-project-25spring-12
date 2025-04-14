@@ -14,18 +14,18 @@
     >
       <el-col :span="2">
         <el-icon :size="20">
-          <component :is="getFileIcon(file.fileName)"/>
+          <component :is="getFileIcon(file.filename)"/>
         </el-icon>
       </el-col>
       <el-col :span="16">
-        <el-text truncated>{{ file.fileName }}</el-text>
+        <el-text truncated>{{ file.filename }}</el-text>
       </el-col>
       <el-col :span="6" class="download-btn">
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click.stop="handleDownloadFile(file.url, file.fileName)"
+            @click.stop="handleDownloadFile(file.url, file.filename)"
         >
           下载
         </el-button>
@@ -64,8 +64,8 @@ const selectedFile = ref<null | Object>(null);
 const emit = defineEmits(["update:selectedFileUrl"]);
 
 // 根据文件后缀返回对应的 Element Plus 图标
-const getFileIcon = (fileName: string) => {
-  const ext = fileName.split(".").pop()?.toLowerCase();
+const getFileIcon = (filename: string) => {
+  const ext = filename.split(".").pop()?.toLowerCase();
   if (["zip", "apk", "rar", "7z", "tar", "gz", "bz2", "xz"].includes(ext || "")) return Box;
   if (["exe", "bat", "sh", "jar", "msi", "app", "com", "vbs"].includes(ext || "")) return Tools;
   if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || "")) return Picture;
@@ -76,9 +76,9 @@ const getFileIcon = (fileName: string) => {
 };
 
 // 下载文件
-const handleDownloadFile = async (url: string, fileName: string) => {
+const handleDownloadFile = async (url: string, filename: string) => {
    try {
-     await downloadFile(url, fileName);
+     await downloadFile(url, filename);
    } catch (error) {
      console.error('下载失败：', error);
    }

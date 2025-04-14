@@ -140,4 +140,8 @@ const submit = () => {
   width: 100%;
   font-size: 14px;
 }
+
+.score-display {
+  text-align: right;
+}
 </style>

@@ -9,15 +9,15 @@
         :key="file.url"
     >
       <div class="container" v-if="selectedFileUrl === file.url">
-        <pdf-viewer :pdf-file="file" :is-marking="true" v-if="fileType(file.fileName) === 'pdf'"/>
-        <pre style="white-space: pre-wrap" v-else-if="fileType(file.fileName) === 'plain'">{{ textContents[file.url] || "加载失败" }}</pre>
-        <md-preview v-bind="getEditorProps(textContents[file.url] || '加载失败')" v-else-if="fileType(file.fileName) === 'markdown'"/>
-        <ImageZoom :src="file.url" :alt="file.fileName" v-else-if="fileType(file.fileName) === 'image'"/>
-        <audio controls style="width: 100%" v-else-if="fileType(file.fileName) === 'audio'">
+        <pdf-viewer :pdf-file="file" :is-marking="true" v-if="fileType(file.filename) === 'pdf'"/>
+        <pre style="white-space: pre-wrap" v-else-if="fileType(file.filename) === 'plain'">{{ textContents[file.url] || "加载失败" }}</pre>
+        <md-preview v-bind="getEditorProps(textContents[file.url] || '加载失败')" v-else-if="fileType(file.filename) === 'markdown'"/>
+        <ImageZoom :src="file.url" :alt="file.filename" v-else-if="fileType(file.filename) === 'image'"/>
+        <audio controls style="width: 100%" v-else-if="fileType(file.filename) === 'audio'">
           <source :src="file.url"/>
           当前浏览器不支持音频播放
         </audio>
-        <video controls style="width: 100%" v-else-if="fileType(file.fileName) === 'video'">
+        <video controls style="width: 100%" v-else-if="fileType(file.filename) === 'video'">
           <source :src="file.url"/>
           当前浏览器不支持视频播放
         </video>
@@ -61,8 +61,8 @@ const textContents = ref({});
 
 const selectedFileUrl = ref("");
 
-const fileType = (fileName: string) => {
-  const ext = fileName.split(".").pop()?.toLowerCase() || "";
+const fileType = (filename: string) => {
+  const ext = filename.split(".").pop()?.toLowerCase() || "";
   if ("pdf" === ext) return "pdf";
   if ("txt" === ext) return "plain";
   if ("md" === ext) return "markdown";
@@ -74,7 +74,7 @@ const fileType = (fileName: string) => {
 
 onMounted(() => {
   for (let file of props.data.attachments) {
-    if (["plain", "markdown"].includes(fileType(file.fileName))) {
+    if (["plain", "markdown"].includes(fileType(file.filename))) {
       fetch(file.url).then((response) => {
         if (!response.ok) {
           throw new Error(`Failed to fetch file from ${file.url}: ${response.statusText}`);

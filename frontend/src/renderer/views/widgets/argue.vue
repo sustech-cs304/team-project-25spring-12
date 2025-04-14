@@ -54,7 +54,7 @@
       <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
         <el-text class="section-title">辩驳理由</el-text>
         <div class="container">
-          <div class="homework-editor" v-if="props.data.submitTypes.includes('file')">
+          <div class="homework-editor" v-if="props.data.submitType === 'file'">
             <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
           </div>
           <el-button
