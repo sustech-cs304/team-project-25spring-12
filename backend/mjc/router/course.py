@@ -2,14 +2,14 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.service import course as course_service
-from backend.mjc.service import user as user_service
-from backend.mjc.permission import course as course_permission
-from backend.mjc.service.user import get_current_user
-from backend.mjc.utils.database import SessionDep
+from mjc.model.schema.common import Message
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
+from mjc.model.schema.user import UserInDB
+from mjc.service import course as course_service
+from mjc.service import user as user_service
+from mjc.permission import course as course_permission
+from mjc.service.user import get_current_user
+from mjc.utils.database import SessionDep
 
 router = APIRouter()
 

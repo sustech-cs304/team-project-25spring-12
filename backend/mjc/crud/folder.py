@@ -1,7 +1,7 @@
 from sqlmodel import Session, select
 
-from backend.mjc.model.entity import Folder, Page
-from backend.mjc.model.schema.folder import FolderCreate, FolderUpdate
+from mjc.model.entity import Folder, Page
+from mjc.model.schema.folder import FolderCreate, FolderUpdate
 
 
 def update_page_order(db: Session, order: list[int], folder: Folder):

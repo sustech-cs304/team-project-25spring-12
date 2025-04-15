@@ -3,15 +3,15 @@ from datetime import datetime
 
 from sqlmodel import select, Session, func
 
-from backend.mjc.model.entity import ArguePost, Widget, Profile, Page, Class, \
+from mjc.model.entity import ArguePost, Widget, Profile, Page, Class, \
         ClassStudentLink, ArguePostVote, ArguePostWatch, ClassTeacherLink, ArguePostStatus, \
         ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment, \
         ClassTeachingAssistantLink
-from backend.mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, \
+from mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, \
         ArguePostVoteCreate, ArguePostFeedbackCreate, ArguePostAttachmentCreate, ArguePostFeedbackAttachmentCreate, \
         ArguePostWatchCreate
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.crud.assignment import get_submitted_assignment
+from mjc.model.schema.user import UserInDB
+from mjc.crud.assignment import get_submitted_assignment
 
 
 def get_teacher_class_argues(db: Session, username: str) -> list[ArguePost]:

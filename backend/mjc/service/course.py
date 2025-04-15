@@ -1,13 +1,13 @@
 from fastapi import HTTPException
 from sqlmodel import Session
 
-from backend.mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
+from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
                                              SemesterUpdate, Class, Semester, ClassCard,
                                              ClassUserEnroll, ClassUserUpdate)
-from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.crud import course as crud_course
-from backend.mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
+from mjc.model.schema.common import File, Message
+from mjc.model.schema.user import UserInDB
+from mjc.crud import course as crud_course
+from mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
 
 
 def entity2cls(cls_entity: ClassEntity, role: str) -> Class:

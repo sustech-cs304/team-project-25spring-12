@@ -2,11 +2,11 @@ from fastapi import HTTPException, Depends
 from fastapi_cache.decorator import cache
 from sqlmodel import Session
 
-from backend.mjc.crud import user as crud
-from backend.mjc.model.entity import User
-from backend.mjc.model.schema.user import UserInDB, Token, Profile, UserCreate
-from backend.mjc.utils import security, database
-from backend.mjc import config
+from mjc.crud import user as crud
+from mjc.model.entity import User
+from mjc.model.schema.user import UserInDB, Token, Profile, UserCreate
+from mjc.utils import security, database
+from mjc import config
 
 
 def pack_profile(user: User) -> Profile:

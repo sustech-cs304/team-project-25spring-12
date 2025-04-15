@@ -2,8 +2,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.common import File
-from backend.mjc.model.entity import ClassRole
+from mjc.model.schema.common import File
+from mjc.model.entity import ClassRole
 
 
 class ClassBase(BaseModel):

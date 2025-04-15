@@ -3,10 +3,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from backend.mjc.model.schema.common import File
-from backend.mjc.model.schema.widget import AssignmentWidget
-from backend.mjc.model.schema.user import Profile
-from backend.mjc.model.entity import ArguePostStatus
+from mjc.model.schema.common import File
+from mjc.model.schema.widget import AssignmentWidget
+from mjc.model.schema.user import Profile
+from mjc.model.entity import ArguePostStatus
 
 
 class ArguePostCommentBase(BaseModel):

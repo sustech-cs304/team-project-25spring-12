@@ -2,13 +2,13 @@ import uuid
 
 from fastapi import APIRouter, Depends
 
-from backend.mjc.model.schema.assignment import SubmittedAssignment, Feedback, SubmittedAssignmentCreate, \
+from mjc.model.schema.assignment import SubmittedAssignment, Feedback, SubmittedAssignmentCreate, \
     SubmissionAttachment, FeedbackCreate, FeedbackUpdate, FeedbackAttachment
-from backend.mjc.model.schema.common import Message
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.service.user import get_current_user
-from backend.mjc.service import assignment as assignment_service
-from backend.mjc.utils.database import SessionDep
+from mjc.model.schema.common import Message
+from mjc.model.schema.user import UserInDB
+from mjc.service.user import get_current_user
+from mjc.service import assignment as assignment_service
+from mjc.utils.database import SessionDep
 
 
 router = APIRouter()

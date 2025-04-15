@@ -3,18 +3,18 @@ import uuid
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-import backend.mjc.crud.assignment
-from backend.mjc.crud import widget as crud_widget
-from backend.mjc.model.schema.user import UserInDB, Profile
-from backend.mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
+import mjc.crud.assignment
+from mjc.crud import widget as crud_widget
+from mjc.model.schema.user import UserInDB, Profile
+from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, Note, NoteCreate, NoteUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
-from backend.mjc.model.schema.assignment import Feedback, SubmittedAssignment
-from backend.mjc.model.schema.common import File, Message
-from backend.mjc.model.entity import Widget as WidgetEntity, WidgetType, Note as NoteEntity
-from backend.mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
-from backend.mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
-from backend.mjc.service.assignment import entity2submission
+from mjc.model.schema.assignment import Feedback, SubmittedAssignment
+from mjc.model.schema.common import File, Message
+from mjc.model.entity import Widget as WidgetEntity, WidgetType, Note as NoteEntity
+from mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
+from mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
+from mjc.service.assignment import entity2submission
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
@@ -42,7 +42,7 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
 
 
 def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
-    entity: FeedbackEntity = backend.mjc.crud.assignment.get_last_feedback(db, widget_id, username)
+    entity: FeedbackEntity = mjc.crud.assignment.get_last_feedback(db, widget_id, username)
     if entity:
         feedback = Feedback(score=entity.score,
                             content=entity.content,
@@ -118,7 +118,7 @@ def get_student_submissions(db: Session,
                             username: str):
     assigment_widget: AssignmentWidget = entity2assignment(assignment_widget_entity)
     if assigment_widget:
-        submissions = backend.mjc.crud.assignment.get_user_assignment_submissions(db, assigment_widget.id, username)
+        submissions = mjc.crud.assignment.get_user_assignment_submissions(db, assigment_widget.id, username)
         if submissions:
             assigment_widget.status = 'submitted'
             assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
@@ -132,7 +132,7 @@ def get_student_submissions(db: Session,
 
 
 def get_all_student_submissions(db: Session, widget_id: int) -> list[SubmittedAssignment] | None:
-    entities: list[SubmittedAssignmentEntity] = backend.mjc.crud.assignment.get_all_assignments_submissions(db, widget_id)
+    entities: list[SubmittedAssignmentEntity] = mjc.crud.assignment.get_all_assignments_submissions(db, widget_id)
     submissions: list[SubmittedAssignment] =[]
     if entities:
         for entity in entities:

@@ -1,11 +1,11 @@
 from sqlmodel import Session, select
 
-from backend.mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from backend.mjc.model.entity import Class, Semester, Profile, \
+from mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
+from mjc.model.entity import Class, Semester, Profile, \
                                      ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.crud.user import get_profile
-from backend.mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate
+from mjc.model.schema.user import UserInDB
+from mjc.crud.user import get_profile
+from mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate
 
 
 def get_class(db: Session, class_id: int) -> Class:

@@ -1,12 +1,12 @@
 from fastapi import Depends, HTTPException, status
 from sqlmodel import Session
 
-from backend.mjc.utils.database import SessionDep
-from backend.mjc.model.schema.user import UserInDB
-from backend.mjc.model.entity import ClassRole
-from backend.mjc.service.user import get_current_user
-from backend.mjc.service import course as course_service
-from backend.mjc.model.schema.course import ClassUpdate
+from mjc.utils.database import SessionDep
+from mjc.model.schema.user import UserInDB
+from mjc.model.entity import ClassRole
+from mjc.service.user import get_current_user
+from mjc.service import course as course_service
+from mjc.model.schema.course import ClassUpdate
 
 
 def verify_class_exist(db: Session, class_id: int):

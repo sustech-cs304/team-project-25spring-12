@@ -3,8 +3,8 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.common import File, Code
-from backend.mjc.model.schema.user import Profile
+from mjc.model.schema.common import File, Code
+from mjc.model.schema.user import Profile
 
 
 class FeedbackBase(BaseModel):

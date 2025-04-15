@@ -3,11 +3,11 @@ from datetime import datetime
 
 from sqlmodel import Session, select
 
-from backend.mjc.crud.widget import get_widget
-from backend.mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
-from backend.mjc.model.schema.assignment import SubmissionAttachment , FeedbackAttachment
-from backend.mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback, AssignmentWidget
-from backend.mjc.model.entity import SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
+from mjc.crud.widget import get_widget
+from mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
+from mjc.model.schema.assignment import SubmissionAttachment , FeedbackAttachment
+from mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback, AssignmentWidget
+from mjc.model.entity import SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
 
 
 def get_submitted_assignment(db: Session, assign_id: int) -> SubmittedAssignment:

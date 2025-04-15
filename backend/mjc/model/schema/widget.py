@@ -3,9 +3,9 @@ from datetime import datetime
 
 from pydantic import BaseModel
 
-from backend.mjc.model.schema.assignment import Feedback, SubmittedAssignment
-from backend.mjc.model.schema.common import File
-from backend.mjc.model.schema.user import Profile
+from mjc.model.schema.assignment import Feedback, SubmittedAssignment
+from mjc.model.schema.common import File
+from mjc.model.schema.user import Profile
 
 
 class WidgetBase(BaseModel):
