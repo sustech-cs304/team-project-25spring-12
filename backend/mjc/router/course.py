@@ -3,8 +3,9 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from mjc.model.schema.user import UserInDB
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassUserEnroll
+from mjc.model.schema.assignment import DDL
+from mjc.model.schema.user import UserInDB, Profile
 from mjc.service import course as course_service
 from mjc.service import user as user_service
 from mjc.permission import course as course_permission
@@ -79,3 +80,19 @@ async def delete_semester(db: SessionDep,
     if current_user and current_user.is_admin:
         return course_service.delete_semester(db, semester_id)
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+
+@router.post(path="/class/user", response_model=list[Profile])
+async def create_user_roll(db: SessionDep, enroll: ClassUserEnroll):
+    return course_service.enroll_class_users(db, enroll)
+
+
+@router.get(path="/class/{class_id}/user")
+async def get_class_user(db: SessionDep, class_id: int):
+    # TODO:
+    pass
+
+
+@router.get(path="/ddl", response_model=list[DDL])
+async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
+    return course_service.get_ddl_calendar(db, current_user)
