@@ -1,9 +1,9 @@
 export interface Deadline {
-    classId: string
+    classId: number
     className: string
-    pageId: string
+    pageId: number
     pageName: string
-    widgetId: string
+    widgetId: number
     widgetTitle: string
     courseCode: string
     ddl: string
