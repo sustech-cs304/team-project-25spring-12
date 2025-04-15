@@ -1,10 +1,15 @@
 import request from '../utils/request'
-import {FileMeta} from "../types/fileMeta";
 
-export async function uploadFile(formData: FormData): Promise<FileMeta> {
+export async function uploadFile(formData: FormData) {
     return await request.post('/file', formData, {
         headers: {
             'Content-Type': 'multipart/form-data',
         },
+    })
+}
+
+export async function downloadFile(fileId: string) {
+    return request.get('/file/' + fileId, {
+        responseType: 'blob',
     })
 }

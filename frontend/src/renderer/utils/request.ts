@@ -3,7 +3,7 @@ import humps from 'humps'
 import {useUserStore} from "../store/user";
 
 const service = axios.create({
-    baseURL: 'http://127.0.0.1:4523/m1/5946426-0-default/', // TODO: baseURL
+    baseURL: '10.16.165.147:8001/api/v1/',
     timeout: 10000,
 })
 
