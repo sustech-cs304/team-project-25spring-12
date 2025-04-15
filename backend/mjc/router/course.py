@@ -1,17 +1,19 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard
 from mjc.model.schema.user import UserInDB
 from mjc.service import course as course_service
-from mjc.service import user as user_service
-from mjc.permission import course as course_permission
+from mjc.permission import course as course_permission, common as common_permission
 from mjc.service.user import get_current_user
 from mjc.utils.database import SessionDep
 
 router = APIRouter()
+
+
+@router.get(path='/class', response_model=list[ClassCard])
+async def get_classes(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
+    return
 
 
 @router.get(path="/class/semester", response_model=list[Semester],
@@ -54,7 +56,8 @@ async def delete_class(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.post(path="/class/semester", response_model=Semester)
+@router.post(path="/class/semester", response_model=Semester,
+             dependencies=[Depends(course_permission.verify_class_create)])
 async def create_semester(db: SessionDep,
                           semester: SemesterCreate,
                           current_user: UserInDB = Depends(get_current_user)):
@@ -63,7 +66,8 @@ async def create_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.patch(path="/class/semester", response_model=Semester)
+@router.patch(path="/class/semester", response_model=Semester,
+              dependencies=[Depends(common_permission.verify_admin)])
 async def update_semester(db: SessionDep,
                           semester: SemesterUpdate,
                           current_user: UserInDB = Depends(get_current_user)):
