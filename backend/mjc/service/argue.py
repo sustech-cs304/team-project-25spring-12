@@ -39,7 +39,7 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
                 attachments=attachments2files(argue.submitted_assignment.attachments),
                 code=argue.submitted_assignment.code,
                 submitted_time=argue.submitted_assignment.create_time,
-                feedback=entity2feedback(None, argue.submitted_assignment.feedback)
+                feedback=entity2feedback(argue.submitted_assignment.feedback)
             )
         ],
         index=argue.widget.index,

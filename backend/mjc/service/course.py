@@ -3,11 +3,11 @@ from sqlmodel import Session
 
 from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
                                              SemesterUpdate, Class, Semester, ClassCard,
-                                             ClassUserEnroll, ClassUserUpdate)
+                                             ClassUserEnroll, ClassUserUpdate, DDL)
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.user import UserInDB
 from mjc.crud import course as crud_course
-from mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
+from mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole, WidgetType
 
 
 def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
@@ -184,3 +184,26 @@ def update_class_user(db: Session, class_user: ClassUserUpdate) -> Class:
 
 def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
     return crud_course.unroll_class_user(db, class_id, username)
+
+
+def get_ddl_calendar(db: Session, user: UserInDB) -> list[DDL]:
+    classes = crud_course.get_student_classes(db, user)
+    print(classes)
+    ddls: list[DDL] = []
+    if classes:
+        for cls in classes:
+            for page in cls.pages:
+                for widget in page.widgets:
+                    if widget.is_deleted == False and widget.type == WidgetType.assignment and widget.visible == True:
+                        ddl=DDL(
+                            class_id=cls.id,
+                            class_name=cls.name,
+                            course_code=cls.course_code,
+                            page_id=page.id,
+                            page_name=page.name,
+                            widget_id=widget.id,
+                            widget_title=widget.title,
+                            ddl=widget.assignment_widget.ddl
+                        )
+                        ddls.append(ddl)
+    return ddls
