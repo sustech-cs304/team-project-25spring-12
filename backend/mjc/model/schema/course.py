@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from mjc.model.schema.common import File
-from mjc.model.entity import ClassRole
+from mjc.model.entity.course import ClassRole
 
 
 class ClassBase(BaseModel):

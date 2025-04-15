@@ -3,10 +3,11 @@ from datetime import datetime
 
 from sqlmodel import select, Session, func
 
-from mjc.model.entity import ArguePost, Widget, Profile, Page, Class, \
-        ClassStudentLink, ArguePostVote, ArguePostWatch, ClassTeacherLink, ArguePostStatus, \
-        ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment, \
-        ClassTeachingAssistantLink
+from mjc.model.entity.widget import Widget
+from mjc.model.entity.course import Class, ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink
+from mjc.model.entity.page import Page
+from mjc.model.entity.argue import ArguePost, ArguePostVote, ArguePostWatch,ArguePostStatus, \
+        ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment
 from mjc.model.schema.argue import ArguePostCreate, ArguePostUpdate, ArguePostCommentCreate, \
         ArguePostVoteCreate, ArguePostFeedbackCreate, ArguePostAttachmentCreate, ArguePostFeedbackAttachmentCreate, \
         ArguePostWatchCreate

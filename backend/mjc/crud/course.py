@@ -1,8 +1,9 @@
 from sqlmodel import Session, select
 
 from mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from mjc.model.entity import Class, Semester, Profile, \
-                                     ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
+from mjc.model.entity.user import Profile
+from mjc.model.entity.course import Class, Semester, ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, \
+    ClassRole
 from mjc.model.schema.user import UserInDB
 from mjc.crud.user import get_profile
 from mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate

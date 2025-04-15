@@ -3,7 +3,7 @@ from fastapi_cache.decorator import cache
 from sqlmodel import Session
 
 from mjc.crud import user as crud
-from mjc.model.entity import User, Profile as ProfileEntity
+from mjc.model.entity.user import User, Profile as ProfileEntity
 from mjc.model.schema.user import UserInDB, Token, Profile, UserCreate
 from mjc.utils import security, database
 from mjc import config

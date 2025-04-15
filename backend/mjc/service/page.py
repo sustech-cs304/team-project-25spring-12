@@ -5,7 +5,9 @@ from mjc.model.schema.common import Message
 from mjc.model.schema.page import Page, PageCreate, PageUpdate
 from mjc.model.schema.user import UserInDB
 from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
-from mjc.model.entity import Page as PageEntity, WidgetType, ClassRole
+from mjc.model.entity.page import Page as PageEntity
+from mjc.model.entity.widget import WidgetType
+from mjc.model.entity.course import ClassRole
 from mjc.crud import page as crud_page, course as crud_course
 from mjc.service import widget as widget_service
 

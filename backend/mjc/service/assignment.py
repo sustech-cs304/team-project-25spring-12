@@ -7,9 +7,8 @@ from sqlmodel import Session
 from mjc.crud import assignment as crud_assignment
 from mjc.crud.user import get_profile
 
-from mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
-from mjc.model.entity import SubmittedAssignmentFeedback
-from mjc.model.entity import Visibility
+from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, SubmittedAssignmentFeedback
+from mjc.model.entity.common import Visibility
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment
 from mjc.model.schema.common import Message, File, Code

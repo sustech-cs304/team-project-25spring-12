@@ -11,9 +11,9 @@ from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, 
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from mjc.model.schema.common import File, Message
-from mjc.model.entity import Widget as WidgetEntity, WidgetType, Note as NoteEntity
-from mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
-from mjc.model.entity import SubmittedAssignmentFeedback as FeedbackEntity
+from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as NoteEntity
+from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, \
+    SubmittedAssignmentFeedback as FeedbackEntity
 from mjc.service.assignment import entity2submission
 
 

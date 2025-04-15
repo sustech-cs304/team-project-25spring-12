@@ -7,7 +7,8 @@ from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.user import UserInDB
 from mjc.crud import course as crud_course
-from mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole, WidgetType
+from mjc.model.entity.course import Class as ClassEntity, Semester as SemesterEntity, ClassRole
+from mjc.model.entity.widget import WidgetType
 
 
 def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
