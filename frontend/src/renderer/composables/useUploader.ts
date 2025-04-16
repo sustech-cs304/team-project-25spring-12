@@ -1,13 +1,13 @@
-import {uploadFile as apiUploadFile} from "../api/file";
+import {uploadFile} from "../api/file";
 import {FileMeta} from "../types/fileMeta";
 
 export function useUploader() {
     const upload = async (file: File): Promise<FileMeta> => {
         const formData = new FormData();
         formData.append("file", file);
-        formData.append("visibility", "");
+        formData.append("visibility", "in_class");  // 之后可以区分权限
 
-        const response = await apiUploadFile(formData);
+        const response = await uploadFile(formData);
         return response.data;
     };
 
