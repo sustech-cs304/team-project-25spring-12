@@ -66,9 +66,17 @@ class Announcement(BaseModel):
 class DDL(BaseModel):
     class_id: int
     class_name: str
-    assignment_id: int
-    assignment_name: str
+    widget_id: int
+    widget_title: str
+    page_id: int
+    page_name: str
     ddl: datetime
+    course_code: str
+
+
+class ClassUserRole(BaseModel):
+    username: str
+    role: ClassRole
 
 
 class ClassUserEnroll(BaseModel):

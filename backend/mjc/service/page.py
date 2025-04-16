@@ -8,8 +8,8 @@ from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget
 from mjc.model.entity.page import Page as PageEntity
 from mjc.model.entity.widget import WidgetType
 from mjc.model.entity.course import ClassRole
-from mjc.crud import page as crud_page, course as crud_course
-from mjc.service import widget as widget_service
+from mjc.crud import page as crud_page
+from mjc.service import widget as widget_service, course as course_service
 
 
 def entity2page(entity: PageEntity) -> Page:
@@ -67,7 +67,7 @@ def get_page(db: Session, page_id: int, current_user: UserInDB) -> Page | None:
     page = crud_page.get_page(db, page_id)
     if not page:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
-    role = crud_course.get_user_class_role(db, current_user.username, page.class_id)
+    role = course_service.get_user_class_role(db, current_user.username, page.class_id)
     widgets: list[AssignmentWidget | NotePdfWidget | DocWidget] = []
     for widget in page.widgets:
         if not widget.is_deleted:

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 from datetime import datetime
 from enum import Enum
 
-from sqlmodel import SQLModel, Field, Relationship
+from sqlmodel import SQLModel, Field, Relationship, Enum as SQLEnum, Column
 
 if TYPE_CHECKING:
     from mjc.model.entity.common import LocalResourceFile
@@ -32,6 +32,12 @@ class ClassTeachingAssistantLink(SQLModel, table=True):
 class ClassStudentLink(SQLModel, table=True):
     class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
     username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
+
+
+class ClassUserLink(SQLModel, table=True):
+    class_id: int = Field(default=None, foreign_key="class.id", primary_key=True)
+    username: str = Field(default=None, foreign_key='profile.username', primary_key=True)
+    role: ClassRole = Field(default=ClassRole.STUDENT, sa_column=Column(SQLEnum(ClassRole)))
 
 
 class SyllabusFile(SQLModel, table=True):
@@ -70,9 +76,7 @@ class Class(SQLModel, table=True):
     syllabus_id: uuid.UUID | None = Field(default=None, foreign_key="local_resource_file.id")
     is_deleted: bool = Field(default=False, nullable=False)
 
-    teachers: list["Profile"] = Relationship(back_populates="teacher_classes", link_model=ClassTeacherLink)
-    teaching_assistants: list["Profile"] = Relationship(back_populates="teaching_assistant_classes", link_model=ClassTeachingAssistantLink)
-    students: list["Profile"] = Relationship(back_populates="student_classes", link_model=ClassStudentLink)
+    users: list["Profile"] = Relationship(back_populates="classes", link_model=ClassUserLink)
     folders: list["Folder"] = Relationship()
     pages: list["Page"] = Relationship()
     semester: "Semester" = Relationship(back_populates="classes")

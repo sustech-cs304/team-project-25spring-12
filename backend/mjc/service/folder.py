@@ -2,7 +2,7 @@ from fastapi import HTTPException, status
 from sqlmodel import Session
 
 from mjc.crud import folder as folder_crud, page as page_crud
-from mjc.crud.course import get_user_class_role
+from mjc.service.course import get_user_class_role
 from mjc.model.schema.common import Message
 from mjc.model.schema.folder import Folder, FolderUpdate
 from mjc.model.schema.user import UserInDB

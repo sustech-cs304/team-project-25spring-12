@@ -16,7 +16,8 @@ router = APIRouter()
 
 @router.get(path='/class', response_model=list[ClassCard])
 async def get_classes(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
-    return course_service.get_ta_classes(db, current_user)
+    # TODO: get classes
+    pass
 
 
 @router.get(path="/class/semester", response_model=list[Semester],

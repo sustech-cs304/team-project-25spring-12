@@ -50,67 +50,9 @@ def get_class(db: Session, cls_id: int) -> Class | None:
     return cls
 
 
-def get_student_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_student_classes(db, user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'student'))
-    return classes
-
-
-def get_teacher_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_teacher_classes(db,user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'teacher'))
-    return classes
-
-
-def get_ta_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_ta_classes(db,user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'ta'))
-    return classes
-
-
-def get_student_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_student_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
-
-
-def get_teacher_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_teacher_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
-
-
-def get_ta_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_ta_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
+def get_user_classes(db: Session, user: UserInDB) -> list[Class]:
+    # TODO: finish the function
+    pass
 
 
 def create_class(db: Session, cls: ClassCreate) -> Class:
@@ -172,7 +114,9 @@ def delete_semester(db: Session, semester_id: int) -> Message:
 
 
 def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
-    return crud_course.get_user_class_role(db, username, cls_id)
+    link = crud_course.get_class_user_link(db, username, cls_id)
+    if link:
+        return link.role
 
 
 def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class:
