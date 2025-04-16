@@ -1,14 +1,9 @@
-import axios from '../utils/request';
+import request from '../utils/request';
 
-export interface LoginRequest {
-    username: string;
-    password: string;
+export const loginApi = (formData: FormData) => {
+    return request.post('/user/login', formData, {
+        headers: {
+            'Content-Type': 'multipart/form-data',
+        },
+    })
 }
-
-export interface LoginResponse {
-    access_token: string;
-}
-
-export const loginApi = (data: LoginRequest) => {
-    return axios.post<LoginResponse>('/user/login', data);
-};
