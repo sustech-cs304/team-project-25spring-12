@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
     from mjc.model.entity.course import Class
-from mjc.model.entity.course import ClassTeacherLink, ClassTeachingAssistantLink, ClassStudentLink
+from mjc.model.entity.course import ClassTeacherLink, ClassTeachingAssistantLink, ClassStudentLink, ClassUserLink
 
 
 class User(SQLModel, table=True):
@@ -32,6 +32,4 @@ class Profile(SQLModel, table=True):
 
     username: str = Field(nullable=False, foreign_key="mjc_user.username", unique=True)
     user: User = Relationship(back_populates="profile")
-    teacher_classes: list["Class"] = Relationship(back_populates="teachers", link_model=ClassTeacherLink)
-    teaching_assistant_classes: list["Class"] = Relationship(back_populates="teaching_assistants", link_model=ClassTeachingAssistantLink)
-    student_classes: list["Class"] = Relationship(back_populates="students", link_model=ClassStudentLink)
+    classes: list["Class"] = Relationship(back_populates="users", link_model=ClassUserLink)
