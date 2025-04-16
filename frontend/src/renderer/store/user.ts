@@ -1,9 +1,7 @@
-import { defineStore } from 'pinia'
+import {defineStore} from 'pinia'
 import type {User} from '../types/user'
 import type {Course} from '../types/course'
 import type {Deadline} from "../types/deadline";
-import {getCourses} from "../api/course";
-import {getDeadlines} from "../api/deadline";
 
 interface UserState extends User {
     courses: Course[] | null
@@ -54,29 +52,5 @@ export const useUserStore = defineStore('user', {
         setDeadlines(deadlineList: Deadline[]) {
             this.deadlines = deadlineList
         },
-
-        async getCourses(): Promise<Course[]> {
-            if (this.courses === null) {
-                const response = await getCourses()
-                this.courses = response.data as Course[]
-            }
-            return this.courses
-        },
-
-        async getDeadlines(): Promise<Deadline[]> {
-            if (this.deadlines === null) {
-                const response = await getDeadlines()
-                this.deadlines = response.data as Deadline[]
-            }
-            return this.deadlines
-        },
-
-        async getRoleByCourseId(courseId: number): Promise<string> {
-            if (this.courses === null) {
-                const response = await getCourses()
-                this.courses = response.data as Course[]
-            }
-            return this.courses.find(c => c.id == courseId)?.role ?? null
-        }
     },
 })

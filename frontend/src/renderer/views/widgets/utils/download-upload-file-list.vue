@@ -2,17 +2,20 @@
   <div class="attachments">
     <el-row justify="space-between">
       <el-text size="large" class="attachment-title">{{ title }}</el-text>
-<!--      <el-upload-->
-<!--          :http-request="uploadFile"-->
-<!--          :show-file-list="false"-->
-<!--      >-->
-<!--        <el-button type="primary">上传文件</el-button>-->
-<!--      </el-upload>-->
+      <el-upload
+          v-show="editable"
+          :http-request="handleUpload"
+          :show-file-list="false"
+      >
+        <el-button type="primary">上传文件</el-button>
+      </el-upload>
     </el-row>
-    <el-divider></el-divider>
+
+    <el-divider/>
+
     <el-row
         v-for="file in fileList"
-        :key="file.url"
+        :key="file.id"
         class="attachment-item"
         justify="space-between"
     >
@@ -21,15 +24,27 @@
           <component :is="getFileIcon(file.filename)"/>
         </el-icon>
       </el-col>
-      <el-col :span="16">
+
+      <el-col :span="12">
         <el-text truncated>{{ file.filename }}</el-text>
       </el-col>
-      <el-col :span="6" class="download-btn">
+
+      <el-col :span="10" class="download-btn">
+        <el-button
+            v-if="editable"
+            type="danger"
+            link
+            :icon="Delete"
+            @click="handleRemoveFile(file.id)"
+        >
+          删除
+        </el-button>
+
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click="handleDownloadFile(file.url, file.filename)"
+            @click="handleDownloadFile(file)"
         >
           下载
         </el-button>
@@ -39,21 +54,21 @@
 </template>
 
 <script setup lang="ts">
-import {Box, Document, Download, Folder, Headset, Picture, Tools, VideoCamera} from "@element-plus/icons-vue";
-import {PropType, ref} from "vue";
-import {downloadFile} from '@/utils/useDownloader';
+import {ElMessage} from "element-plus";
+import {Download, Delete} from "@element-plus/icons-vue";
+import {PropType} from "vue";
+import {getFileIcon} from "@/utils/getIconByFileType";
 import {FileMeta} from "@/types/fileMeta";
-import {uploadFile as apiUploadFile} from "@/api/file"
+import {useUploader} from "@/composables/useUploader";
+import {useDownloader} from "@/composables/useDownloader";
 
 const props = defineProps({
   fileList: {
     type: Array as PropType<FileMeta[]>,
-    required: false,
-    default: () => [],
+    required: true,
   },
-  upload: {
+  editable: {
     type: Boolean,
-    required: false,
     default: false,
   },
   title: {
@@ -62,51 +77,44 @@ const props = defineProps({
   },
 });
 
-const fileList = ref<FileMeta[]>([...props.fileList]);
+const emit = defineEmits<{
+  (e: "upload", file: FileMeta): void;
+  (e: "remove", file: FileMeta): void;
+}>();
 
-// 根据文件后缀返回对应的 Element Plus 图标
-const getFileIcon = (filename: string) => {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  if (["zip", "apk", "rar", "7z", "tar", "gz", "bz2", "xz"].includes(ext || "")) return Box;
-  if (["exe", "bat", "sh", "jar", "msi", "app", "com", "vbs"].includes(ext || "")) return Tools;
-  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || "")) return Picture;
-  if (["mp4", "avi", "mkv", "mov"].includes(ext || "")) return VideoCamera;
-  if (["pdf", "doc", "docx", "txt", "md"].includes(ext || "")) return Document;
-  if (["mp3", "wav", "flac", "aac"].includes(ext || "")) return Headset;
-  return Folder;
-};
+// 如果进一步解耦，这里可以变成两个 props 由用户决定上传和下载的组合逻辑
+// 但是在本项目中上传下载的逻辑是固定的，因此没有进一步解耦
+const {upload} = useUploader();
+const {download} = useDownloader();
 
 // 下载文件
-const handleDownloadFile = async (url: string, filename: string): Promise<void> => {
+const handleDownloadFile = async (file: FileMeta) => {  // 本项目中，目前 file.url 为空
   try {
-    await downloadFile(url, filename);
+    await download(file);
   } catch (error) {
-    console.error('下载失败：', error);
+    ElMessage.error("下载失败，请稍后重试");
   }
 };
 
 // 上传文件
-const uploadFile = async (options: any) => {
-  const { file, onSuccess, onError } = options
-
-  const formData = new FormData()
-  formData.append('file', file)
-  formData.append('visibility', '')
+const handleUpload = async (options: any) => {
+  const {file, onSuccess, onError} = options;
 
   try {
-    const response = await apiUploadFile(formData)
-    console.log('yeah')
-    // TODO
-    onSuccess(response.data)
+    const result = await upload(file);
+    emit("upload", result as FileMeta);
+    onSuccess(result);
   } catch (err) {
-    onError(err)
+    ElMessage.error("上传失败，请稍后重试");
+    onError(err);
   }
-}
+};
 
-// 返回文件列表
-defineExpose({
-  getFileList: (): FileMeta[] => [...fileList.value],
-});
+// 删除文件
+const handleRemoveFile = async (fileId: string) => {
+  // 本项目中删除文件无需告知后端，后端会离线扫描没有引用的文件进行删除
+  emit("remove", fileId);
+}
 </script>
 
 <style scoped>
@@ -140,18 +148,14 @@ defineExpose({
 
 .download-btn {
   text-align: right;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .el-button {
-  padding: 8px 16px;
   font-size: 14px;
   border-radius: 8px;
-  background: #409eff;
-  color: #fff;
-}
-
-.el-button:hover {
-  background-color: #66b1ff;
 }
 
 .el-text {
