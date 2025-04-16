@@ -33,8 +33,8 @@
 </template>
 
 <script setup lang="ts" name="homepage">
-import CourseListWidget from '@/views/element/homepage-course-cards.vue'
-import DeadlineCalendarWidget from '@/views/element/hoempage-deadline-calendar.vue'
+import CourseListWidget from '@/views/components/homepage-course-cards.vue'
+import DeadlineCalendarWidget from '@/views/components/hoempage-deadline-calendar.vue'
 import {Calendar, Collection} from '@element-plus/icons-vue'
 </script>
 
