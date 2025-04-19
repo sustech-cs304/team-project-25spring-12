@@ -74,7 +74,6 @@ const feedback = ref("");
 const error = ref(false);
 
 watch(score, (newVal) => {
-  console.log(newVal);
   error.value = newVal < 0 || newVal > props.data.maxScore;
 });
 

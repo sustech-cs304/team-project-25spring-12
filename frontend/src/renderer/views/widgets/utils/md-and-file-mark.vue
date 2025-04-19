@@ -1,14 +1,14 @@
 <template>
   <div class="content">
     <!-- Markdown 预览 -->
-    <div class="container" v-if="selectedFileUrl === ''">
+    <div class="container" v-if="selectedFile === null">
       <md-preview v-bind="getEditorProps(props.data.content)"/>
     </div>
     <template
         v-for="file in props.data.attachments"
         :key="file.url"
     >
-      <div class="container" v-if="selectedFileUrl === file.url">
+      <div class="container" v-if="selectedFile !== null && selectedFile.id === file.id">
         <pdf-viewer :pdf-file="file" :is-marking="true" v-if="fileType(file.filename) === 'pdf'"/>
         <pre style="white-space: pre-wrap" v-else-if="fileType(file.filename) === 'plain'">{{ textContents[file.url] || "加载失败" }}</pre>
         <md-preview v-bind="getEditorProps(textContents[file.url] || '加载失败')" v-else-if="fileType(file.filename) === 'markdown'"/>
@@ -28,7 +28,7 @@
     <!-- 下载文件列表 -->
     <view-file-list
         :fileList="props.data.attachments"
-        @update:selected-file-url="(data) => { selectedFileUrl = data; }"
+        @select="handleSelectFile"
         title="附件"/>
   </div>
 </template>
@@ -40,6 +40,7 @@ import {MdPreview} from "md-editor-v3";
 import ViewFileList from "./view-file-list.vue";
 import PdfViewer from "./pdf-viewer.vue";
 import ImageZoom from "@/views/widgets/utils/image-zoom.vue";
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps({
   data: {
@@ -59,7 +60,11 @@ const getEditorProps = (content: string) => {
 
 const textContents = ref({});
 
-const selectedFileUrl = ref("");
+const selectedFile = ref<FileMeta | null>(null);
+
+const handleSelectFile = (file: FileMeta) => {
+  selectedFile.value = file;
+};
 
 const fileType = (filename: string) => {
   const ext = filename.split(".").pop()?.toLowerCase() || "";

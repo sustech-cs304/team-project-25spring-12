@@ -59,17 +59,18 @@
 </template>
 
 <script setup lang="ts">
-import {onBeforeUnmount, onMounted, onUnmounted, ref} from "vue";
+import {onBeforeUnmount, onMounted, PropType, ref} from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
 import "pdfjs-dist/web/pdf_viewer.css";
+import {FileMeta} from "@/types/fileMeta";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
 const props = defineProps({
   pdfFile: {
-    type: Object,
+    type: Object as PropType<FileMeta>,
     required: true,
   },
   isMarking: {
@@ -182,11 +183,7 @@ const changeTextSize = (value: number) => {
   });
 };
 
-const submit = async (pdfFile: Object, pdfDocument: pdfjsLib.PDFDocumentProxy | undefined) => {
-  if (pdfDocument === undefined) {
-    console.error("pdfDocument not found");
-    return;
-  }
+const submit = async (pdfFile: Object, pdfDocument: pdfjsLib.PDFDocumentProxy) => {
   const data = await pdfDocument.saveDocument();
   // TODO: 上传文件
 };
@@ -197,11 +194,13 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (props.isMarking) {
-    submit(props.pdfFile, pdfViewer.pdfDocument);
+    const pdfDocument = pdfViewer.pdfDocument;
+    if (pdfDocument === undefined) {
+      console.error("pdfDocument not found");
+    } else {
+      submit(props.pdfFile, pdfDocument);
+    }
   }
-});
-
-onUnmounted(() => {
   resizeObserver.disconnect();
 });
 </script>
