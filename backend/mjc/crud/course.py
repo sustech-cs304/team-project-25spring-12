@@ -1,10 +1,9 @@
 from sqlmodel import Session, select
 
 from mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from mjc.model.entity import Class, Semester, Profile, \
-                                     ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink, ClassRole
+from mjc.model.entity.user import Profile
+from mjc.model.entity.course import Class, Semester, ClassUserLink, ClassRole
 from mjc.model.schema.user import UserInDB
-from mjc.crud.user import get_profile
 from mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate
 
 
@@ -15,21 +14,11 @@ def get_class(db: Session, class_id: int) -> Class:
 
 
 def get_student_classes(db: Session, user: UserInDB) -> list[Class]:
-    stmt = select(Profile).where(Profile.username == user.username)
-    student: Profile = db.exec(stmt).first()
-    return [cls for cls in student.student_classes if cls.is_deleted == False]
-
-
-def get_teacher_classes(db: Session, user: UserInDB) -> list[Class]:
-    stmt = select(Profile).where(Profile.username == user.username)
-    teacher: Profile = db.exec(stmt).first()
-    return [cls for cls in teacher.teacher_classes if cls.is_deleted == False]
-
-
-def get_ta_classes(db: Session, user: UserInDB) -> list[Class]:
-    stmt = select(Class).where(Profile.username == user.username)
-    ta: Profile = db.exec(stmt).first()
-    return [cls for cls in ta.teaching_assistant_classes if cls.is_deleted == False]
+    stmt = select(Class).join(ClassUserLink, Class.id == ClassUserLink.class_id) \
+                        .where(ClassUserLink.username == user.username) \
+                        .where(ClassUserLink.role == ClassRole.STUDENT)
+    classes: list[Class] = db.exec(stmt).all()
+    return classes
 
 
 def get_semester_classes(db: Session, semester_id: int) -> list[Class]:
@@ -121,71 +110,30 @@ def delete_semester(db: Session, semester_id: int) -> Semester:
     return semester_entity
 
 
-def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
-    stmt = select(ClassStudentLink).where(ClassStudentLink.class_id == cls_id) \
-                                   .where(ClassStudentLink.username == username)
-    if db.exec(stmt).first():
-        return ClassRole.STUDENT
-    stmt = select(ClassTeacherLink).where(ClassTeacherLink.class_id == cls_id) \
-                                   .where(ClassTeacherLink.username == username)
-    if db.exec(stmt).first():
-        return ClassRole.TEACHER
-    stmt = select(ClassTeachingAssistantLink).where(ClassTeachingAssistantLink.class_id == cls_id) \
-                                             .where(ClassTeachingAssistantLink.username == username)
-    if db.exec(stmt).first():
-        return ClassRole.TA
+def get_class_user_link(db: Session, username: str, cls_id: int) -> ClassUserLink:
+    stmt = select(ClassUserLink).where(ClassUserLink.username == username).where(ClassUserLink.class_id == cls_id)
+    link = db.exec(stmt).first()
+    return link
 
 
-def enroll_class_users(db: Session, assign: ClassUserEnroll) -> Class:
-    cls = get_class(db, assign.class_id)
-    if cls:
-        for username in assign.usernames:
-            user = get_profile(db, username)
-            if user:
-                if assign.role is ClassRole.STUDENT:
-                    cls.students.append(user)
-                elif assign.role is ClassRole.TEACHER:
-                    cls.teachers.append(user)
-                elif assign.role is ClassRole.TA:
-                    cls.teaching_assistants.append(user)
-        db.refresh(cls)
-    return cls
+def enroll_class_users(db: Session, assign: ClassUserEnroll) -> list[ClassUserLink]:
+    links: list[ClassUserLink] = [ClassUserLink(username=username, class_id=assign.class_id, role=assign.role)
+                                  for username in assign.usernames]
+    db.add_all(links)
+    db.commit()
+    return links
 
 
-def update_class_user(db: Session, assign: ClassUserUpdate) -> Class:
-    cls = get_class(db, assign.class_id)
-    if cls:
-        user = get_profile(db, assign.username)
-        if user:
-            role = get_user_class_role(db, user.username, assign.class_id)
-            if role is ClassRole.STUDENT:
-                cls.students.remove(user)
-            elif role is ClassRole.TEACHER:
-                cls.teachers.remove(user)
-            elif role is ClassRole.TA:
-                cls.teaching_assistants.remove(user)
-            if assign.role is ClassRole.STUDENT:
-                cls.students.append(user)
-            if assign.role is ClassRole.TEACHER:
-                cls.teachers.append(user)
-            if assign.role is ClassRole.TA:
-                cls.teaching_assistants.append(user)
-            db.refresh(cls)
-    return cls
+def update_class_user(db: Session, assign: ClassUserUpdate) -> ClassUserLink:
+    stmt = select(ClassUserLink).where(ClassUserLink.username == assign.username) \
+                                .where(ClassUserLink.class_id == assign.class_id)
+    link: ClassUserLink = db.exec(stmt).first()
+    if link:
+        link.role = assign.role
+    db.commit()
 
 
-def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
-    cls = get_class(db, class_id)
-    if cls:
-        user = get_profile(db, username)
-        if user:
-            role = get_user_class_role(db, user.username, class_id)
-            if role == ClassRole.STUDENT:
-                if role == ClassRole.STUDENT:
-                    cls.students.remove(user)
-                elif role == ClassRole.TEACHER:
-                    cls.teachers.remove(user)
-                elif role == ClassRole.TA:
-                    cls.teaching_assistants.remove(user)
-        db.refresh(cls)
-    return cls
+def unroll_class_user(db: Session, class_id: int, username: str):
+    link = get_class_user_link(db, username, class_id)
+    db.delete(link)
+    db.commit()

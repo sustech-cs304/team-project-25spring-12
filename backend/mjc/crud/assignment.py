@@ -5,9 +5,10 @@ from sqlmodel import Session, select
 
 from mjc.crud.widget import get_widget
 from mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
-from mjc.model.schema.assignment import SubmissionAttachment , FeedbackAttachment
-from mjc.model.entity import SubmittedAssignment, Widget, SubmittedAssignmentFeedback, AssignmentWidget
-from mjc.model.entity import SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
+from mjc.model.schema.assignment import SubmissionAttachment, FeedbackAttachment
+from mjc.model.entity.widget import Widget, AssignmentWidget
+from mjc.model.entity.assignment import SubmittedAssignment, SubmittedAssignmentFeedback, \
+    SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
 
 
 def get_submitted_assignment(db: Session, assign_id: int) -> SubmittedAssignment:

@@ -53,3 +53,14 @@ class SubmissionAttachment(BaseModel):
 class FeedbackAttachment(BaseModel):
     feedback_id: int
     file_id: uuid.UUID
+
+
+class DDL(BaseModel):
+    class_id: int
+    class_name: str
+    widget_id: int
+    widget_title: str
+    page_id: int
+    page_name: str
+    ddl: datetime
+    course_code: str

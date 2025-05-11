@@ -1,6 +1,6 @@
 from sqlmodel import Session, select
 
-from mjc.model.entity import User, Profile
+from mjc.model.entity.user import User, Profile
 from mjc.model.schema.user import UserCreate, ChangePassword
 from mjc.utils import security
 

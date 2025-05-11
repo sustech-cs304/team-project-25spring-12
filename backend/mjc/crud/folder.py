@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 
-from mjc.model.entity import Folder, Page
+from mjc.model.entity.folder import Folder
+from mjc.model.entity.page import Page
 from mjc.model.schema.folder import FolderCreate, FolderUpdate
 
 

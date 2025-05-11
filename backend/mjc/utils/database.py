@@ -4,7 +4,6 @@ from fastapi.params import Depends
 from sqlmodel import Session, SQLModel
 
 from mjc.model.database import engine
-from mjc.model import entity  # 通过引用 entities.py 中定义的数据库实体来初始化 metadata
 
 
 def get_session() -> Generator[Session, None, None]:

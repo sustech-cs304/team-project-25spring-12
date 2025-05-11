@@ -7,9 +7,8 @@ from sqlmodel import Session
 from mjc.crud import assignment as crud_assignment
 from mjc.crud.user import get_profile
 
-from mjc.model.entity import SubmittedAssignment as SubmittedAssignmentEntity
-from mjc.model.entity import SubmittedAssignmentFeedback
-from mjc.model.entity import Visibility
+from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, SubmittedAssignmentFeedback
+from mjc.model.entity.common import Visibility
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment
 from mjc.model.schema.common import Message, File, Code
@@ -32,7 +31,7 @@ def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> Submitt
     return submission
 
 
-def entity2feedback(db: Session, entity: SubmittedAssignmentFeedback) -> Feedback:
+def entity2feedback(entity: SubmittedAssignmentFeedback) -> Feedback:
     feedback = Feedback(
         id=entity.id,
         score=entity.score,
@@ -80,14 +79,14 @@ def delete_submission_attachment(db: Session, file_id: uuid.UUID) -> Message:
 def create_feedback(db: Session, feedback: FeedbackCreate, current_user: UserInDB) -> Feedback:
     entity = crud_assignment.create_feedback(db, feedback, current_user.username)
     if entity:
-        return entity2feedback(db, entity)
+        return entity2feedback(entity)
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create feedback failed")
 
 
 def update_feedback(db: Session, feedback: FeedbackUpdate, current_user: UserInDB) -> Feedback:
     entity = crud_assignment.update_feedback(db, feedback, current_user.username)
     if entity:
-        return entity2feedback(db, entity)
+        return entity2feedback(entity)
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Update feedback failed")
 
 

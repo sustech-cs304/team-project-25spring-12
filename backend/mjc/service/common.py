@@ -6,7 +6,7 @@ from fastapi import UploadFile
 from fastapi.responses import FileResponse
 from sqlmodel import Session
 
-from mjc.model.entity import Visibility, LocalResourceFile
+from mjc.model.entity.common import Visibility, LocalResourceFile
 from mjc.model.schema.user import UserInDB
 from mjc.model.schema.common import LocalResourceFileCreate, File
 from mjc.crud import common as common_crud

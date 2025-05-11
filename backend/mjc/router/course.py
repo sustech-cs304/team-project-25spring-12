@@ -1,17 +1,23 @@
-from typing import Annotated
-
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassUserEnroll
+from mjc.model.schema.assignment import DDL
+from mjc.model.schema.user import UserInDB, Profile
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard
 from mjc.model.schema.user import UserInDB
 from mjc.service import course as course_service
-from mjc.service import user as user_service
-from mjc.permission import course as course_permission
+from mjc.permission import course as course_permission, common as common_permission
 from mjc.service.user import get_current_user
 from mjc.utils.database import SessionDep
 
 router = APIRouter()
+
+
+@router.get(path='/class', response_model=list[ClassCard])
+async def get_classes(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
+    # TODO: get classes
+    pass
 
 
 @router.get(path="/class/semester", response_model=list[Semester],
@@ -54,7 +60,8 @@ async def delete_class(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.post(path="/class/semester", response_model=Semester)
+@router.post(path="/class/semester", response_model=Semester,
+             dependencies=[Depends(course_permission.verify_class_create)])
 async def create_semester(db: SessionDep,
                           semester: SemesterCreate,
                           current_user: UserInDB = Depends(get_current_user)):
@@ -63,7 +70,8 @@ async def create_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.patch(path="/class/semester", response_model=Semester)
+@router.patch(path="/class/semester", response_model=Semester,
+              dependencies=[Depends(common_permission.verify_admin)])
 async def update_semester(db: SessionDep,
                           semester: SemesterUpdate,
                           current_user: UserInDB = Depends(get_current_user)):
@@ -79,3 +87,19 @@ async def delete_semester(db: SessionDep,
     if current_user and current_user.is_admin:
         return course_service.delete_semester(db, semester_id)
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
+
+
+@router.post(path="/class/user", response_model=list[Profile])
+async def create_user_roll(db: SessionDep, enroll: ClassUserEnroll):
+    return course_service.enroll_class_users(db, enroll)
+
+
+@router.get(path="/class/{class_id}/user")
+async def get_class_user(db: SessionDep, class_id: int):
+    # TODO:
+    pass
+
+
+@router.get(path="/ddl", response_model=list[DDL])
+async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
+    return course_service.get_ddl_calendar(db, current_user)
