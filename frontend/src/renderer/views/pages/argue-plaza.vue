@@ -41,7 +41,8 @@
         >
           <template v-slot:default="slotProp">
             <div class="list-item">
-              <a :href="'https://gkshi.com/blog/' + slotProp.item._id">
+              <a :href="'#/argue/0' + slotProp.item._id">
+                <!-- <a :href="'https://gkshi.com/blog/' + slotProp.item._id"> -->
                 <div class="cover-wrapper">
                   <!-- 此处注意：data-key 是该图片的字段名称，目前只支持在一级的字段，不支持嵌套 -->
                   <img v-if="slotProp.item.cover" :src="slotProp.item.cover" data-key="cover" class="cover" />
