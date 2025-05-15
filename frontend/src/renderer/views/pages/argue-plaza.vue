@@ -4,211 +4,244 @@
       <div class="channel-container">
         <div class="scroll-container channel-scroll-container">
           <div class="content-container">
-            <div class="channel active">广场</div>
-            <div class="channel">我的</div>
+            <div class="left-channels">
+              <div
+                v-for="channel in leftChannels"
+                :key="channel"
+                class="channel"
+                :class="{ active: activeChannel === channel }"
+                @click="setActiveChannel(channel)"
+              >
+                {{ channel }}
+              </div>
+            </div>
+            <div
+              class="channel"
+              :class="{ active: activeChannel === '创建' }"
+              @click="setActiveChannel('创建')"
+            >
+              创建
+            </div>
           </div>
         </div>
       </div>
-      <div class="loading-container"></div>
-      <div class="feeds-container">
-        <Waterfall :list="list" :width="240" :hasAroundGutter="false" style="max-width: 1260px">
-          <template #item="{ item, url, index }">
-            <div class="card">
-              <LazyImg :url="url" style="border-radius: 8px" @click="toMain" />
-              <div class="footer">
-                <a class="title"><span>这是具体内容</span></a>
-                <div class="author-wrapper">
-                  <a class="author">
-                    <img class="author-avatar" :src="url" />
-                    <span class="name">这是名字</span>
-                  </a>
-                  <span class="like-wrapper like-active">
-                    <Search style="width: 1em; height: 1em" />
-                    <span class="count">12</span>
-                  </span>
+      <!-- 内容区域 -->
+      <div class="content-area">
+        <!-- <p>当前显示：{{ activeChannel }} 的内容</p> -->
+        <v3-waterfall
+          :list="list"
+          :colWidth="280"
+          :virtual-time="400"
+          :scrollBodySelector="isLimit ? '.limit-box' : ''"
+          :isMounted="isMounted"
+          :isLoading="loading"
+          :isOver="over"
+          class="waterfall"
+          @scrollReachBottom="getNext"
+        >
+          <template v-slot:default="slotProp">
+            <div class="list-item">
+              <a :href="'https://gkshi.com/blog/' + slotProp.item._id">
+                <div class="cover-wrapper">
+                  <!-- 此处注意：data-key 是该图片的字段名称，目前只支持在一级的字段，不支持嵌套 -->
+                  <img v-if="slotProp.item.cover" :src="slotProp.item.cover" data-key="cover" class="cover" />
                 </div>
+                <div class="brief">
+                  <h3>{{ slotProp.item.title }}</h3>
+                  <p>{{ slotProp.item.outline }}</p>
+                </div>
+                <div class="cover-wrapper">
+                  <img :src="slotProp.item.notExistSrc" data-key="notExistSrc" class="cover" />
+                </div>
+              </a>
+              <div class="outline-bottom">
+                <p class="article-tags">
+                  <span>tags</span>
+                  <span v-for="tag of slotProp.item.tags" :key="tag" class="tag">{{
+                    tag
+                    }}</span>
+                </p>
+                <time>{{ slotProp.item.time }}</time>
               </div>
             </div>
           </template>
-        </Waterfall>
+        </v3-waterfall>
       </div>
-      <div class="feeds-loading"></div>
     </div>
   </div>
 </template>
 
-
 <script setup>
-  import { LazyImg, Waterfall } from "vue-waterfall-plugin-next";
-  import "vue-waterfall-plugin-next/dist/style.css";
-  import { ref } from "vue";
+import { ref } from 'vue';
+const list = ref([
+  {
+    title: '标题',
+    outline: '摘要',
+    tags: ['课程', '任课老师', '发起者'],
+    time: "25-01-14",
+  },
+  {
+    title: '标题',
+    outline: '摘要',
+    tags: ['课程', '任课老师', '发起者'],
+    time: "25-05-14",
+  },
+])
 
-  const list = ref([
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.Zte3ljd4g6kqrWWyg-8fhAHaEo?w=264&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.cGc4c8dVlqnfV3uwcS1IogHaE8?w=260&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.Zte3ljd4g6kqrWWyg-8fhAHaEo?w=264&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse4-mm.cn.bing.net/th/id/OIP-C.N0USLldg_iKDGVKT12vB4AHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.jzcWzXf_uts2sgE2WChuCQHaEo?w=263&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.Zte3ljd4g6kqrWWyg-8fhAHaEo?w=264&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/1/34/19aa98b1fcb2781c4fba33d850549jpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/d/e6/c4d93a3805b3ce3f323f7974e6f78jpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/0/6f/e35ff375812e6b0020b6b4e8f9583jpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/9/bb/e27858e973f5d7d3904835f46abbdjpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/3/28/bbf893f792f03a54408b3b7a7ebf0jpeg.jpeg" },
-    { src: "https://fuss10.elemecdn.com/2/11/6535bcfb26e4c79b48ddde44f4b6fjpeg.jpeg" },
-    { src: "https://tse4-mm.cn.bing.net/th/id/OIP-C.N0USLldg_iKDGVKT12vB4AHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.jzcWzXf_uts2sgE2WChuCQHaEo?w=263&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse3-mm.cn.bing.net/th/id/OIP-C.YzEeJqgWky6RQMatrMd6-gHaHa?w=170&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse3-mm.cn.bing.net/th/id/OIP-C.YzEeJqgWky6RQMatrMd6-gHaHa?w=170&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.Zte3ljd4g6kqrWWyg-8fhAHaEo?w=264&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse4-mm.cn.bing.net/th/id/OIP-C.N0USLldg_iKDGVKT12vB4AHaEK?w=292&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.jzcWzXf_uts2sgE2WChuCQHaEo?w=263&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.Zte3ljd4g6kqrWWyg-8fhAHaEo?w=264&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-    { src: "https://tse1-mm.cn.bing.net/th/id/OIP-C.cGc4c8dVlqnfV3uwcS1IogHaE8?w=260&h=180&c=7&r=0&o=5&dpr=1.3&pid=1.7" },
-  ]);
+
+// 左侧 channel 列表
+const leftChannels = ['广场', '我的'];
+// 当前激活的 channel
+const activeChannel = ref('广场');
+
+// 设置激活的 channel
+const setActiveChannel = (channel) => {
+  activeChannel.value = channel;
+};
 </script>
 
 
-<style lang="less" scoped>
-  .feeds-page {
-    flex: 1;
-    padding: 0 24px;
-    padding-top: 72px;
-
-    .channel-container {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      user-select: none;
-      -webkit-user-select: none;
-
-      .channel-scroll-container {
-        backdrop-filter: blur(20px);
-        background-color: transparent;
-        width: calc(100vw - 24px);
-
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        user-select: none;
-        -webkit-user-select: none;
-        align-items: center;
-        font-size: 16px;
-        color: rgba(51, 51, 51, 0.8);
-        height: 40px;
-        white-space: nowrap;
-        height: 72px;
-
-        .content-container::-webkit-scrollbar {
-          display: none;
-        }
-
-        .content-container {
-          display: flex;
-          overflow-x: scroll;
-          overflow-y: hidden;
-          white-space: nowrap;
-          color: rgba(51, 51, 51, 0.8);
-
-          .active {
-            font-weight: 600;
-            background: rgba(0, 0, 0, 0.03);
-            border-radius: 999px;
-            color: #333;
-          }
-
-          .channel {
-            height: 40px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 0 16px;
-            cursor: pointer;
-            -webkit-user-select: none;
-            user-select: none;
-          }
-        }
-      }
-    }
-
-    .feeds-container {
-      position: relative;
-      transition: width 0.5s;
-      margin: 0 auto;
-
-      .footer {
-        padding: 12px;
-        .title {
-          margin-bottom: 8px;
-          word-break: break-all;
-          display: -webkit-box;
-          -webkit-box-orient: vertical;
-          -webkit-line-clamp: 2;
-          overflow: hidden;
-          font-weight: 500;
-          font-size: 14px;
-          line-height: 140%;
-          color: #333;
-        }
-
-        .author-wrapper {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          height: 20px;
-          color: rgba(51, 51, 51, 0.8);
-          font-size: 12px;
-          transition: color 1s;
-
-          .author {
-            display: flex;
-            align-items: center;
-            color: inherit;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            margin-right: 12px;
-
-            .author-avatar {
-              margin-right: 6px;
-              width: 20px;
-              height: 20px;
-              border-radius: 20px;
-              border: 1px solid rgba(0, 0, 0, 0.08);
-              flex-shrink: 0;
-            }
-
-            .name {
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-          }
-
-          .like-wrapper {
-            position: relative;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-
-            .count {
-              margin-left: 2px;
-            }
-          }
-        }
-      }
-    }
-  }
-</style>
-
-
 <style scoped>
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
-</style>
+/* FeedChannels 样式 */
+.page {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: Arial, sans-serif;
+}
+.feeds-page {
+  padding: 20px;
+}
+.channel-container {
+  border-bottom: 1px solid #e0e0e0;
+}
+.scroll-container {
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+}
+.content-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+.left-channels {
+  display: flex;
+  gap: 10px;
+}
+.channel {
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+  color: #333;
+  transition: all 0.2s ease;
+}
+.channel:hover {
+  background-color: #f5f5f5;
+}
+.channel.active {
+  font-weight: bold;
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+.content-area {
+  margin-top: 20px;
+}
 
+/* 瀑布流容器 */
+.waterfall {
+  margin: 0 auto;
+  padding: 0 10px;
+}
+
+/* 卡片容器 */
+.list-item {
+  width: 280px;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  margin-bottom: 16px;
+}
+.list-item:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* 文章摘要区域 */
+.brief {
+  padding: 16px;
+}
+.brief h3 {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+  color: #333;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.brief p {
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* 增加到 3 行 */
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 底部区域 */
+.outline-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 16px;
+  border-top: 1px solid #eee;
+}
+.article-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  font-size: 12px;
+  color: #999;
+}
+.article-tags > span:first-child {
+  margin-right: 4px;
+}
+.tag {
+  background: #f5f5f5;
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+time {
+  font-size: 12px;
+  color: #999;
+}
+
+/* 链接样式 */
+.list-item a {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+}
+
+/* 响应式调整 */
+@media (max-width: 600px) {
+  .list-item {
+    width: 100%;
+    max-width: 280px;
+  }
+  .brief h3 {
+    font-size: 16px;
+  }
+  .brief p {
+    font-size: 13px;
+    -webkit-line-clamp: 2; /* 移动端限制 2 行 */
+  }
+}
+</style>
