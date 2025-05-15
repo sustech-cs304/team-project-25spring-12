@@ -72,10 +72,10 @@ import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import {Download} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
-import {downloadFile} from '@/utils/saveFile';
 import type {Note, NotePdfWidget} from '@/types/widgets';
 
 import {createNote} from "@/api/courseMaterial";
+import {useDownloader} from "@/composables/useDownloader";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -228,9 +228,11 @@ const observeBottom = () => {
   observer.observe(bottomObserver.value);
 };
 
+const {download} = useDownloader()
+
 const handleDownloadFile = async () => {
   try {
-    await downloadFile(props.data.pdfFile.url, props.data.pdfFile.filename);
+    await download(props.data.pdfFile);
   } catch (error) {
     console.error('下载失败：', error);
   }
