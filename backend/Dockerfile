@@ -15,4 +15,7 @@ COPY ./mjc /code/mjc
 COPY main.py /code
 
 #
+RUN mkdir -p /code/resources/user_files/
+
+#
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]

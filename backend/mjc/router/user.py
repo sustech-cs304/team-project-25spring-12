@@ -21,12 +21,12 @@ async def register(db: SessionDep, user: mjc.model.schema.user.UserCreate):
     return user_service.register(db, user)
 
 
-@router.get("/user/{username}", response_model=mjc.model.schema.user.Profile)
-async def get_profile(db: SessionDep, username: str):
-    return user_service.get_profile(db, username)
-
-
 @router.get("/user/me", response_model=mjc.model.schema.user.Profile)
 async def get_profile_me(db: SessionDep,
                          current_user: UserInDB = Depends(user_service.get_current_user)):
     return user_service.get_profile(db, current_user.username)
+
+
+@router.get("/user/{username}", response_model=mjc.model.schema.user.Profile)
+async def get_profile(db: SessionDep, username: str):
+    return user_service.get_profile(db, username)

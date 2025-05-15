@@ -1,4 +1,4 @@
-from fastapi import HTTPException, Depends
+from fastapi import HTTPException, Depends, status
 from fastapi_cache.decorator import cache
 from sqlmodel import Session
 
@@ -34,7 +34,9 @@ def login(db: Session, username: str, plain_password: str) -> Token | None:
             raise HTTPException(status_code=400, detail="未激活的用户")
         if security.verify_password(plain_password, user.encoded_password):
             return Token(access_token=security.generate_access_jwt(username, config.TOKEN_EXPIRE_MINUTES))
-    return None
+        else:
+            raise HTTPException(status_code=401, detail="Unauthorized")
+    raise HTTPException(status_code=401, detail="Unauthorized")
 
 
 def register(db: Session, user: UserCreate) -> Profile | None:
