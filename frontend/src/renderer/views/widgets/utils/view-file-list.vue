@@ -1,7 +1,7 @@
 <template>
   <div class="attachments">
     <el-row justify="space-between">
-      <el-text size="large" class="attachment-title">{{ title }}</el-text>
+      <el-text size="large" class="attachment-title">附件</el-text>
     </el-row>
 
     <el-divider/>
@@ -10,7 +10,7 @@
         v-for="file in fileList"
         :key="file.id"
         class="attachment-item"
-        :class="{'selected': selectedFile !== null && selectedFile.id === file.id}"
+        :class="{'selected': props.selectedFileId === file.id}"
         justify="space-between"
         @click="handleSelectFile(file)"
     >
@@ -29,7 +29,7 @@
             type="primary"
             link
             :icon="Download"
-            @click="handleDownloadFile(file)"
+            @click.stop="handleDownloadFile(file)"
         >
           下载
         </el-button>
@@ -41,40 +41,30 @@
 <script setup lang="ts">
 import {ElMessage} from "element-plus";
 import {Download} from "@element-plus/icons-vue";
-import {PropType, ref} from "vue";
 import {getFileIcon} from "@/utils/getIconByFileType";
 import type {FileMeta} from "@/types/fileMeta";
 import {useDownloader} from "@/composables/useDownloader";
 
-const props = defineProps({
-  fileList: {
-    type: Array as PropType<FileMeta[]>,
-    required: true,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-});
+const props = defineProps<{
+  fileList: FileMeta[];
+  selectedFileId: string | null;
+}>();
 
 const emit = defineEmits<{
-  (e: "select", file: FileMeta): void;
+  (e: "update:selectedFileId", id: string | null): void;
 }>();
 
 // 如果进一步解耦，这里可以变成两个 props 由用户决定上传和下载的组合逻辑
 // 但是在本项目中上传下载的逻辑是固定的，因此没有进一步解耦
 const {download} = useDownloader();
 
-const selectedFile = ref<FileMeta | null>(null);
-
 // 选择文件
 const handleSelectFile = (file: FileMeta) => {
-  if (selectedFile.value !== null && selectedFile.value.id === file.id) {
-    selectedFile.value = null;
+  if (props.selectedFileId === file.id) {
+    emit("update:selectedFileId", null);
   } else {
-    selectedFile.value = file;
+    emit("update:selectedFileId", file.id);
   }
-  emit("select", selectedFile.value);
 };
 
 // 下载文件

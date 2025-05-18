@@ -1,34 +1,252 @@
 <template>
-  <div class="page">
-    <assignment-mark :data="assignmentMarkData"></assignment-mark>
+  <div class="widget-layout">
+    <!-- 左侧菜单 -->
+    <div class="widget-menu-wrapper" :class="{ collapsed }">
+      <!-- 折叠按钮 -->
+      <div class="menu-toggle" @click="toggleCollapse">
+        <el-icon>
+          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
+        </el-icon>
+        <span v-if="showTitle" class="menu-title">提交记录</span>
+      </div>
+
+      <!-- 文件夹菜单 -->
+      <el-menu
+          class="widget-menu"
+          :default-active="activeSubmissionId"
+          :collapse="collapsed"
+          :collapse-transition="true"
+          mode="vertical"
+          @select="handleMenuSelect"
+      >
+        <el-menu-item
+            v-for="submission in submissionsSorted"
+            :key="submission.id"
+            :index="submission.id.toString()"
+            class="hoverable-item"
+            :style="getMenuItemStyle(submission)"
+            @mouseenter="hoveredSubmissionId = submission.id.toString()"
+            @mouseleave="hoveredSubmissionId = null"
+        >
+          <el-icon><Document/></el-icon>
+          <span v-if="!collapsed">{{ submission.id }}</span>
+        </el-menu-item>
+      </el-menu>
+    </div>
+
+    <!-- 主体内容区域 -->
+    <div class="widget-content">
+      <assignment-mark
+          v-if="activeSubmission !== undefined"
+          :submission="activeSubmission"
+          :feedback="activeFeedback"
+          :max-score="maxScore"
+          :download-file="handleDownloadFile"
+          @update-file="handleUpdateFile"
+          @save="handleSave"
+          @submit="handleSubmit"
+      />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts" name="mark">
 import assignmentMark from "../widgets/assignment-mark.vue";
-const assignmentMarkData = {
-  title: '作业批改',
-  content: '# 我是作业\n\n请完成作业',
-  attachments: [
-    {id: 1, filename: '真7zip.exe', url: 'https://www.7-zip.org/a/7z2409-arm64.exe'},
-    {id: 2, filename: '为什么开水和凉水听起来不一样.pdf', url: 'https://arxiv.org/pdf/2403.14740'},
-    {id: 3, filename: 'index.txt', url: 'https://raw.githubusercontent.com/xz-xuezhe/sample/refs/heads/master/index.html'},
-    {id: 4, filename: 'hello.md', url: 'https://raw.githubusercontent.com/xz-xuezhe/sample/refs/heads/master/hello.md'},
-    {id: 5, filename: 'element-plus-logo.jpg', url: 'https://element-plus.org/images/element-plus-logo.svg'},
-    {id: 6, filename: 'ギターと孤独と蒼い惑星.mp3', url: 'https://music.163.com/song/media/outer/url?id=2024541857.mp3'},
-    {id: 7, filename: '1280*720 from sample-video.com.mp4', url: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_1mb.mp4'},
-  ],
-  status: 'marking',
-  submitType: 'file',
-  maxScore: 100,
+import {FileMeta} from "@/types/fileMeta";
+import {computed, nextTick, onMounted, ref, watch} from "vue";
+import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
+import {useRoute} from "vue-router";
+import {useUserStore} from "@/store/user";
+import {getAllSubmissions} from "@/api/feedback";
+import {downloadFile} from "@/api/file";
+import {useFeedback} from "@/composables/useFeedback";
+
+const route = useRoute();
+const userStore = useUserStore();
+const {createFeedback, updateFeedback} = useFeedback();
+
+const submissions = ref<SubmissionForMark[]>([]);
+const submissionsSorted = computed(() => [...submissions.value].sort((a, b) => {
+  return a.id > b.id ? -1 : 1;
+}));
+const feedbacks = ref<Record<number, FeedbackForm>>({});
+const patches = ref<Record<number, Record<string, Uint8Array>>>({});
+
+// TODO: set max score
+const maxScore = ref(100);
+
+const activeSubmissionId = ref<number | null>(null);
+const hoveredSubmissionId = ref<string | null>(null);
+const activeSubmission = computed(() => submissions.value.find(s => s.id === activeSubmissionId.value));
+const activeFeedback = computed(() => feedbacks.value[Number(activeSubmissionId.value)]);
+
+const collapsed = ref(false);
+const showTitle = ref(true);
+const toggleCollapse = async () => {
+  collapsed.value = !collapsed.value;
+  await nextTick();
+};
+watch(collapsed, (val) => {
+  if (val) {
+    showTitle.value = false;
+  } else {
+    setTimeout(() => {
+      showTitle.value = true;
+    }, 300);
+  }
+});
+
+const getMenuItemStyle = (submission: SubmissionForMark) => {
+  const isActive = submission.id === activeSubmissionId.value;
+  const isHovered = submission.id.toString() === hoveredSubmissionId.value;
+  const baseColor = '#f9f9f9'
+  const hoverColor = '#e6f0ff'
+  const activeColor = '#409eff'
+  return {
+    backgroundColor: isActive ? activeColor : (isHovered ? hoverColor : baseColor),
+    color: isActive ? 'white' : 'black',
+    fontWeight: 'bold',
+    borderRadius: '6px',
+    margin: '4px 8px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    transition: 'all 0.2s',
+    cursor: 'pointer',
+  }
 }
+
+const initActiveSubmission = () => {
+  const id = route.query.submissionId as string;
+  const matched = submissions.value.find((s) => s.id.toString() === id);
+  if (matched) {
+    activeSubmissionId.value = matched.id;
+  } else {
+    activeSubmissionId.value = submissions.value[0].id;
+  }
+};
+
+const handleMenuSelect = (submissionId: string) => {
+  activeSubmissionId.value = Number(submissionId);
+};
+
+const handleDownloadFile = async (submissionId: number, fileId: string) => {
+  if (patches.value[submissionId] && patches.value[submissionId][fileId]) {
+    return new Blob([patches.value[submissionId][fileId]]);
+  }
+  const response = await downloadFile(fileId);
+  return response.data as Blob;
+};
+
+const handleUpdateFile = async (submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>) => {
+  patches.value[submissionId][fileId] = await dataPromise;
+};
+
+const handleSave = (submissionId: number, score?: number, content?: string) => {
+  const feedback = feedbacks.value[submissionId];
+  feedback.score = score;
+  feedback.content = content;
+};
+
+const handleSubmit = (submissionId: number, score: number, content: string) => {
+  const submission = submissions.value.find((s) => s.id === submissionId);
+  if (!submission) {
+    console.error(`no such submission: ${submissionId}`);
+    return;
+  }
+  const feedback = feedbacks.value[submissionId];
+  feedback.score = score;
+  feedback.content = content;
+  const patch = patches.value[submissionId];
+  if (!submission.feedback) {
+    createFeedback(submission, feedback, patch);
+  } else {
+    updateFeedback(submission, feedback, patch);
+  }
+};
+
+onMounted(async () => {
+  const widgetId = route.params.widgetId as string;
+  const response = await getAllSubmissions(widgetId);
+  submissions.value = response.data as SubmissionForMark[];
+  submissions.value.forEach(submission => {
+    if (submission.feedback) {
+      feedbacks.value[submission.id] = {
+        score: submission.feedback.score,
+        content: submission.feedback.content,
+      };
+    } else {
+      feedbacks.value[submission.id] = {};
+    }
+    patches.value[submission.id] = {};
+  });
+  initActiveSubmission();
+});
 </script>
 
 <style scoped>
-.page {
+.widget-layout {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.widget-menu {
+  height: 100%;
+}
+
+.widget-menu-wrapper {
   display: flex;
   flex-direction: column;
+  height: 100%;
+  border-right: 1px solid #ebeef5;
+  transition: width 0.3s ease-in-out;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.widget-menu-wrapper.collapsed {
+  width: 64px;
+}
+
+:deep(.el-menu--collapse) {
+  width: 64px;
+}
+
+.menu-toggle {
+  display: flex;
+  align-items: center;
   gap: 10px;
-  width: 100%;
+  padding: 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #ebeef5;
+  transition: padding 0.3s ease-in-out;
+}
+
+.menu-title {
+  font-weight: bold;
+  font-size: 16px;
+  transition: opacity 0.3s ease;
+  white-space: nowrap;
+}
+
+.hoverable-item:hover {
+  filter: brightness(1.08);
+  cursor: pointer;
+}
+
+.widget-content {
+  flex: 1;
+  height: 100%;
+  padding: 0;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.widget-scroll-wrapper {
+  height: 100%;
+  overflow: auto;
 }
 </style>

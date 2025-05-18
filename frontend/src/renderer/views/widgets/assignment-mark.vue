@@ -1,15 +1,22 @@
 <template>
-  <widget-card :title="computedTitle" color="blue" icon="Notebook">
+  <widget-card title="作业批改" color="blue" icon="Notebook">
     <div class="container">
       <!--   作业信息   -->
-      <md-and-file-mark :data="props.data"/>
+      <md-and-file-mark
+          ref="submissionContainer"
+          :submission-id="props.submission.id"
+          :md-content="submission.content || ''"
+          :file-list="submission.feedback?.attachments || submission.attachments"
+          :download-file="props.downloadFile"
+          @update-file="handleUpdateFile"
+      />
 
       <!--   得分   -->
       <div class="assignment-status">
         <el-row class="status-row">
           <el-col :span="12" class="status-text">得分</el-col>
           <el-col :span="12" class="score-display">
-            <el-input-number v-model="score" style="width: 72px" placeholder="分数" :controls="false"></el-input-number>
+            <el-input-number v-model="score" style="width: 72px" placeholder="分数" :controls="false" />
             <span> / {{ displayTotalScore }}</span>
           </el-col>
         </el-row>
@@ -21,12 +28,12 @@
           <el-col :span="24" class="feedback-input">
             <el-input
               type="textarea"
-              v-model="feedback"
+              v-model="content"
               placeholder="请输入评语"
               :maxlength="200"
               show-word-limit
-              rows="3"
-            ></el-input>
+              :rows="3"
+            />
           </el-col>
         </el-row>
       </div>
@@ -34,13 +41,13 @@
     <div class="mark-submit">
       <el-tooltip
           :content="errorMessage"
-          :disabled="errorMessage === ''"
+          :disabled="errorMessage === null"
       >
         <el-button
             type="primary"
             :icon="Check"
-            @click="submit"
-            :disabled="error || score === undefined || score === null"
+            @click="handleSubmit"
+            :disabled="errorMessage !== null"
             style="width: 120px; margin-left: auto"
         >
           确认
@@ -52,42 +59,55 @@
 
 <script setup lang="ts">
 import WidgetCard from "./utils/widget-card.vue";
-import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileMark from "./utils/md-and-file-mark.vue";
-import {computed, onMounted, ref, watch} from "vue";
-import {Check, Close} from "@element-plus/icons-vue";
+import {computed, ref, watch} from "vue";
+import {Check} from "@element-plus/icons-vue";
+import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
-});
+const props = defineProps<{
+  maxScore: number;
+  submission: SubmissionForMark;
+  feedback: FeedbackForm;
+  downloadFile: (submissionId: number, fileId: string) => Promise<Blob>;
+}>();
 
-// 本卡片的标题
-const computedTitle = computed(() => props.data?.title || "作业");
+const emit = defineEmits<{
+  (e: "updateFile", submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>): void;
+  (e: "save", submissionId: number, score: number, content: string): void;
+  (e: "submit", submissionId: number, score: number, content: string): void;
+}>();
 
-const displayTotalScore = computed(() => (props.data.status === "marking" || props.data.status === "returned" ? props.data.maxScore : "--"));
+const displayTotalScore = computed(() => props.maxScore);
 
 const score = ref();
-const feedback = ref("");
-const error = ref(false);
-
-watch(score, (newVal) => {
-  error.value = newVal < 0 || newVal > props.data.maxScore;
-});
+const content = ref("");
+const submissionContainer = ref();
 
 const errorMessage = computed(() => {
   if (score.value === undefined || score.value === null) return "请输入分数";
-  if (error.value) return "分数超出范围";
-  return "";
+  if (score.value < 0 || score.value > props.maxScore) return "分数超出范围";
+  return null;
 });
 
-const submit = () => {
-  // TODO: 上传分数和评语
-  console.log("分数:", score.value);
-  console.log("评语:", feedback.value);
+const handleUpdateFile = (submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>) => {
+  emit("updateFile", submissionId, fileId, dataPromise);
 };
+
+const handleSubmit = () => {
+  submissionContainer.value.save();
+  emit("submit", props.submission.id, score.value, content.value);
+};
+
+watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedback], [oldSubmission, oldFeedback]) => {
+  if (oldSubmission) {
+    if (submissionContainer.value.isDirty()) {
+      submissionContainer.value.save();
+    }
+    emit("save", oldSubmission.id, score.value, content.value);
+  }
+  score.value = newFeedback.score;
+  content.value = newFeedback.content || "";
+}, {immediate: true});
 </script>
 
 <style scoped>

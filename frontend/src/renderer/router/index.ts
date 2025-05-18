@@ -51,7 +51,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/message-box.vue'),
             },
             {
-                path: 'mark',
+                path: 'mark/:widgetId',
                 name: 'mark',
                 meta: {title: '批改'},
                 component: () => import('../views/pages/mark.vue'),
