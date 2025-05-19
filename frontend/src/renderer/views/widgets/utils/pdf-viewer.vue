@@ -89,7 +89,6 @@ const inkSize = ref(1);
 const highlightDefaultColor = ref(highlightColors.yellow);
 const textColor = ref("#000000");
 const textSize = ref(textSizes[2]);
-const isDirty = ref(false);
 
 let pdfViewer: pdfjsViewer.PDFViewer;
 const eventBus = new pdfjsViewer.EventBus();
@@ -122,7 +121,6 @@ const loadPDF = async () => {
   const pdfDocument = await loadingTask.promise;
   pdfViewer.setDocument(pdfDocument);
   changeEditorMode(pdfjsLib.AnnotationEditorType.NONE);
-  isDirty.value = false;
 };
 
 const editorTypes = [
@@ -133,9 +131,6 @@ const editorTypes = [
 ];
 
 const changeEditorMode = (value: number) => {
-  if (value !== pdfjsLib.AnnotationEditorType.NONE) {
-    isDirty.value = true;
-  }
   mode.value = value;
   pdfViewer.annotationEditorMode = {mode: value};
 };
@@ -194,7 +189,7 @@ onBeforeUnmount(() => {
 
 defineExpose({
   isDirty: () => {
-    return isDirty.value;
+    return !!pdfViewer.pdfDocument?.annotationStorage.size;
   },
   getDocument: () => {
     return pdfViewer.pdfDocument?.saveDocument();

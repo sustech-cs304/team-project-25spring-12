@@ -13,7 +13,7 @@
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
-          :default-active="activeSubmissionId"
+          :default-active="activeSubmissionId?.toString()"
           :collapse="collapsed"
           :collapse-transition="true"
           mode="vertical"
@@ -28,8 +28,14 @@
             @mouseenter="hoveredSubmissionId = submission.id.toString()"
             @mouseleave="hoveredSubmissionId = null"
         >
-          <el-icon><Document/></el-icon>
-          <span v-if="!collapsed">{{ submission.id }}</span>
+          <el-icon>
+            <DocumentChecked v-if="submission.feedback" />
+            <Document v-else />
+          </el-icon>
+          <div v-if="!collapsed" class="submission-info">
+            <div class="student-name">{{ submission.student?.name || "未知用户" }}</div>
+            <div class="submission-time">{{ formatTime(submission.submittedTime) }}</div>
+          </div>
         </el-menu-item>
       </el-menu>
     </div>
@@ -52,7 +58,6 @@
 
 <script setup lang="ts" name="mark">
 import assignmentMark from "../widgets/assignment-mark.vue";
-import {FileMeta} from "@/types/fileMeta";
 import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 import {useRoute} from "vue-router";
@@ -117,13 +122,20 @@ const getMenuItemStyle = (submission: SubmissionForMark) => {
   }
 }
 
+const formatTime = (time: string) => {
+  if (!time) {
+    return "无提交时间";
+  }
+  return new Date(time).toLocaleString();
+};
+
 const initActiveSubmission = () => {
   const id = route.query.submissionId as string;
   const matched = submissions.value.find((s) => s.id.toString() === id);
   if (matched) {
     activeSubmissionId.value = matched.id;
   } else {
-    activeSubmissionId.value = submissions.value[0].id;
+    activeSubmissionId.value = submissionsSorted.value[0].id;
   }
 };
 
@@ -135,8 +147,20 @@ const handleDownloadFile = async (submissionId: number, fileId: string) => {
   if (patches.value[submissionId] && patches.value[submissionId][fileId]) {
     return new Blob([patches.value[submissionId][fileId]]);
   }
-  const response = await downloadFile(fileId);
-  return response.data as Blob;
+  // const response = await downloadFile(fileId);
+  // return response.data as Blob;
+  const submission = submissions.value.find((s) => s.id === submissionId);
+  if (!submission?.attachments) {
+    console.log("@");
+    return new Blob();
+  }
+  const file = (submission.feedback?.attachments || submission.attachments).find((f) => f.id === fileId);
+  if (!file) {
+    console.log("#");
+    return new Blob();
+  }
+  const response = await fetch(file.url);
+  return await response.blob();
 };
 
 const handleUpdateFile = async (submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>) => {
@@ -149,7 +173,7 @@ const handleSave = (submissionId: number, score?: number, content?: string) => {
   feedback.content = content;
 };
 
-const handleSubmit = (submissionId: number, score: number, content: string) => {
+const handleSubmit = async (submissionId: number, score: number, content: string) => {
   const submission = submissions.value.find((s) => s.id === submissionId);
   if (!submission) {
     console.error(`no such submission: ${submissionId}`);
@@ -160,9 +184,9 @@ const handleSubmit = (submissionId: number, score: number, content: string) => {
   feedback.content = content;
   const patch = patches.value[submissionId];
   if (!submission.feedback) {
-    createFeedback(submission, feedback, patch);
+    submission.feedback = await createFeedback(submission, feedback, patch);
   } else {
-    updateFeedback(submission, feedback, patch);
+    submission.feedback = await updateFeedback(submission, feedback, patch);
   }
 };
 
@@ -248,5 +272,24 @@ onMounted(async () => {
 .widget-scroll-wrapper {
   height: 100%;
   overflow: auto;
+}
+
+.submission-info {
+  display: flex;
+  flex-direction: column;
+  line-height: normal;
+}
+
+.student-name {
+  font-size: 14px;
+}
+
+.submission-time {
+  font-size: 12px;
+  color: #909399;
+}
+
+.el-menu-item.is-active .submission-info .submission-time {
+  color: white;
 }
 </style>

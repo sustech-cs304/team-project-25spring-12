@@ -30,8 +30,6 @@
               type="textarea"
               v-model="content"
               placeholder="请输入评语"
-              :maxlength="200"
-              show-word-limit
               :rows="3"
             />
           </el-col>
@@ -50,7 +48,7 @@
             :disabled="errorMessage !== null"
             style="width: 120px; margin-left: auto"
         >
-          确认
+          提交
         </el-button>
       </el-tooltip>
     </div>
