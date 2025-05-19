@@ -42,16 +42,18 @@
 
     <!-- 主体内容区域 -->
     <div class="widget-content">
-      <assignment-mark
-          v-if="activeSubmission !== undefined"
-          :submission="activeSubmission"
-          :feedback="activeFeedback"
-          :max-score="maxScore"
-          :download-file="handleDownloadFile"
-          @update-file="handleUpdateFile"
-          @save="handleSave"
-          @submit="handleSubmit"
-      />
+      <el-scrollbar>
+        <assignment-mark
+            v-if="activeSubmission !== undefined"
+            :submission="activeSubmission"
+            :feedback="activeFeedback"
+            :max-score="maxScore"
+            :download-file="handleDownloadFile"
+            @update-file="handleUpdateFile"
+            @save="handleSave"
+            @submit="handleSubmit"
+        />
+      </el-scrollbar>
     </div>
   </div>
 </template>
