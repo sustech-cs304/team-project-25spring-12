@@ -3,7 +3,7 @@ from sqlmodel import SQLModel, Field, Relationship
 
 if TYPE_CHECKING:
     from mjc.model.entity.course import Class
-from mjc.model.entity.course import ClassTeacherLink, ClassTeachingAssistantLink, ClassStudentLink, ClassUserLink
+from mjc.model.entity.course import ClassUserLink
 
 
 class User(SQLModel, table=True):

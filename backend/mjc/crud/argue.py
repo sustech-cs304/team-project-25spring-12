@@ -4,7 +4,7 @@ from datetime import datetime
 from sqlmodel import select, Session, func
 
 from mjc.model.entity.widget import Widget
-from mjc.model.entity.course import Class, ClassStudentLink, ClassTeacherLink, ClassTeachingAssistantLink
+from mjc.model.entity.course import Class, ClassUserLink, ClassRole
 from mjc.model.entity.page import Page
 from mjc.model.entity.argue import ArguePost, ArguePostVote, ArguePostWatch,ArguePostStatus, \
         ArguePostComment, ArguePostAttachment, ArguePostFeedback, ArguePostFeedbackAttachment
@@ -23,16 +23,18 @@ def get_teacher_class_argues(db: Session, username: str) -> list[ArguePost]:
     :return:
     """
     stmt = select(ArguePost).join(ArguePost.widget).join(Widget.page).join(Page.class_) \
-                            .join(ClassTeacherLink, Class.id == ClassTeacherLink.class_id) \
-                            .where(ClassStudentLink.username == username)
+                            .join(ClassUserLink, Class.id == ClassUserLink.class_id) \
+                            .where(ClassUserLink.username == username) \
+                            .where(ClassUserLink.role == ClassRole.TEACHER)
     argues: list[ArguePost] = db.exec(stmt).all()
     return argues
 
 
 def get_ta_class_argues(db: Session, username: str) -> list[ArguePost]:
     stmt = select(ArguePost).join(ArguePost.widget).join(Widget.page).join(Page.class_) \
-        .join(ClassTeachingAssistantLink, Class.id == ClassTeachingAssistantLink.class_id) \
-        .where(ClassTeachingAssistantLink.username == username)
+        .join(ClassUserLink, Class.id == ClassUserLink.class_id) \
+        .where(ClassUserLink.username == username) \
+        .where(ClassUserLink.role == ClassRole.TA)
     argues: list[ArguePost] = db.exec(stmt).all()
     return argues
 
@@ -43,8 +45,9 @@ def get_student_class_argues(db: Session, username: str) -> list[ArguePost]:
     """
     # 选择学生所在的 class 的 argue
     stmt = select(ArguePost).join(ArguePost.widget).join(Widget.page).join(Page.class_) \
-                     .join(ClassStudentLink, Class.id == ClassStudentLink.class_id) \
-                     .where(ClassStudentLink.username == username)
+                     .join(ClassUserLink, Class.id == ClassUserLink.class_id) \
+                     .where(ClassUserLink.username == username) \
+                     .where(ClassUserLink.role == ClassRole.STUDENT)
     argues: list[ArguePost] = db.exec(stmt).all()
     return argues
 
