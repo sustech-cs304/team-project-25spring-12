@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status
 from sqlmodel import Session
 
 from mjc.model.schema.page import PageCreate, PageUpdate
+from mjc.permission.common import verify_class_admin
 from mjc.utils.database import SessionDep
 from mjc.model.schema.user import UserInDB
 from mjc.model.entity.course import ClassRole
@@ -15,14 +16,6 @@ def verify_page_exist(db: Session, page_id: int):
     if page is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
     return page
-
-
-def verify_class_admin(db: Session, class_id: int, username: str):
-    role = course_service.get_user_class_role(db, username, class_id)
-    if role is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
-    elif role is ClassRole.STUDENT:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have not permission")
 
 
 async def verify_page_get(db: SessionDep, page_id: int,
