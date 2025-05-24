@@ -113,13 +113,14 @@ def delete_semester(db: Session, semester_id: int) -> Message:
     raise HTTPException(status_code=404, detail="Delete semester failed")
 
 
-def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
+def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole | None:
     link = crud_course.get_class_user_link(db, username, cls_id)
     if link:
         return link.role
+    return None
 
 
-def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class:
+def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class | None:
     return crud_course.enroll_class_users(db, enroll)
 
 
