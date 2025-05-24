@@ -15,7 +15,7 @@ def entity2folder(entity: FolderEntity) -> Folder:
     return Folder(pages=[FolderPageItem.model_validate(page.model_dump()) for page in entity.pages],
                   **entity.model_dump())
 
-def get_folder(db: Session, folder_id: int) -> Folder:
+def get_folder(db: Session, folder_id: int) -> FolderEntity:
     return folder_crud.get_folder(db, folder_id)
 
 
