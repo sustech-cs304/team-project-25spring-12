@@ -21,48 +21,6 @@ def entity2page(entity: PageEntity) -> Page:
     return page
 
 
-def get_student_page(db: Session, page_id: int, username: str) -> Page | None:
-    page = crud_page.get_page(db, page_id)
-    if not page:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
-    widgets: list[AssignmentWidget | NotePdfWidget | DocWidget] = []
-    for widget in page.widgets:
-        if not widget.is_deleted:
-            if widget.type == WidgetType.assignment:
-                widgets.append(widget_service.get_student_submissions(db, widget, username))
-            elif widget.type == WidgetType.note_pdf:
-                widgets.append(widget_service.entity2notepdf(widget))
-            elif widget.type == WidgetType.doc:
-                widgets.append(widget_service.entity2doc(widget))
-    page = Page(id=page.id,
-                name=page.name,
-                index=page.index,
-                visible=page.visible,
-                widgets=widgets)
-    return page
-
-
-def get_teacher_page(db: Session, page_id: int, username: str) -> Page | None:
-    page = crud_page.get_page(db, page_id)
-    if not page:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
-    widgets: list[AssignmentWidget | NotePdfWidget | DocWidget] = []
-    for widget in page.widgets:
-        if not widget.is_deleted:
-            if widget.type == WidgetType.assignment:
-                widgets.append(widget_service.entity2assignment(widget))
-            elif widget.type == WidgetType.note_pdf:
-                widgets.append(widget_service.entity2notepdf(widget))
-            elif widget.type == WidgetType.doc:
-                widgets.append(widget_service.entity2doc(widget))
-    page = Page(id=page.id,
-                name=page.name,
-                index=page.index,
-                visible=page.visible,
-                widgets=widgets)
-    return page
-
-
 def get_page(db: Session, page_id: int, current_user: UserInDB) -> Page | None:
     page = crud_page.get_page(db, page_id)
     if not page:
