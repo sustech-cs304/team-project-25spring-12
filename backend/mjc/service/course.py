@@ -50,9 +50,9 @@ def get_class(db: Session, cls_id: int) -> Class | None:
     return cls
 
 
-def get_user_classes(db: Session, user: UserInDB) -> list[Class]:
-    # TODO: finish the function
-    pass
+def get_user_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
+    cls_entities = crud_course.get_user_classes(db, user)
+    return [cls2cls_card(cls_entity) for cls_entity in cls_entities]
 
 
 def create_class(db: Session, cls: ClassCreate) -> Class:

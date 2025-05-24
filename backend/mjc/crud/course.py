@@ -13,6 +13,13 @@ def get_class(db: Session, class_id: int) -> Class:
     return cls_entity
 
 
+def get_user_classes(db: Session, user: UserInDB) ->list[Class]:
+    stmt = select(Class).join(ClassUserLink, Class.id == ClassUserLink.class_id) \
+                        .where(ClassUserLink.username == user.username)
+    classes: list[Class] = db.exec(stmt).all()
+    return classes
+
+
 def get_student_classes(db: Session, user: UserInDB) -> list[Class]:
     stmt = select(Class).join(ClassUserLink, Class.id == ClassUserLink.class_id) \
                         .where(ClassUserLink.username == user.username) \
