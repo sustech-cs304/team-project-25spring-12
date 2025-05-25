@@ -1,7 +1,6 @@
 from sqlmodel import Session, select
 
 from mjc.model.schema.course import ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate
-from mjc.model.entity.user import Profile
 from mjc.model.entity.course import Class, Semester, ClassUserLink, ClassRole
 from mjc.model.schema.user import UserInDB
 from mjc.model.schema.course import ClassUserEnroll, ClassUserUpdate
@@ -123,6 +122,12 @@ def get_class_user_link(db: Session, username: str, cls_id: int) -> ClassUserLin
     return link
 
 
+def get_class_roles(db: Session, cls_id: int) -> [ClassUserLink]:
+    stmt = select(ClassUserLink).where(ClassUserLink.class_id == cls_id)
+    links = db.exec(stmt).all()
+    return links
+
+
 def enroll_class_users(db: Session, assign: ClassUserEnroll) -> list[ClassUserLink]:
     links: list[ClassUserLink] = [ClassUserLink(username=username, class_id=assign.class_id, role=assign.role)
                                   for username in assign.usernames]
@@ -138,6 +143,7 @@ def update_class_user(db: Session, assign: ClassUserUpdate) -> ClassUserLink:
     if link:
         link.role = assign.role
     db.commit()
+    return link
 
 
 def unroll_class_user(db: Session, class_id: int, username: str):

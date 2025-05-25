@@ -89,3 +89,9 @@ class ClassUserUpdate(BaseModel):
     class_id: int
     username: str
     role: ClassRole
+
+
+class ClassUserRoleName(ClassUserRole):
+    username: str
+    name: str
+    role: ClassRole

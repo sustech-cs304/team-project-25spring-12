@@ -2,12 +2,12 @@ from fastapi import HTTPException
 from sqlmodel import Session
 
 from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
-                                             SemesterUpdate, Class, Semester, ClassCard,
-                                             ClassUserEnroll, ClassUserUpdate, DDL)
+                                     SemesterUpdate, Class, Semester, ClassCard,
+                                     ClassUserEnroll, ClassUserUpdate, DDL, ClassUserRoleName)
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.user import UserInDB
-from mjc.crud import course as crud_course
-from mjc.model.entity.course import Class as ClassEntity, Semester as SemesterEntity, ClassRole
+from mjc.crud import course as crud_course, user as crud_user
+from mjc.model.entity.course import Class as ClassEntity, Semester as SemesterEntity, ClassRole, ClassUserLink
 from mjc.model.entity.widget import WidgetType
 
 
@@ -40,6 +40,12 @@ def entity2semester(semester_entity: SemesterEntity) -> Semester:
                         start_time=semester_entity.start_time,
                         end_time=semester_entity.end_time)
     return semester
+
+
+def entity2class_user_role(db: Session, link: ClassUserLink) -> ClassUserRoleName:
+    return ClassUserRoleName(username=link.username,
+                        name=crud_user.get_profile(db, link.username).name,
+                        role=link.role)
 
 
 def get_class(db: Session, cls_id: int) -> Class | None:
@@ -120,18 +126,29 @@ def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole | 
     return None
 
 
-def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class | None:
-    crud_course.enroll_class_users(db, enroll)
-    return crud_course.get_class(db, enroll.class_id)
+def get_class_role(db:Session, cls_id: int) -> list[ClassUserRoleName] | None:
+    links = crud_course.get_class_roles(db, cls_id)
+    if links:
+        return [entity2class_user_role(db, link) for link in links]
 
 
-def update_class_user(db: Session, class_user: ClassUserUpdate) -> Class:
-    crud_course.update_class_user(db, class_user)
-    return crud_course.get_class(db, class_user.class_id)
+def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> [ClassUserRoleName]:
+    links = crud_course.enroll_class_users(db, enroll)
+    users: [ClassUserRoleName] = []
+    if links:
+        users = [entity2class_user_role(db, link) for link in links]
+    return users
 
 
-def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
-    return crud_course.unroll_class_user(db, class_id, username)
+def update_class_user(db: Session, class_user: ClassUserUpdate) -> ClassUserRoleName | None:
+    link = crud_course.update_class_user(db, class_user)
+    if link:
+        return entity2class_user_role(db, link)
+
+
+def unroll_class_user(db: Session, class_id: int, username: str) -> Message:
+    crud_course.unroll_class_user(db, class_id, username)
+    return Message(msg="success")
 
 
 def get_ddl_calendar(db: Session, user: UserInDB) -> list[DDL]:

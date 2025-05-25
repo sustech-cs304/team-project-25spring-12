@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassUserEnroll
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, \
+    ClassUserEnroll, ClassUserRole, ClassUserRoleName, ClassUserUpdate
 from mjc.model.schema.assignment import DDL
 from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard
@@ -88,15 +89,24 @@ async def delete_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.post(path="/class/user", response_model=list[Profile])
+@router.post(path="/class/user", response_model=list[ClassUserRoleName])
 async def create_user_roll(db: SessionDep, enroll: ClassUserEnroll):
     return course_service.enroll_class_users(db, enroll)
 
 
-@router.get(path="/class/{class_id}/user")
+@router.patch(path="/class/user", response_model=ClassUserRoleName)
+async def update_user_roll(db: SessionDep, update: ClassUserUpdate):
+    return course_service.update_class_user(db, update)
+
+
+@router.delete(path="/class/{cls_id}/user/{username}", response_model=Message)
+async def delete_user_roll(db: SessionDep, cls_id: int, username: str):
+    return course_service.unroll_class_user(db, cls_id, username)
+
+
+@router.get(path="/class/{class_id}/user", response_model=list[ClassUserRoleName])
 async def get_class_user(db: SessionDep, class_id: int):
-    # TODO:
-    pass
+    return course_service.get_class_role(db, class_id)
 
 
 @router.get(path="/ddl", response_model=list[DDL])
