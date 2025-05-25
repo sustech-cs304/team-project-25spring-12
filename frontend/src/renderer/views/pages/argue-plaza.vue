@@ -56,13 +56,16 @@
                 </div>
               </a>
               <div class="outline-bottom">
+                <time>{{ slotProp.item.time }}</time>
                 <p class="article-tags">
-                  <span>tags</span>
+                  <!-- <span>tags</span> -->
                   <span v-for="tag of slotProp.item.tags" :key="tag" class="tag">{{
                     tag
-                    }}</span>
+                    }}
+                  </span>
                 </p>
-                <time>{{ slotProp.item.time }}</time>
+                <p class='watch-info'><el-icon><Pointer /></el-icon><br>{{ slotProp.item.ratio }}%</p>
+                <p class='watch-info'><el-icon><View/></el-icon><br>{{ slotProp.item.watch }}</p>
               </div>
             </div>
           </template>
@@ -99,8 +102,11 @@ const formatList = (rawList) => {
     argueId: item.id,
     title: item.title,
     outline: item.content.length > 100 ? item.content.slice(0, 100) + '...' : item.content, // 截取前100字符作为摘要
-    tags: [item.status, item.editor.username, item.support + ' vs ' + item.notSupport],
+    tags: [item.status, item.editor.username],
     time: item.updateTime,
+    ratio: item.support + item.notSupport === 0 ? '?' :
+      (item.support / (item.support + item.notSupport)).toFixed(2) * 100,
+    watch: item.watch,
   }));
 };
 
@@ -252,11 +258,15 @@ onMounted(() => {
   border-radius: 4px;
   padding: 2px 6px;
 }
+.watch-info {
+  font-size: 12px;
+  color: #666;
+  margin: 0 8px;
+}
 time {
   font-size: 12px;
   color: #999;
 }
-
 /* 链接样式 */
 .list-item a {
   text-decoration: none;
