@@ -18,6 +18,14 @@ class WidgetBase(BaseModel):
     visible: bool
 
 
+class WidgetCreate(BaseModel):
+    page_id: int
+
+
+class WidgetUpdate(WidgetCreate):
+    id: int
+
+
 class DocWidget(WidgetBase):
     id: int
     content: str | None = None

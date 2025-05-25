@@ -7,7 +7,7 @@ from mjc.model.schema.user import UserInDB
 from mjc.service.user import get_current_user
 from mjc.utils.database import SessionDep
 from mjc.service import common as common_service
-from mjc.model.entity import Visibility
+from mjc.model.entity.common import Visibility
 
 
 router = APIRouter()

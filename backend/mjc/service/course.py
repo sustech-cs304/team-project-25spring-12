@@ -2,12 +2,13 @@ from fastapi import HTTPException
 from sqlmodel import Session
 
 from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
-                                             SemesterUpdate, Class, Semester, ClassCard,
-                                             ClassUserEnroll, ClassUserUpdate)
+                                     SemesterUpdate, Class, Semester, ClassCard,
+                                     ClassUserEnroll, ClassUserUpdate, DDL, ClassUserRoleName)
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.user import UserInDB
-from mjc.crud import course as crud_course
-from mjc.model.entity import Class as ClassEntity, Semester as SemesterEntity, ClassRole
+from mjc.crud import course as crud_course, user as crud_user
+from mjc.model.entity.course import Class as ClassEntity, Semester as SemesterEntity, ClassRole, ClassUserLink
+from mjc.model.entity.widget import WidgetType
 
 
 def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
@@ -41,6 +42,12 @@ def entity2semester(semester_entity: SemesterEntity) -> Semester:
     return semester
 
 
+def entity2class_user_role(db: Session, link: ClassUserLink) -> ClassUserRoleName:
+    return ClassUserRoleName(username=link.username,
+                        name=crud_user.get_profile(db, link.username).name,
+                        role=link.role)
+
+
 def get_class(db: Session, cls_id: int) -> Class | None:
     cls_entity = crud_course.get_class(db, cls_id)
     if cls_entity is None:
@@ -49,67 +56,9 @@ def get_class(db: Session, cls_id: int) -> Class | None:
     return cls
 
 
-def get_student_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_student_classes(db, user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'student'))
-    return classes
-
-
-def get_teacher_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_teacher_classes(db,user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'teacher'))
-    return classes
-
-
-def get_ta_classes(db: Session, user: UserInDB) -> list[Class] | None:
-    cls_entities = crud_course.get_ta_classes(db,user)
-    if cls_entities is None:
-        return None
-    classes = []
-    for cls_entity in cls_entities:
-        classes.append(entity2cls(cls_entity, 'ta'))
-    return classes
-
-
-def get_student_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_student_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
-
-
-def get_teacher_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_teacher_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
-
-
-def get_ta_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
-    classes = get_ta_classes(db, user)
-    if classes is None:
-        return None
-    class_cards = []
-    for cls in classes:
-        class_card = cls2cls_card(cls)
-        class_cards.append(class_card)
-    return class_cards
+def get_user_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
+    cls_entities = crud_course.get_user_classes(db, user)
+    return [cls2cls_card(cls_entity) for cls_entity in cls_entities]
 
 
 def create_class(db: Session, cls: ClassCreate) -> Class:
@@ -170,17 +119,56 @@ def delete_semester(db: Session, semester_id: int) -> Message:
     raise HTTPException(status_code=404, detail="Delete semester failed")
 
 
-def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole:
-    return crud_course.get_user_class_role(db, username, cls_id)
+def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole | None:
+    link = crud_course.get_class_user_link(db, username, cls_id)
+    if link:
+        return link.role
+    return None
 
 
-def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class:
-    return crud_course.enroll_class_users(db, enroll)
+def get_class_role(db:Session, cls_id: int) -> list[ClassUserRoleName] | None:
+    links = crud_course.get_class_roles(db, cls_id)
+    if links:
+        return [entity2class_user_role(db, link) for link in links]
 
 
-def update_class_user(db: Session, class_user: ClassUserUpdate) -> Class:
-    return crud_course.update_class_user(db, class_user)
+def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> [ClassUserRoleName]:
+    links = crud_course.enroll_class_users(db, enroll)
+    users: [ClassUserRoleName] = []
+    if links:
+        users = [entity2class_user_role(db, link) for link in links]
+    return users
 
 
-def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
-    return crud_course.unroll_class_user(db, class_id, username)
+def update_class_user(db: Session, class_user: ClassUserUpdate) -> ClassUserRoleName | None:
+    link = crud_course.update_class_user(db, class_user)
+    if link:
+        return entity2class_user_role(db, link)
+
+
+def unroll_class_user(db: Session, class_id: int, username: str) -> Message:
+    crud_course.unroll_class_user(db, class_id, username)
+    return Message(msg="success")
+
+
+def get_ddl_calendar(db: Session, user: UserInDB) -> list[DDL]:
+    classes = crud_course.get_student_classes(db, user)
+    print(classes)
+    ddls: list[DDL] = []
+    if classes:
+        for cls in classes:
+            for page in cls.pages:
+                for widget in page.widgets:
+                    if widget.is_deleted == False and widget.type == WidgetType.assignment and widget.visible == True:
+                        ddl=DDL(
+                            class_id=cls.id,
+                            class_name=cls.name,
+                            course_code=cls.course_code,
+                            page_id=page.id,
+                            page_name=page.name,
+                            widget_id=widget.id,
+                            widget_title=widget.title,
+                            ddl=widget.assignment_widget.ddl
+                        )
+                        ddls.append(ddl)
+    return ddls

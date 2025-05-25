@@ -10,9 +10,10 @@ from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
     ArguePostUpdate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedbackCreate, \
     ArguePostFeedbackAttachmentCreate, ArguePostCreate
-from mjc.model.schema.assignment import SubmittedAssignment, Feedback
-from mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
-    SubmittedAssignmentAttachment, ArguePost as ArguePostEntity
+from mjc.model.schema.assignment import SubmittedAssignment
+from mjc.model.entity.widget import WidgetAttachment
+from mjc.model.entity.assignment import SubmittedAssignmentAttachment
+from mjc.model.entity.argue import ArguePostAttachment, ArguePostFeedbackAttachment, ArguePost as ArguePostEntity
 from mjc.crud.argue import count_argue_votes
 from mjc.model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
 from mjc.service.assignment import entity2feedback
@@ -39,7 +40,7 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
                 attachments=attachments2files(argue.submitted_assignment.attachments),
                 code=argue.submitted_assignment.code,
                 submitted_time=argue.submitted_assignment.create_time,
-                feedback=entity2feedback(None, argue.submitted_assignment.feedback)
+                feedback=entity2feedback(argue.submitted_assignment.feedback)
             )
         ],
         index=argue.widget.index,

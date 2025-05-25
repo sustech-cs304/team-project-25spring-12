@@ -8,8 +8,7 @@ from mjc.model.schema.widget import WidgetAttachmentCreate
 from mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
 from mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
-from mjc.model.entity import Widget, WidgetType, WidgetAttachment, \
-    AssignmentWidget, NotePDFWidget, SubmitType, \
+from mjc.model.entity.widget import Widget, WidgetType, WidgetAttachment, AssignmentWidget, NotePDFWidget, SubmitType, \
     Note
 
 
