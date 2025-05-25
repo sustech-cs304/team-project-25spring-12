@@ -18,6 +18,11 @@
 
 
 = Architechture Design
+== System Overview
+
+#figure(
+  image("assets/system.png", height: 90%)
+)
 
 == Overview Component Diagram 
 

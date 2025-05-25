@@ -52,8 +52,20 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'mark',
+                name: 'mark-center',
+                meta: {title: '批改中心'},
+                component: () => import('../views/pages/mark-center.vue'),
+            },
+            {
+                path: 'mark/:courseId',
+                name: 'mark-course',
+                meta: {title: '批改课程'},
+                component: () => import('../views/pages/mark-class.vue'),
+            },
+            {
+                path: 'mark/:courseId/widget/:widgetId',
                 name: 'mark',
-                meta: {title: '批改'},
+                meta: {title: '批改记录'},
                 component: () => import('../views/pages/mark.vue'),
             },
         ],

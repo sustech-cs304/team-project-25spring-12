@@ -1,5 +1,9 @@
 # Architechture Design
 
+## System Overview
+
+![](assets/system.png)
+
 ## Overview Component Diagram
 
 The following figure shows the component diagram of the system.
