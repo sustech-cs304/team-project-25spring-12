@@ -1,5 +1,6 @@
 from fastapi import HTTPException
 from sqlmodel import Session
+from typing_extensions import Tuple
 
 from mjc.model.schema.course import (ClassCreate, ClassUpdate, SemesterCreate,
                                      SemesterUpdate, Class, Semester, ClassCard,
@@ -29,8 +30,16 @@ def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
     return cls
 
 
-def cls2cls_card(cls: Class) -> ClassCard:
-    class_card = ClassCard.model_validate(cls)
+def cls2cls_card(cls_pair: Tuple[ClassEntity, ClassUserLink]) -> ClassCard:
+    cls, link = cls_pair
+    class_card = ClassCard(id=cls.id,
+                           name=cls.name,
+                           course_code=cls.course_code,
+                           semester=cls.semester.name,
+                           lecturer=cls.lecturer,
+                           location=cls.location,
+                           time=cls.time,
+                           role=ClassRole(link.role))
     return class_card
 
 

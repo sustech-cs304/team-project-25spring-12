@@ -17,7 +17,7 @@ class ClassBase(BaseModel):
 
 class ClassCard(ClassBase):
     id: int
-    role: str | None = None
+    role: ClassRole | None = None
 
 
 class Class(ClassBase):

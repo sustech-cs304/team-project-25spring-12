@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 
-from sqlmodel import Session, select
+from sqlmodel import Session, select, desc
 
 from mjc.crud.widget import get_widget
 from mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
@@ -25,12 +25,11 @@ def get_all_assignments_submissions(db: Session, widget_id: int) -> list[Submitt
     return submissions
 
 
-def get_user_assignment_submissions(db: Session, widget_id: int, username: str) -> list[SubmittedAssignment]:
+def get_user_assignment_submissions(db: Session, assignment_widget_id: int, username: str) -> list[SubmittedAssignment]:
     stmt = select(SubmittedAssignment) \
-                .where(SubmittedAssignment.widget_id == widget_id) \
+                .where(SubmittedAssignment.assignment_widget_id == assignment_widget_id) \
                 .where(SubmittedAssignment.username == username) \
-                .join(Widget) \
-                .where(Widget.is_deleted == False)
+                .join(SubmittedAssignment.assignment_widget).join(AssignmentWidget.widget).where(Widget.is_deleted == False)
     submissions: list[SubmittedAssignment] = db.exec(stmt).all()
     return submissions
 
@@ -43,9 +42,9 @@ def get_feedback(db: Session, feedback_id: int) -> SubmittedAssignmentFeedback:
 
 def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAssignmentFeedback:
     stmt = select(SubmittedAssignment) \
-            .where(SubmittedAssignment.widget_id == widget_id) \
+            .where(SubmittedAssignment.assignment_widget_id == widget_id) \
             .where(SubmittedAssignment.username == username) \
-            .order_by(SubmittedAssignment.feedback.create_time.desc()).limit(1)
+            .order_by(desc(SubmittedAssignment.feedback.create_time)).limit(1)
     feedback = db.exec(stmt).first().feedback
     return feedback
 

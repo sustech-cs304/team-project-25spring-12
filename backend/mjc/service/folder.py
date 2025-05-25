@@ -61,6 +61,7 @@ def get_user_class_folders(db: Session, class_id: int, user: UserInDB) -> list[F
 
 
 def create_folder(db: Session, folder: FolderCreate) -> Folder:
+    print(folder)
     folder_entity = folder_crud.create_folder(db, folder)
     return entity2folder(folder_entity)
 

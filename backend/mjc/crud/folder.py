@@ -18,7 +18,7 @@ def update_page_order(db: Session, order: list[int], folder: Folder):
 
 
 def get_class_folders(db: Session, class_id: int, ) -> list[Folder]:
-    stmt = select(Folder).where(Folder.id == class_id) \
+    stmt = select(Folder).where(Folder.class_id == class_id) \
                          .where(Folder.is_deleted == False)
     folders: list[Folder] = db.exec(stmt).all()
     return folders

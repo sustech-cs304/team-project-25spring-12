@@ -51,7 +51,8 @@ def get_all_submissions(db: Session, assignment_widget_id: int) -> list[Submitte
         submissions: list[SubmittedAssignment] = [entity2submission(db, entity) for entity in entities]
         return submissions
     else:
-        return None
+        submissions: list[SubmittedAssignment] = []
+        return submissions
 
 
 def create_submission(db: Session, submission: SubmittedAssignmentCreate, current_user: UserInDB) -> SubmittedAssignment:
