@@ -35,6 +35,12 @@ def get_user_assignment_submissions(db: Session, widget_id: int, username: str) 
     return submissions
 
 
+def get_feedback(db: Session, feedback_id: int) -> SubmittedAssignmentFeedback:
+    stmt = select(SubmittedAssignmentFeedback).where(SubmittedAssignmentFeedback.id == feedback_id)
+    feedback = db.exec(stmt).first()
+    return feedback
+
+
 def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAssignmentFeedback:
     stmt = select(SubmittedAssignment) \
             .where(SubmittedAssignment.widget_id == widget_id) \
@@ -42,6 +48,18 @@ def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAs
             .order_by(SubmittedAssignment.feedback.create_time.desc()).limit(1)
     feedback = db.exec(stmt).first().feedback
     return feedback
+
+
+def get_submission_attach(db: Session, file_id: uuid.UUID) -> SubmittedAssignmentAttachment:
+    stmt = select(SubmittedAssignmentAttachment).where(SubmittedAssignmentAttachment.file_id == file_id)
+    attachment: SubmittedAssignmentAttachment = db.exec(stmt).first()
+    return attachment
+
+
+def get_feedback_attach(db: Session, file_id: uuid.UUID) -> FeedbackAttachmentEntity:
+    stmt = select(FeedbackAttachmentEntity).where(FeedbackAttachmentEntity.file_id == file_id)
+    attachment: FeedbackAttachment = db.exec(stmt).first()
+    return attachment
 
 
 def create_submission(db: Session, submission: SubmittedAssignmentCreate, username: str) -> SubmittedAssignment:
