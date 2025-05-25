@@ -17,10 +17,11 @@ def verify_class_admin(db: Session, class_id: int, current_user: UserInDB):
         return
     role = verify_user_in_class(db, class_id, current_user.username)
     if role is None or ClassRole.STUDENT:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have not permission")
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have no permission")
 
 
 def verify_user_in_class(db: Session, class_id: int, username: str):
+    print(username, class_id)
     role = course_service.get_user_class_role(db, username, class_id)
     if role is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")

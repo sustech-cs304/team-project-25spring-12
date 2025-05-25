@@ -22,7 +22,7 @@ class WidgetCreate(BaseModel):
     page_id: int
 
 
-class WidgetUpdate(WidgetCreate):
+class WidgetUpdate(BaseModel):
     id: int
 
 

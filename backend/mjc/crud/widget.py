@@ -110,6 +110,11 @@ def update_assignment_widget(db: Session, widget: AssignmentWidgetUpdate, editor
     return widget_entity
 
 
+def get_assignment_widget_by_widget_id(db: Session, widget_id: int) -> AssignmentWidget:
+    stmt = select(AssignmentWidget).where(AssignmentWidget.widget_id == widget_id)
+    return db.exec(stmt).first()
+
+
 def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: UserInDB) -> Widget:
     widget_entity = create_widget(db, widget, editor)
     note_pdf = NotePDFWidget(

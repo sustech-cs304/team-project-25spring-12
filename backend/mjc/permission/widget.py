@@ -29,6 +29,7 @@ async def verify_widget_create(db: SessionDep, widget: WidgetCreate,
 async def verify_widget_update(db: SessionDep, widget: WidgetUpdate,
                                 current_user: UserInDB = Depends(get_current_user)):
     widget = verify_widget_exist(db, widget.id)
+    print(widget.id)
     verify_class_admin(db, widget.page.class_id, current_user)
 
 

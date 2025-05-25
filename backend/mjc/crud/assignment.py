@@ -40,13 +40,16 @@ def get_feedback(db: Session, feedback_id: int) -> SubmittedAssignmentFeedback:
     return feedback
 
 
-def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAssignmentFeedback:
+def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAssignmentFeedback | None:
     stmt = select(SubmittedAssignment) \
             .where(SubmittedAssignment.assignment_widget_id == widget_id) \
             .where(SubmittedAssignment.username == username) \
-            .order_by(desc(SubmittedAssignment.feedback.create_time)).limit(1)
-    feedback = db.exec(stmt).first().feedback
-    return feedback
+            .join(SubmittedAssignment.feedback) \
+            .order_by(desc(SubmittedAssignmentFeedback.create_time)).limit(1)
+    submitted = db.exec(stmt).first()
+    if submitted:
+        return submitted.feedback
+    return None
 
 
 def get_submission_attach(db: Session, file_id: uuid.UUID) -> SubmittedAssignmentAttachment:

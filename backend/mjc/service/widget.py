@@ -117,12 +117,13 @@ def get_student_submissions(db: Session,
                             assignment_widget_entity: WidgetEntity,
                             username: str):
     assigment_widget: AssignmentWidget = entity2assignment(assignment_widget_entity)
+    assignment_widget_id = crud_widget.get_assignment_widget_by_widget_id(db, assigment_widget.id).id
     if assigment_widget:
-        submissions = mjc.crud.assignment.get_user_assignment_submissions(db, assigment_widget.id, username)
+        submissions = mjc.crud.assignment.get_user_assignment_submissions(db, assignment_widget_id, username)
         if submissions:
             assigment_widget.status = 'submitted'
             assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
-        feedback = get_feedback(db, assignment_widget_entity.id, username)
+        feedback = get_feedback(db, assignment_widget_id, username)
         if feedback:
             assigment_widget.status = 'marked'
             assigment_widget.score = feedback.score
