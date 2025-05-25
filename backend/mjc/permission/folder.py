@@ -23,14 +23,14 @@ async def verify_folders_get(db: SessionDep, class_id: int,
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
 
 
-async def verify_folder_create(db: SessionDep, request: FolderCreate,
+async def verify_folder_create(db: SessionDep, folder: FolderCreate,
                                current_user: UserInDB = Depends(get_current_user)):
-    verify_class_admin(db, request.class_id, current_user)
+    verify_class_admin(db, folder.class_id, current_user)
 
 
-async def verify_folder_update(db: SessionDep, request: FolderUpdate,
+async def verify_folder_update(db: SessionDep, folder: FolderUpdate,
                                current_user: UserInDB = Depends(get_current_user)):
-    folder = verify_folder_exist(db, request.id)
+    folder = verify_folder_exist(db, folder.id)
     verify_class_admin(db, folder.class_id, current_user)
 
 

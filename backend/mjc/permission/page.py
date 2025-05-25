@@ -30,16 +30,16 @@ async def verify_page_get(db: SessionDep, page_id: int,
 
 
 async def verify_page_create(db: SessionDep,
-                       request: PageCreate,
+                       page: PageCreate,
                        current_user: UserInDB = Depends(get_current_user)):
-    verify_class_admin(db, request.class_id, current_user)
+    verify_class_admin(db, page.class_id, current_user)
 
 
 async def verify_page_update(db:SessionDep,
-                       request: PageUpdate,
-                       current_user: UserInDB = Depends(get_current_user)):
-    verify_page_exist(db, request.id)
-    verify_class_admin(db, request.class_id, current_user)
+                             page: PageUpdate,
+                             current_user: UserInDB = Depends(get_current_user)):
+    page_entity = verify_page_exist(db, page.id)
+    verify_class_admin(db, page_entity.class_id, current_user)
 
 
 async def verify_page_delete(db: SessionDep, page_id: int,
