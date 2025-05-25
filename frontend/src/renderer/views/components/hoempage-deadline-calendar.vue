@@ -84,18 +84,6 @@
           </el-icon>
           前往完成
         </el-button>
-        <el-button
-            type="danger"
-            @click="dismissReminder"
-            size="large"
-            class="action-button"
-            plain
-        >
-          <el-icon>
-            <BellFilled/>
-          </el-icon>
-          不再提醒
-        </el-button>
       </div>
     </template>
   </el-drawer>
@@ -118,28 +106,30 @@ const router = useRouter()
 const userStore = useUserStore()
 
 onMounted(async () => {
-  const response = await getDeadlines();
-  const data: Deadline[] = response.data as Deadline[];
-  deadlines.value = data;
-  userStore.setDeadlines(data);
-  if (calendar.value) {
-    const calendarApi = calendar.value.getApi();
-    const calcColor = (item: Deadline) =>
-        (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
-    const events = deadlines.value.map(item => ({
-      id: item.widgetId,
-      title: `${item.courseCode}`,
-      start: item.ddl,
-      extendedProps: item,
-      backgroundColor: calcColor(item),
-      borderColor: calcColor(item),
-      textColor: getTextColor(calcColor(item)),
-      className: 'calendar-event'
-    }))
-    calendarApi.removeAllEvents();
-    calendarApi.addEventSource(events);
-    console.log('success')
-    console.log(events)
+  try {
+    const response = await getDeadlines();
+    const data: Deadline[] = response.data as Deadline[];
+    deadlines.value = data;
+    userStore.setDeadlines(data);
+    if (calendar.value) {
+      const calendarApi = calendar.value.getApi();
+      const calcColor = (item: Deadline) =>
+          (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
+      const events = deadlines.value.map(item => ({
+        id: item.widgetId,
+        title: `${item.courseCode}`,
+        start: item.ddl,
+        extendedProps: item,
+        backgroundColor: calcColor(item),
+        borderColor: calcColor(item),
+        textColor: getTextColor(calcColor(item)),
+        className: 'calendar-event'
+      }))
+      calendarApi.removeAllEvents();
+      calendarApi.addEventSource(events);
+    }
+  } catch (err) {
+    console.error('获取ddl失败', err)
   }
 })
 
@@ -213,17 +203,6 @@ const goToTask = () => {
         + '?widget=' + selectedDeadline.value.widgetId)
   }
 }
-
-const dismissReminder = () => {
-  drawerVisible.value = false;
-  if (calendar.value && selectedDeadline.value) {
-    const calendarApi = calendar.value.getApi();
-    const eventToRemove = calendarApi.getEventById(selectedDeadline.value.widgetId);
-    eventToRemove?.remove();
-  }
-
-  // TODO: 后端
-};
 
 const onDrawerOpen = () => {
   // Nothing
