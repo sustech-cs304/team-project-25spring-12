@@ -1,40 +1,29 @@
 <template>
-  <mark-assignment-list :course-id="courseId" :widgets="widgets" />
+  <mark-assignment-list :course-id="courseId" :widgets="widgetsSorted" />
 </template>
 
 <script setup lang="ts" name="mark-class">
 import MarkAssignmentList from "@/views/widgets/mark-assignment-list.vue";
 import {AssignmentWidget} from "@/types/widgets";
-import {Folder} from "@/types/folder";
-import {Page} from "@/types/page";
-import {getFolders} from "@/api/course";
-import {onMounted, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
-import {getPage} from "@/api/courseMaterial";
+import {getAllAssignments, getWidget} from "@/api/feedback";
 
 const route = useRoute();
 
 const courseId = ref(0);
 const widgets = ref<AssignmentWidget[]>([]);
+const widgetsSorted = computed(() => [...widgets.value].sort((a, b) => a.id - b.id));
 
 onMounted(async () => {
   courseId.value = Number(route.params.courseId);
-  const response = await getFolders(courseId.value);
-  const folders = response.data as Folder[];
-  folders.forEach((folder) => {
-    folder.pages.forEach(async (pageItem) => {
-      const response = await getPage(pageItem.id);
-      const page = response.data as Page;
-      page.widgets.forEach((widget) => {
-        if (widget.type === "assignment") {
-          const assignmentWidget = widget as AssignmentWidget;
-          if (assignmentWidget.submitType === "file") {
-            widgets.value.push(assignmentWidget);
-          }
-        }
-      });
-    });
-  });
+  const response = await getAllAssignments(courseId.value);
+  const widgetIds = response.data as number[];
+  for (const widgetId of widgetIds) {
+    const widgetResponse = await getWidget(widgetId);
+    const widget = widgetResponse.data as AssignmentWidget;
+    widgets.value.push(widget);
+  }
 });
 </script>
 

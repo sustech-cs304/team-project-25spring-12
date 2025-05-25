@@ -63,7 +63,7 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/mark-class.vue'),
             },
             {
-                path: 'mark/:courseId/:pageId/:widgetId',
+                path: 'mark/:courseId/widget/:widgetId',
                 name: 'mark',
                 meta: {title: '批改记录'},
                 component: () => import('../views/pages/mark.vue'),

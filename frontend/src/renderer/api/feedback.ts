@@ -33,3 +33,11 @@ export function createFeedbackAttachment(feedbackId: number, fileId: string) {
 export function deleteFeedbackAttachment(fileId: string) {
     return request.delete("/class/widget/assignment/feedback/attach/" + fileId);
 }
+
+export function getAllAssignments(courseId: number) {
+    return request.get("/class/" + courseId + "/assignments");
+}
+
+export function getWidget(widgetId: number) {
+    return request.get("/class/widget/" + widgetId);
+}

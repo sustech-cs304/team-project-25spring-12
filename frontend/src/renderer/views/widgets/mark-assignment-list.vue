@@ -30,7 +30,7 @@ const props = defineProps<{
 const router = useRouter();
 
 const handleWidgetClick = (widget: AssignmentWidget) => {
-  router.push('/mark/' + props.courseId + '/widget/' + widget.id);
+  router.push('/mark/' + props.courseId + "/widget/" + widget.id);
 }
 </script>
 

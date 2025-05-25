@@ -65,7 +65,7 @@ import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 import {useRoute} from "vue-router";
 import {useUserStore} from "@/store/user";
-import {getAllSubmissions} from "@/api/feedback";
+import {getAllSubmissions, getWidget} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
 import {Page} from "@/types/page";
@@ -196,11 +196,9 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 };
 
 onMounted(async () => {
-  const pageId = Number(route.params.pageId);
   const widgetId = Number(route.params.widgetId);
-  const pageResponse = await getPage(pageId);
-  const page = pageResponse.data as Page;
-  const widget = page.widgets.find((w) => w.id === widgetId) as AssignmentWidget;
+  const response = await getWidget(widgetId);
+  const widget = response.data as AssignmentWidget;
   maxScore.value = widget.maxScore;
   const submissionsResponse = await getAllSubmissions(widgetId);
   submissions.value = submissionsResponse.data as SubmissionForMark[];
