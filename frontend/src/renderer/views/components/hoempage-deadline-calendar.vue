@@ -94,54 +94,53 @@ import {onBeforeUnmount, onMounted, ref} from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import {AlarmClock, BellFilled, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
+import {AlarmClock, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
 import {getCourseColor, getTextColor} from "@/utils/courseColorGenerator";
 import type {Deadline} from '@/types/deadline'
-import {getDeadlines} from "@/api/deadline";
 import {useUserStore} from "@/store/user";
 import {useRouter} from "vue-router";
+import {ensureDeadlinesLoaded} from "@/composables/useUserData";
 
 const deadlines = ref<Deadline[]>([])
 const router = useRouter()
 const userStore = useUserStore()
 
 onMounted(async () => {
-  try {
-    const response = await getDeadlines();
-    const data: Deadline[] = response.data as Deadline[];
-    deadlines.value = data;
-    userStore.setDeadlines(data);
-    if (calendar.value) {
-      const calendarApi = calendar.value.getApi();
-      const calcColor = (item: Deadline) =>
-          (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
-      const events = deadlines.value.map(item => ({
-        id: item.widgetId,
-        title: `${item.courseCode}`,
-        start: item.ddl,
-        extendedProps: item,
-        backgroundColor: calcColor(item),
-        borderColor: calcColor(item),
-        textColor: getTextColor(calcColor(item)),
-        className: 'calendar-event'
-      }))
-      calendarApi.removeAllEvents();
-      calendarApi.addEventSource(events);
-    }
-  } catch (err) {
-    console.error('获取ddl失败', err)
-  }
+  await ensureDeadlinesLoaded();
+  deadlines.value = userStore.deadlines;
+  calendarRefresh();
 })
+
+/*
+* AI generated
+* 我要求ChatGPT生成了一份FullCalendar库的基本配置和操作方法
+* */
 
 const drawerVisible = ref(false)
 const selectedDeadline = ref<Deadline>(null)
 const calendar = ref()
 const calendarWrapper = ref()
 
-/*
-* AI generated
-* 我要求ChatGPT生成了一份FullCalendar的基本配置
-* */
+function calendarRefresh() {
+  if (calendar.value) {
+    const calendarApi = calendar.value.getApi();
+    const calcColor = (item: Deadline) =>
+        (new Date(item.ddl) < new Date() ? '#bdbdbd' : getCourseColor(item.courseCode))
+    const events = deadlines.value.map(item => ({
+      id: item.widgetId,
+      title: `${item.courseCode}`,
+      start: item.ddl,
+      extendedProps: item,
+      backgroundColor: calcColor(item),
+      borderColor: calcColor(item),
+      textColor: getTextColor(calcColor(item)),
+      className: 'calendar-event'
+    }))
+    calendarApi.removeAllEvents();
+    calendarApi.addEventSource(events);
+  }
+}
+
 const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',

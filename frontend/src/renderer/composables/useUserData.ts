@@ -5,24 +5,21 @@ import {useUserStore} from '../store/user';
 export async function ensureCoursesLoaded() {
     const store = useUserStore();
     if (!store.courses) {
-        const {data} = await getCourses();
-        store.setCourses(data);
+        const response = await getCourses();
+        store.setCourses(response.data);
     }
 }
 
 export async function ensureDeadlinesLoaded() {
     const store = useUserStore();
     if (!store.deadlines) {
-        const {data} = await getDeadlines();
-        store.setDeadlines(data);
+        const response = await getDeadlines();
+        store.setDeadlines(response.data);
     }
 }
 
 export async function getRoleByCourseId(courseId: number): Promise<string | null> {
+    await ensureCoursesLoaded();
     const store = useUserStore();
-    if (!store.courses) {
-        const {data} = await getCourses();
-        store.setCourses(data);
-    }
-    return store.courses?.find(c => c.id === courseId)?.role ?? null;
+    return store.courses?.find(c => c.id === courseId)?.role ?? 'Not Enrolled';
 }
