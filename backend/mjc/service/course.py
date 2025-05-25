@@ -121,11 +121,13 @@ def get_user_class_role(db: Session, username: str, cls_id: int) -> ClassRole | 
 
 
 def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> Class | None:
-    return crud_course.enroll_class_users(db, enroll)
+    crud_course.enroll_class_users(db, enroll)
+    return crud_course.get_class(db, enroll.class_id)
 
 
 def update_class_user(db: Session, class_user: ClassUserUpdate) -> Class:
-    return crud_course.update_class_user(db, class_user)
+    crud_course.update_class_user(db, class_user)
+    return crud_course.get_class(db, class_user.class_id)
 
 
 def unroll_class_user(db: Session, class_id: int, username: str) -> Class:
