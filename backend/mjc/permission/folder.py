@@ -25,16 +25,16 @@ async def verify_folders_get(db: SessionDep, class_id: int,
 
 async def verify_folder_create(db: SessionDep, request: FolderCreate,
                                current_user: UserInDB = Depends(get_current_user)):
-    verify_class_admin(db, request.class_id, current_user.username)
+    verify_class_admin(db, request.class_id, current_user)
 
 
 async def verify_folder_update(db: SessionDep, request: FolderUpdate,
                                current_user: UserInDB = Depends(get_current_user)):
     folder = verify_folder_exist(db, request.id)
-    verify_class_admin(db, folder.class_id, current_user.username)
+    verify_class_admin(db, folder.class_id, current_user)
 
 
 async def verify_folder_delete(db: SessionDep, folder_id: int,
                                current_user: UserInDB = Depends(get_current_user)):
     folder = verify_folder_exist(db, folder_id)
-    verify_class_admin(db, folder.class_id, current_user.username)
+    verify_class_admin(db, folder.class_id, current_user)

@@ -23,19 +23,19 @@ async def verify_widget_create(db: SessionDep, widget: WidgetCreate,
     page = crud_page.get_page(db, widget.page_id)
     if page is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Page not found")
-    verify_class_admin(db, page.class_id, current_user.username)
+    verify_class_admin(db, page.class_id, current_user)
 
 
 async def verify_widget_update(db: SessionDep, widget: WidgetUpdate,
                                 current_user: UserInDB = Depends(get_current_user)):
     widget = verify_widget_exist(db, widget.id)
-    verify_class_admin(db, widget.page.class_id, current_user.username)
+    verify_class_admin(db, widget.page.class_id, current_user)
 
 
 async def verify_widget_delete(db: SessionDep, widget_id: int,
                                current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, widget_id)
-    verify_class_admin(db, widget.page.class_id, current_user.username)
+    verify_class_admin(db, widget.page.class_id, current_user)
 
 
 async def verify_add_attach(db: SessionDep, attach: WidgetAttachmentCreate,

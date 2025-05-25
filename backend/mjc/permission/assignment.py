@@ -24,7 +24,7 @@ async def verify_all_submissions_get(db: SessionDep, widget_id: int,
     widget = crud_widget.get_widget(db, widget_id)
     if widget is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
-    verify_class_admin(db, widget.page.class_id, current_user.username)
+    verify_class_admin(db, widget.page.class_id, current_user)
 
 
 async def verify_submission_create(db: SessionDep, submission: SubmittedAssignmentCreate,
@@ -55,13 +55,13 @@ async def verify_attach_delete(db: SessionDep, file_id: uuid.UUID,
 async def verify_feedback_create(db: SessionDep, feedback: FeedbackCreate,
                                  current_user: UserInDB = Depends(get_current_user)):
     submission = verify_submission_exists(db, feedback.submission_id)
-    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user.username)
+    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user)
 
 
 async def verify_feedback_update(db: SessionDep, feedback: FeedbackUpdate,
                                  current_user: UserInDB = Depends(get_current_user)):
     submission = verify_submission_exists(db, feedback.submission_id)
-    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user.username)
+    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user)
 
 
 async def verify_feedback_attach_add(db: SessionDep, attach: FeedbackAttachment,
@@ -70,7 +70,7 @@ async def verify_feedback_attach_add(db: SessionDep, attach: FeedbackAttachment,
     if feedback is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback not found")
     submission = verify_submission_exists(db, feedback.submission_id)
-    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user.username)
+    verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user)
 
 
 async def verify_feedback_attach_delete(db: SessionDep, file_id: uuid.UUID,

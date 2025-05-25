@@ -1,6 +1,5 @@
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, Depends, status
 from sqlmodel import Session
-from starlette import status
 
 from mjc.model.entity.course import ClassRole
 from mjc.model.schema.user import UserInDB
@@ -13,9 +12,11 @@ async def verify_admin(current_user: UserInDB = Depends(get_current_user)):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not system admin")
 
 
-def verify_class_admin(db: Session, class_id: int, username: str):
-    role = verify_user_in_class(db, class_id, username)
-    if role is ClassRole.STUDENT:
+def verify_class_admin(db: Session, class_id: int, current_user: UserInDB):
+    if  current_user.is_admin:
+        return
+    role = verify_user_in_class(db, class_id, current_user.username)
+    if role is None or ClassRole.STUDENT:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have not permission")
 
 
