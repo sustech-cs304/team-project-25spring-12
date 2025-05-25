@@ -73,7 +73,7 @@ async def verify_feedback_attach_add(db: SessionDep, attach: FeedbackAttachment,
     verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user.username)
 
 
-async def verify_feedback_attach_delete(db: Session, file_id: uuid.UUID,
+async def verify_feedback_attach_delete(db: SessionDep, file_id: uuid.UUID,
                                         current_user: UserInDB = Depends(get_current_user)):
     attach = crud_assignment.get_feedback_attach(db, file_id)
     if attach is None:

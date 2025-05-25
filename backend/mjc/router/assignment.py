@@ -73,6 +73,6 @@ def add_feedback_attachment(db: SessionDep,
 
 @router.delete(path="/class/widget/assignment/feedback/attach/{file_id}",
                response_model=Message,
-               dependencies=Depends(assignment_permission.verify_feedback_attach_delete))
+               dependencies=[Depends(assignment_permission.verify_feedback_attach_delete)])
 def delete_feedback_attachment(db: SessionDep, file_id: uuid.UUID) -> Message:
     return assignment_service.delete_feedback_attachment(db, file_id)

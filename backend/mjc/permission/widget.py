@@ -50,7 +50,7 @@ async def verify_delete_attach(db: SessionDep, file_id: uuid.UUID):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="File not found")
 
 
-async def verify_add_note(db: Session, note: NoteCreate,
+async def verify_add_note(db: SessionDep, note: NoteCreate,
                           current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, note.widget_id)
     verify_user_in_class(db, widget.page.class_id, current_user.username)
