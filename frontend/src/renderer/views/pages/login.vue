@@ -5,9 +5,9 @@
         <img class="logo" src="../../assets/img/logo.svg" alt="Logo"/>
         <h1 class="login-title">后台管理系统</h1>
       </div>
-      <el-form :model="param" :rules="rules" ref="login" size="large">
+      <el-form :model="loginFormData" :rules="rules" ref="loginForm" size="large">
         <el-form-item prop="username">
-          <el-input v-model="param.username" placeholder="用户名" clearable>
+          <el-input v-model="loginFormData.username" placeholder="用户名" clearable>
             <template #prepend>
               <el-icon>
                 <User/>
@@ -18,11 +18,11 @@
         <el-form-item prop="password">
           <el-input
               type="password"
-              v-model="param.password"
+              v-model="loginFormData.password"
               placeholder="密码"
               show-password
               clearable
-              @keyup.enter="submitForm(login)"
+              @keyup.enter="submitForm()"
           >
             <template #prepend>
               <el-icon>
@@ -31,10 +31,7 @@
             </template>
           </el-input>
         </el-form-item>
-        <div class="login-options">
-          <el-checkbox v-model="checked">记住密码</el-checkbox>
-        </div>
-        <el-button class="login-btn" type="primary" size="large" @click="submitForm(login)">登录</el-button>
+        <el-button class="login-btn" type="primary" size="large" @click="submitForm()">登录</el-button>
       </el-form>
     </div>
   </div>
@@ -46,44 +43,41 @@ import {useRouter} from 'vue-router';
 import type {FormInstance, FormRules} from 'element-plus';
 import {ElMessage} from 'element-plus';
 import {useTabsStore} from '@/store/tabs';
-import {loginApi} from '@/api/auth';
 import {useUserStore} from '@/store/user';
-
-interface LoginInfo {
-  username: string;
-  password: string;
-}
+import {useLogin} from "@/composables/useLogin";
+import {LoginRequest} from "@/types/auth";
 
 const router = useRouter();
 const userStore = useUserStore();
-
-const checked = ref(localStorage.getItem('login-param') !== null);
-const defParam = checked.value ? JSON.parse(localStorage.getItem('login-param')!) : null;
-
-const param = reactive<LoginInfo>({
-  username: defParam?.username || '',
-  password: defParam?.password || '',
-});
 
 const rules: FormRules = {
   username: [{required: true, message: '请输入用户名', trigger: 'blur'}],
   password: [{required: true, message: '请输入密码', trigger: 'blur'}],
 };
 
-const login = ref<FormInstance>();
-const submitForm = (formEl: FormInstance | undefined) => {
-  if (!formEl) return;
-  formEl.validate(async (valid) => {
+const {login} = useLogin();
+const loginForm = ref<FormInstance>();
+const loginFormData = reactive<LoginRequest>({
+  username: '',
+  password: '',
+});
+
+const submitForm = () => {
+  if (!loginForm.value) return;
+
+  loginForm.value.validate(async (valid) => {
     if (valid) {
       try {
-        const {data} = await loginApi(param);
-        userStore.setToken(data.accessToken);
-        userStore.setUsername(param.username);
-        console.log('login test', userStore.accessToken, userStore.username, data)
+        const result = await login(loginFormData);
+        userStore.setToken(result.accessToken);
+        userStore.setUsername(loginFormData.username);
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {
-        ElMessage.error('登录失败，请检查用户名或密码');
+        const status = error?.response?.status;
+        if (status === 401) {
+          ElMessage.error('登录失败，请检查用户名或密码');
+        }
       }
     }
   });
@@ -127,14 +121,6 @@ useTabsStore().clearTabs();
   font-size: 20px;
   font-weight: 600;
   color: #1e40af;
-}
-
-.login-options {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin: 10px 0 20px;
-  font-size: 14px;
 }
 
 .login-btn {
