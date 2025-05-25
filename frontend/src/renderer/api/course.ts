@@ -5,6 +5,10 @@ export function getCourses() {
     return request.get('/class')
 }
 
+export function getCourse(id: number) {
+    return request.get("/class/" + id);
+}
+
 export function getFolders(classId: number) {
     return request.get('/class/' + classId + '/folder')
 }

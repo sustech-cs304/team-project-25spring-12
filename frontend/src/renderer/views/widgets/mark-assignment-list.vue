@@ -1,5 +1,5 @@
 <template>
-  <widget-card title="作业选择" style="height: 100%">
+  <widget-card :title="computedTitle" style="height: 100%">
     <el-scrollbar>
       <div class="widget-list">
         <div
@@ -21,11 +21,15 @@ import WidgetCard from "@/views/widgets/utils/widget-card.vue";
 import {Document} from "@element-plus/icons-vue";
 import {useRouter} from "vue-router"
 import {AssignmentWidget} from "@/types/widgets";
+import {computed} from "vue";
 
 const props = defineProps<{
   courseId: number;
+  courseName: string;
   widgets: AssignmentWidget[];
 }>();
+
+const computedTitle = computed(() => props.courseName + " - 作业列表");
 
 const router = useRouter();
 

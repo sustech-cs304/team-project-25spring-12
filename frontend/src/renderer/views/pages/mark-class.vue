@@ -1,5 +1,9 @@
 <template>
-  <mark-assignment-list :course-id="courseId" :widgets="widgetsSorted" />
+  <mark-assignment-list
+      :course-id="courseId"
+      :course-name="courseName"
+      :widgets="widgetsSorted"
+  />
 </template>
 
 <script setup lang="ts" name="mark-class">
@@ -8,17 +12,23 @@ import {AssignmentWidget} from "@/types/widgets";
 import {computed, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {getAllAssignments, getWidget} from "@/api/feedback";
+import {getCourse} from "@/api/course";
+import {Course} from "@/types/course";
 
 const route = useRoute();
 
 const courseId = ref(0);
+const courseName = ref("");
 const widgets = ref<AssignmentWidget[]>([]);
 const widgetsSorted = computed(() => [...widgets.value].sort((a, b) => a.id - b.id));
 
 onMounted(async () => {
   courseId.value = Number(route.params.courseId);
-  const response = await getAllAssignments(courseId.value);
-  const widgetIds = response.data as number[];
+  const courseResponse = await getCourse(courseId.value);
+  const course = courseResponse.data as Course;
+  courseName.value = course.name;
+  const assignmentsResponse = await getAllAssignments(courseId.value);
+  const widgetIds = assignmentsResponse.data as number[];
   for (const widgetId of widgetIds) {
     const widgetResponse = await getWidget(widgetId);
     const widget = widgetResponse.data as AssignmentWidget;
