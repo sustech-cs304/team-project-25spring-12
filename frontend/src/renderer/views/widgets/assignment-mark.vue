@@ -7,7 +7,7 @@
           :submission-id="props.submission.id"
           :md-content="submission.content || ''"
           :file-list="submission.feedback?.attachments || submission.attachments"
-          :download-file="props.downloadFile"
+          :get-file="handleGetFile"
           @update-file="handleUpdateFile"
       />
 
@@ -66,11 +66,12 @@ const props = defineProps<{
   maxScore: number;
   submission: SubmissionForMark;
   feedback: FeedbackForm;
-  downloadFile: (submissionId: number, fileId: string) => Promise<Blob>;
+  blobList: Record<string, Blob>;
+  patch: Record<string, Uint8Array>;
 }>();
 
 const emit = defineEmits<{
-  (e: "updateFile", submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>): void;
+  (e: "updateFile", fileId: string, dataPromise: Promise<Uint8Array>): void;
   (e: "save", submissionId: number, score: number, content: string): void;
   (e: "submit", submissionId: number, score: number, content: string): void;
 }>();
@@ -87,13 +88,23 @@ const errorMessage = computed(() => {
   return null;
 });
 
-const handleUpdateFile = (submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>) => {
-  emit("updateFile", submissionId, fileId, dataPromise);
+const handleGetFile = (fileId: string) => {
+  if (fileId in props.patch)
+      return new Blob([props.patch[fileId]]);
+  return props.blobList[fileId];
+};
+
+const handleUpdateFile = (fileId: string, dataPromise: Promise<Uint8Array>) => {
+  emit("updateFile", fileId, dataPromise);
 };
 
 const handleSubmit = () => {
   submissionContainer.value.save();
   emit("submit", props.submission.id, score.value, content.value);
+};
+
+const isDirty = () => {
+  return score.value !== props.feedback.score || content.value !== (props.feedback.content || "");
 };
 
 watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedback], [oldSubmission, oldFeedback]) => {

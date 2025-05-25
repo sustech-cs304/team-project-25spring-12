@@ -48,7 +48,8 @@
             :submission="activeSubmission"
             :feedback="activeFeedback"
             :max-score="maxScore"
-            :download-file="handleDownloadFile"
+            :blob-list="blobs"
+            :patch="patch"
             @update-file="handleUpdateFile"
             @save="handleSave"
             @submit="handleSubmit"
@@ -77,7 +78,8 @@ const submissionsSorted = computed(() => [...submissions.value].sort((a, b) => {
   return a.id > b.id ? -1 : 1;
 }));
 const feedbacks = ref<Record<number, FeedbackForm>>({});
-const patches = ref<Record<number, Record<string, Uint8Array>>>({});
+const blobs = ref<Record<string, Blob>>({});
+const patch = ref<Record<string, Uint8Array>>({});
 
 // TODO: set max score
 const maxScore = ref(100);
@@ -139,34 +141,34 @@ const initActiveSubmission = () => {
   } else {
     activeSubmissionId.value = submissionsSorted.value[0].id;
   }
+  updateBlobList(activeSubmissionId.value);
 };
 
 const handleMenuSelect = (submissionId: string) => {
   activeSubmissionId.value = Number(submissionId);
+  updateBlobList(Number(submissionId));
 };
 
-const handleDownloadFile = async (submissionId: number, fileId: string) => {
-  if (patches.value[submissionId] && patches.value[submissionId][fileId]) {
-    return new Blob([patches.value[submissionId][fileId]]);
+const updateBlobList = (submissionId: number) => {
+  blobs.value = {};
+  const submission = submissionsSorted.value.find(s => s.id === submissionId);
+  if (submission === undefined) {
+    console.error(`Submission ${submissionId} is not found`);
+    return;
   }
-  // const response = await downloadFile(fileId);
-  // return response.data as Blob;
-  const submission = submissions.value.find((s) => s.id === submissionId);
-  if (!submission?.attachments) {
-    console.log("@");
-    return new Blob();
+  const files = submission.feedback?.attachments || submission.attachments;
+  if (files) {
+    files.forEach(async (file) => {
+      const response = await downloadFile(file.id);
+      if (submissionId === activeSubmissionId.value) {
+        blobs.value[file.id] = response.data as Blob;
+      }
+    });
   }
-  const file = (submission.feedback?.attachments || submission.attachments).find((f) => f.id === fileId);
-  if (!file) {
-    console.log("#");
-    return new Blob();
-  }
-  const response = await fetch(file.url);
-  return await response.blob();
 };
 
-const handleUpdateFile = async (submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>) => {
-  patches.value[submissionId][fileId] = await dataPromise;
+const handleUpdateFile = async (fileId: string, dataPromise: Promise<Uint8Array>) => {
+  patch.value[fileId] = await dataPromise;
 };
 
 const handleSave = (submissionId: number, score?: number, content?: string) => {
@@ -184,11 +186,10 @@ const handleSubmit = async (submissionId: number, score: number, content: string
   const feedback = feedbacks.value[submissionId];
   feedback.score = score;
   feedback.content = content;
-  const patch = patches.value[submissionId];
   if (!submission.feedback) {
-    submission.feedback = await createFeedback(submission, feedback, patch);
+    submission.feedback = await createFeedback(submission, feedback, patch.value);
   } else {
-    submission.feedback = await updateFeedback(submission, feedback, patch);
+    submission.feedback = await updateFeedback(submission, feedback, patch.value);
   }
 };
 
@@ -205,7 +206,6 @@ onMounted(async () => {
     } else {
       feedbacks.value[submission.id] = {};
     }
-    patches.value[submission.id] = {};
   });
   initActiveSubmission();
 });

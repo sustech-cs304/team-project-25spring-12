@@ -6,8 +6,8 @@
     </div>
     <div class="container" v-else>
       <pdf-viewer ref="pdfViewer" :data="content" is-marking v-if="selectedFileType === FileType.PDF"/>
-      <pre style="white-space: pre-wrap" v-else-if="selectedFileType === FileType.PLAIN">{{ content || '加载失败' }}</pre>
-      <md-preview v-bind="getEditorProps(content || '加载失败')" v-else-if="selectedFileType === FileType.MARKDOWN"/>
+      <pre style="white-space: pre-wrap" v-else-if="selectedFileType === FileType.PLAIN">{{ textContent }}</pre>
+      <md-preview v-bind="getEditorProps(textContent)" v-else-if="selectedFileType === FileType.MARKDOWN"/>
       <ImageZoom :src="content" :alt="selectedFile.filename" v-else-if="selectedFileType === FileType.IMAGE"/>
       <audio controls style="width: 100%" v-else-if="selectedFileType === FileType.AUDIO">
         <source :src="content"/>
@@ -24,7 +24,7 @@
     <view-file-list
         :file-list="props.fileList"
         :selected-file-id="selectedFileId"
-        @update:selected-file-id="handleUpdateSelectFileId"
+        @update:selected-file-id="updateSelectFileId"
         v-if="props.fileList"
     />
   </div>
@@ -40,14 +40,13 @@ import ImageZoom from "@/views/widgets/utils/image-zoom.vue";
 import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps<{
-  submissionId: number;
   mdContent: string;
   fileList?: FileMeta[];
-  downloadFile: (submissionId: number, fileId: string) => Promise<Blob>;
+  getFile: (fileId: string) => Blob;
 }>();
 
 const emit = defineEmits<{
-  (e: "update-file", submissionId: number, fileId: string, dataPromise: Promise<Uint8Array>): void;
+  (e: "update-file", fileId: string, dataPromise: Promise<Uint8Array>): void;
 }>();
 
 enum FileType {
@@ -73,18 +72,19 @@ const selectedFileId = ref<string | null>(null);
 const selectedFile = computed(() => props.fileList?.find((f) => f.id === selectedFileId.value));
 const selectedFileType = computed(() => selectedFile.value ? fileType(selectedFile.value.filename) : FileType.UNKNOWN);
 const content = ref();
+const textContent = computed(() => typeof(content.value) === "string" ? content.value : "加载失败");
 const pdfViewer = ref();
 
 const isDirty = () => {
   return (FileType.PDF === selectedFileType.value && pdfViewer.value.isDirty()) || [FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value);
 };
 
-const handleSave = (submissionId: number) => {
+const handleSave = () => {
   if (selectedFileId.value) {
     if (FileType.PDF === selectedFileType.value) {
       const dataPromise = pdfViewer.value.getDocument();
       if (dataPromise) {
-        emit("update-file", submissionId, selectedFileId.value, dataPromise);
+        emit("update-file", selectedFileId.value, dataPromise);
       }
     } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
       if (content.value) {
@@ -94,26 +94,23 @@ const handleSave = (submissionId: number) => {
   }
 };
 
-const updateSelectFileId = async (submissionId: number, fileId: string | null) => {
+const updateSelectFileId = async (fileId: string | null) => {
   if (isDirty()) {
-    handleSave(submissionId);
+    handleSave();
   }
   content.value = null;
   selectedFileId.value = fileId;
-  if (fileId) {
-    const blob = await props.downloadFile(submissionId, fileId);
+  if (fileId !== null) {
+    const blob = props.getFile(fileId);
     if (FileType.PDF === selectedFileType.value) {
       content.value = blob;
     } else if ([FileType.PLAIN, FileType.MARKDOWN].includes(selectedFileType.value)) {
+      content.value = "";
       content.value = await blob.text();
     } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
       content.value = URL.createObjectURL(blob);
     }
   }
-};
-
-const handleUpdateSelectFileId = (id: string | null) => {
-  updateSelectFileId(props.submissionId, id);
 };
 
 const fileType = (filename: string) => {
@@ -127,13 +124,13 @@ const fileType = (filename: string) => {
   return FileType.UNKNOWN;
 };
 
-watch(() => props.submissionId, (newSubmissionId, oldSubmissionId) => {
-  updateSelectFileId(oldSubmissionId, null);
+watch(() => props.fileList, () => {
+  updateSelectFileId(null);
 });
 
 defineExpose({
   isDirty,
-  save: () => handleSave(props.submissionId),
+  save: () => handleSave(),
 });
 </script>
 

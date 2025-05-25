@@ -1,6 +1,7 @@
 import {Feedback, FeedbackForm, SubmissionForMark} from "../types/feedback";
 import {createFeedbackAttachment, deleteFeedbackAttachment, patchFeedback, postFeedback} from "../api/feedback";
 import {uploadFile} from "../api/file";
+import {FileMeta} from "../types/fileMeta";
 
 export function useFeedback() {
     const createFeedback = async (submission: SubmissionForMark, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
@@ -20,9 +21,10 @@ export function useFeedback() {
                     formData.append("file", file);
                     formData.append("visibility", "public");
                     const response = await uploadFile(formData);
-                    const newAttachment = response.data;
+                    const newAttachment = response.data as FileMeta;
                     await createFeedbackAttachment(feedback.id, newAttachment.id);
                     attachments.push(newAttachment);
+                    delete patch[attachment.id];
                 } else {
                     await createFeedbackAttachment(feedback.id, attachment.id);
                     attachments.push(attachment);
@@ -51,22 +53,24 @@ export function useFeedback() {
         const response = await patchFeedback(payload);
         const feedback = response.data as Feedback;
         if (feedback.attachments !== undefined) {
-            for (const [attachmentId, blob] of Object.entries(patch)) {
-                const selectedAttachment = feedback.attachments.find(attachment => attachment.id === attachmentId);
-                if (!selectedAttachment) {
-                    console.error(`attachmentId ${attachmentId} not found`);
-                    continue;
+            const attachments = [];
+            for (const attachment of feedback.attachments) {
+                if (attachment.id in patch) {
+                    const file = new File([patch[attachment.id]], attachment.filename);
+                    const formData = new FormData();
+                    formData.append("file", file);
+                    formData.append("visibility", "public");
+                    const response = await uploadFile(formData);
+                    const newAttachment = response.data as FileMeta;
+                    await deleteFeedbackAttachment(attachment.id);
+                    await createFeedbackAttachment(feedback.id, newAttachment.id);
+                    attachments.push(newAttachment);
+                    delete patch[attachment.id];
+                } else {
+                    attachments.push(attachment);
                 }
-                const file = new File([blob], selectedAttachment.filename);
-                const formData = new FormData();
-                formData.append("file", file);
-                formData.append("visibility", "public");
-                const response = await uploadFile(formData);
-                const newAttachment = response.data;
-                await deleteFeedbackAttachment(attachmentId);
-                await createFeedbackAttachment(feedback.id, newAttachment.id);
-                feedback.attachments = feedback.attachments.map(attachment => attachment.id === attachmentId ? attachment: newAttachment);
             }
+            feedback.attachments = attachments;
         }
         return feedback;
     };

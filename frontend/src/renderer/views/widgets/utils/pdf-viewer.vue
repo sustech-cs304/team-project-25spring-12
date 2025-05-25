@@ -111,6 +111,7 @@ const setupViewer = () => {
   });
   eventBus.on("pagesinit", function () {
     pdfViewer.currentScaleValue = "page-width";
+    changeEditorMode(pdfjsLib.AnnotationEditorType.NONE);
   });
   resizeObserver.observe(container);
 }
@@ -120,7 +121,6 @@ const loadPDF = async () => {
   const loadingTask = pdfjsLib.getDocument(arrayBuffer);
   const pdfDocument = await loadingTask.promise;
   pdfViewer.setDocument(pdfDocument);
-  changeEditorMode(pdfjsLib.AnnotationEditorType.NONE);
 };
 
 const editorTypes = [
