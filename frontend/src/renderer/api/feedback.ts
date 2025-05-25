@@ -1,6 +1,6 @@
 import request from "../utils/request";
 
-export function getAllSubmissions(widgetId: string) {
+export function getAllSubmissions(widgetId: number) {
     return request.get("/class/widget/" + widgetId + "/submission");
 }
 

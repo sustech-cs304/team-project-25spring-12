@@ -68,6 +68,9 @@ import {useUserStore} from "@/store/user";
 import {getAllSubmissions} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
+import {Page} from "@/types/page";
+import {getPage} from "@/api/courseMaterial";
+import {AssignmentWidget} from "@/types/widgets";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -81,7 +84,6 @@ const feedbacks = ref<Record<number, FeedbackForm>>({});
 const blobs = ref<Record<string, Blob>>({});
 const patch = ref<Record<string, Uint8Array>>({});
 
-// TODO: set max score
 const maxScore = ref(100);
 
 const activeSubmissionId = ref<number | null>(null);
@@ -194,9 +196,14 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 };
 
 onMounted(async () => {
-  const widgetId = route.params.widgetId as string;
-  const response = await getAllSubmissions(widgetId);
-  submissions.value = response.data as SubmissionForMark[];
+  const pageId = Number(route.params.pageId);
+  const widgetId = Number(route.params.widgetId);
+  const pageResponse = await getPage(pageId);
+  const page = pageResponse.data as Page;
+  const widget = page.widgets.find((w) => w.id === widgetId) as AssignmentWidget;
+  maxScore.value = widget.maxScore;
+  const submissionsResponse = await getAllSubmissions(widgetId);
+  submissions.value = submissionsResponse.data as SubmissionForMark[];
   submissions.value.forEach(submission => {
     if (submission.feedback) {
       feedbacks.value[submission.id] = {
