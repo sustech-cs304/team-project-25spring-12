@@ -114,7 +114,7 @@
               <el-text type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-text>
               </el-progress>
             </el-table-column>
-            <el-table-column label="投票">
+            <el-table-column label="投票" width="200">
               <div style="display: flex; align-items: center">
                 <!-- <el-button-group> -->
                   <el-button onclick="vote(true)" type="success">支持</el-button>
@@ -258,7 +258,8 @@
     padding: 0;
     background-color: transparent;
     border: none;
-    gap: 15px;
+    gap: 20px;
+    padding: 40px;
   }
   
   .toolbar {

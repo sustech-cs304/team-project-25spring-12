@@ -41,7 +41,7 @@
         >
           <template v-slot:default="slotProp">
             <div class="list-item">
-              <a :href="'#/argue/0' + slotProp.item._id">
+              <a :href="'#/argue/' + slotProp.item.argueId">
                 <!-- <a :href="'https://gkshi.com/blog/' + slotProp.item._id"> -->
                 <div class="cover-wrapper">
                   <!-- 此处注意：data-key 是该图片的字段名称，目前只支持在一级的字段，不支持嵌套 -->
@@ -73,22 +73,50 @@
 </template>
 
 <script setup>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
+import axios from 'axios';
+import service from '../../utils/request';
+
+// const list = ref([]);
 const list = ref([
   {
     title: '标题',
     outline: '摘要',
     tags: ['课程', '任课老师', '发起者'],
-    time: "25-01-14",
+    time: '25-01-14',
   },
   {
     title: '标题',
     outline: '摘要',
     tags: ['课程', '任课老师', '发起者'],
-    time: "25-05-14",
+    time: '25-05-14',
   },
 ])
 
+// 格式化后端数据到前端所需格式
+const formatList = (rawList) => {
+  return rawList.map(item => ({
+    argueId: item.id,
+    title: item.title,
+    outline: item.content.length > 100 ? item.content.slice(0, 100) + '...' : item.content, // 截取前100字符作为摘要
+    tags: [item.status, item.editor.username, item.support + ' vs ' + item.notSupport],
+    time: item.updateTime,
+  }));
+};
+
+const fetchList = async (channel) => {
+  try {
+    const response = await service.get('/argue');
+    console.log('fetchList', response.data);
+    list.value = formatList(response.data || []);;
+  } catch (error) {
+    console.error('获取数据失败:', error);
+  }
+};
+
+const getNext = async () => {
+  // NO NEED
+};
 
 // 左侧 channel 列表
 const leftChannels = ['广场', '我的'];
@@ -99,6 +127,11 @@ const activeChannel = ref('广场');
 const setActiveChannel = (channel) => {
   activeChannel.value = channel;
 };
+
+onMounted(() => {
+  fetchList(activeChannel.value);
+});
+
 </script>
 
 
