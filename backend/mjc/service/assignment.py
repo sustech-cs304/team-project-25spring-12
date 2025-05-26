@@ -13,7 +13,7 @@ from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignment
 from mjc.model.schema.common import Message, File, Code
 from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.widget import AssignmentWidget
-from mjc.service.widget import entity2assignment, get_feedback
+from mjc.service import widget as widget_service
 
 
 def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> SubmittedAssignment:
@@ -117,14 +117,14 @@ def get_widget_submissions_for_student(db: Session,
 def get_student_submissions(db: Session,
                             assignment_widget_entity: WidgetEntity,
                             username: str) -> AssignmentWidget | None:
-    assigment_widget: AssignmentWidget = entity2assignment(assignment_widget_entity)
+    assigment_widget: AssignmentWidget = widget_service.entity2assignment(assignment_widget_entity)
     assignment_widget_id = crud_widget.get_assignment_widget_by_widget_id(db, assigment_widget.id).id
     if assigment_widget:
         submissions = crud_assignment.get_user_assignment_submissions(db, assignment_widget_id, username)
         if submissions:
             assigment_widget.status = 'submitted'
             assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
-        feedback = get_feedback(db, assignment_widget_id, username)
+        feedback = widget_service.get_feedback(db, assignment_widget_id, username)
         if feedback:
             assigment_widget.status = 'marked'
             assigment_widget.score = feedback.score
