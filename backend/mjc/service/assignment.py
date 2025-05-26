@@ -3,15 +3,17 @@ import uuid
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
-from mjc.crud import assignment as crud_assignment
+from mjc.crud import assignment as crud_assignment, widget as crud_widget
 from mjc.crud.user import get_profile
-
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, SubmittedAssignmentFeedback
 from mjc.model.entity.common import Visibility
+from mjc.model.entity.widget import Widget as WidgetEntity
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment
 from mjc.model.schema.common import Message, File, Code
 from mjc.model.schema.user import UserInDB, Profile
+from mjc.model.schema.widget import AssignmentWidget
+from mjc.service.widget import entity2assignment, get_feedback
 
 
 def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> SubmittedAssignment:
@@ -102,3 +104,30 @@ def delete_feedback_attachment(db: Session, file_id: uuid.UUID) -> Message:
     if entity:
         return Message(msg="delete success")
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Delete feedback attachment failed")
+
+
+def get_widget_submissions_for_student(db: Session,
+                                       widget_id: int,
+                                       current_user: UserInDB)-> AssignmentWidget| None:
+    entity = crud_widget.get_widget(db, widget_id)
+    if entity:
+        return get_student_submissions(db, entity, current_user.username)
+
+
+def get_student_submissions(db: Session,
+                            assignment_widget_entity: WidgetEntity,
+                            username: str) -> AssignmentWidget | None:
+    assigment_widget: AssignmentWidget = entity2assignment(assignment_widget_entity)
+    assignment_widget_id = crud_widget.get_assignment_widget_by_widget_id(db, assigment_widget.id).id
+    if assigment_widget:
+        submissions = crud_assignment.get_user_assignment_submissions(db, assignment_widget_id, username)
+        if submissions:
+            assigment_widget.status = 'submitted'
+            assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
+        feedback = get_feedback(db, assignment_widget_id, username)
+        if feedback:
+            assigment_widget.status = 'marked'
+            assigment_widget.score = feedback.score
+            assigment_widget.feedback = feedback
+        return assigment_widget
+    return None
