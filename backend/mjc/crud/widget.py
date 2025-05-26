@@ -115,6 +115,11 @@ def get_assignment_widget_by_widget_id(db: Session, widget_id: int) -> Assignmen
     return db.exec(stmt).first()
 
 
+def get_assignment_widgets_by_class_id(db: Session, class_id: int) -> list[Widget]:
+    stmt = select(Widget).join(Widget.page).where(Widget.page.class_id == class_id)
+    return db.exec(stmt).all()
+
+
 def create_note_pdf_widget(db: Session, widget: NotePdfWidgetCreate, editor: UserInDB) -> Widget:
     widget_entity = create_widget(db, widget, editor)
     note_pdf = NotePDFWidget(

@@ -76,3 +76,9 @@ def add_feedback_attachment(db: SessionDep,
                dependencies=[Depends(assignment_permission.verify_feedback_attach_delete)])
 def delete_feedback_attachment(db: SessionDep, file_id: uuid.UUID) -> Message:
     return assignment_service.delete_feedback_attachment(db, file_id)
+
+
+@router.get(path="/class/widget/{widget_id}/submission/student")
+def get_widget_submissions_for_student(db: SessionDep, widget_id: int,
+                                       current_user: UserInDB = Depends(get_current_user)):
+    return assignment_service.get_widget_submissions_for_student(db, widget_id, current_user)

@@ -1,6 +1,7 @@
 from fastapi import HTTPException, status
 from sqlmodel import Session
 
+import mjc.service.assignment
 from mjc.model.schema.common import Message
 from mjc.model.schema.page import Page, PageCreate, PageUpdate
 from mjc.model.schema.user import UserInDB
@@ -9,7 +10,7 @@ from mjc.model.entity.page import Page as PageEntity
 from mjc.model.entity.widget import WidgetType
 from mjc.model.entity.course import ClassRole
 from mjc.crud import page as crud_page
-from mjc.service import widget as widget_service, course as course_service
+from mjc.service import widget as widget_service, course as course_service, assignment as assignment_service
 
 
 def entity2page(entity: PageEntity) -> Page:
@@ -31,7 +32,7 @@ def get_page(db: Session, page_id: int, current_user: UserInDB) -> Page | None:
         if not widget.is_deleted:
             if widget.type == WidgetType.assignment:
                 if role == ClassRole.STUDENT:
-                    widgets.append(widget_service.get_student_submissions(db, widget, current_user.username))
+                    widgets.append(assignment_service.get_student_submissions(db, widget, current_user.username))
                 elif role == ClassRole.TEACHER or role == ClassRole.TA or current_user.is_admin:
                     widgets.append(widget_service.entity2assignment(widget))
             elif widget.type == WidgetType.note_pdf:
