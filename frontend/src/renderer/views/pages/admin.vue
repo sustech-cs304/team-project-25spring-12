@@ -45,7 +45,16 @@
           <el-table :data="filteredCourses" style="width: 100%" border>
             <el-table-column prop="id" label="ID" width="100" />
             <el-table-column prop="name" label="课程名" />
-            <el-table-column prop="instructor" label="讲师" />
+            <el-table-column label="讲师">
+              <template #default="{ row }">
+                {{ row.instructor.join(', ') }}
+              </template>
+            </el-table-column>
+            <el-table-column label="助教">
+              <template #default="{ row }">
+                {{ row.assistants.join(', ') }}
+              </template>
+            </el-table-column>
             <el-table-column prop="description" label="描述" />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
@@ -101,7 +110,48 @@
           <el-input v-model="courseForm.name" />
         </el-form-item>
         <el-form-item label="讲师" prop="instructor">
-          <el-input v-model="courseForm.instructor" />
+          <el-select
+            v-model="courseForm.instructor"
+            placeholder="选择讲师"
+            filterable
+            clearable
+            multiple
+            style="width: 100%"
+            :filter-method="filterTeachers"
+          >
+            <el-option
+              v-for="teacher in teachers"
+              :key="teacher.email"
+              :value="teacher.email"
+            >
+              <div class="teacher-option">
+                <span class="teacher-name">{{ teacher.username }}</span>
+                <span class="teacher-email">{{ teacher.email }}</span>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="助教" prop="assistants">
+          <el-select
+            v-model="courseForm.assistants"
+            placeholder="选择助教"
+            filterable
+            clearable
+            multiple
+            style="width: 100%"
+            :filter-method="filterAssistants"
+          >
+            <el-option
+              v-for="assistant in assistants"
+              :key="assistant.email"
+              :value="assistant.email"
+            >
+              <div class="teacher-option">
+                <span class="teacher-name">{{ assistant.username }}</span>
+                <span class="teacher-email">{{ assistant.email }}</span>
+              </div>
+            </el-option>
+          </el-select>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="courseForm.description" type="textarea" />
@@ -143,7 +193,9 @@ const userRules = {
 }
 const users = ref([
   { id: 1, username: 'admin', email: 'admin@example.com', role: 'admin' },
-  { id: 2, username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' }
+  { id: 2, username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' },
+  { id: 3, username: 'teacher1', email: 'teacher2@example.com', role: 'teacher' },
+  { id: 4, username: 'student1', email: 'student1@example.com', role: 'student' }
 ])
 const filteredUsers = computed(() => {
   return users.value.filter(user =>
@@ -168,12 +220,10 @@ const saveUser = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
       if (userForm.value.id) {
-        // 编辑用户
         const index = users.value.findIndex(u => u.id === userForm.value.id)
         users.value[index] = { ...userForm.value, password: undefined }
         ElMessage.success('用户更新成功')
       } else {
-        // 添加用户
         users.value.push({
           id: users.value.length + 1,
           username: userForm.value.username,
@@ -202,23 +252,48 @@ const courseFormRef = ref(null)
 const courseForm = ref({
   id: null,
   name: '',
-  instructor: '',
+  instructor: [],
+  assistants: [],
   description: ''
 })
 const courseRules = {
   name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
-  instructor: [{ required: true, message: '请输入讲师名', trigger: 'blur' }],
+  instructor: [{ required: true, type: 'array', min: 1, message: '请至少选择一名讲师', trigger: 'change' }],
+  assistants: [{ required: true, type: 'array', min: 1, message: '请至少选择一名助教', trigger: 'change' }],
   description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
 }
 const courses = ref([
-  { id: 1, name: '数学基础', instructor: '张教授', description: '基础数学课程' },
-  { id: 2, name: '编程入门', instructor: '李教授', description: 'Python编程入门' }
+  { id: 1, name: '数学基础', instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程' },
+  { id: 2, name: '编程入门', instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门' }
 ])
 const filteredCourses = computed(() => {
   return courses.value.filter(course =>
     course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
   )
 })
+
+const teachers = ref(users.value.filter(user => user.role === 'teacher'))
+const assistants = ref(users.value.filter(user => user.role === 'student'))
+
+const filterTeachers = (query) => {
+  const lowerQuery = query.toLowerCase()
+  teachers.value = users.value.filter(user => 
+    user.role === 'teacher' && (
+      user.username.toLowerCase().includes(lowerQuery) || 
+      user.email.toLowerCase().includes(lowerQuery)
+    )
+  )
+}
+
+const filterAssistants = (query) => {
+  const lowerQuery = query.toLowerCase()
+  assistants.value = users.value.filter(user => 
+    user.role === 'student' && (
+      user.username.toLowerCase().includes(lowerQuery) || 
+      user.email.toLowerCase().includes(lowerQuery)
+    )
+  )
+}
 
 const openAddCourseDialog = () => {
   courseDialogTitle.value = '添加课程'
@@ -230,23 +305,24 @@ const openEditCourseDialog = (course) => {
   courseDialogVisible.value = true
 }
 const resetCourseForm = () => {
-  courseForm.value = { id: null, name: '', instructor: '', description: '' }
+  courseForm.value = { id: null, name: '', instructor: [], assistants: [], description: '' }
   courseFormRef.value?.resetFields()
+  teachers.value = users.value.filter(user => user.role === 'teacher')
+  assistants.value = users.value.filter(user => user.role === 'student')
 }
 const saveCourse = () => {
   courseFormRef.value.validate((valid) => {
     if (valid) {
       if (courseForm.value.id) {
-        // 编辑课程
         const index = courses.value.findIndex(c => c.id === courseForm.value.id)
         courses.value[index] = { ...courseForm.value }
         ElMessage.success('课程更新成功')
       } else {
-        // 添加课程
         courses.value.push({
           id: courses.value.length + 1,
           name: courseForm.value.name,
           instructor: courseForm.value.instructor,
+          assistants: courseForm.value.assistants,
           description: courseForm.value.description
         })
         ElMessage.success('课程添加成功')
@@ -272,5 +348,19 @@ const filterCourses = () => {
   margin-bottom: 20px;
   display: flex;
   gap: 10px;
+}
+.teacher-option {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+.teacher-name {
+  flex: 1;
+  text-align: left;
+}
+.teacher-email {
+  flex: 1;
+  text-align: right;
+  color: #909399;
 }
 </style>
