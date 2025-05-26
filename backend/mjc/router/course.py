@@ -1,13 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, \
-    ClassUserEnroll, ClassUserRole, ClassUserRoleName, ClassUserUpdate
 from mjc.model.schema.assignment import DDL
-from mjc.model.schema.user import UserInDB, Profile
-from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard
+from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard,\
+    ClassUserEnroll, ClassUserRoleName, ClassUserUpdate
 from mjc.model.schema.user import UserInDB
-from mjc.service import course as course_service
+from mjc.model.schema.widget import AssignmentWidget
+from mjc.service import course as course_service, widget as widget_service
 from mjc.permission import course as course_permission, common as common_permission
 from mjc.service.user import get_current_user
 from mjc.utils.database import SessionDep
@@ -112,3 +111,10 @@ async def get_class_user(db: SessionDep, class_id: int):
 @router.get(path="/ddl", response_model=list[DDL])
 async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_user)):
     return course_service.get_ddl_calendar(db, current_user)
+
+
+@router.get(path="/class/{clas_id}/assignments",
+            response_model=list[AssignmentWidget])
+def get_class_assignments(db: SessionDep, class_id: int,
+                          current_user: UserInDB = Depends(get_current_user)) -> list[AssignmentWidget]:
+    return widget_service.get_class_assignments(db, class_id, current_user)
