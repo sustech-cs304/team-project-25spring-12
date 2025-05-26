@@ -1,6 +1,6 @@
 <template>
   <widget-card :title="computedTitle" color="orange" icon="Opportunity">
-    <div class="container">
+    <div class="overall_container">
       <!-- 辩驳状态 -->
       <div>
         <el-text class="section-title">辩驳状态</el-text>
@@ -221,20 +221,9 @@
     // updateMode();
     isEditing.value = true;
   }
-  
-  // 提交辩驳
-  const submit = () => {
-  // TODO
-    if (contentEditor.value) {
-      const content = contentEditor.value.getContent();
-      console.log(content);
-      const fileList = contentEditor.value.getFileList();
-      console.log(fileList);
-    }
-  }
 
   const submitArgue = () => {
-
+    const content = contentEditor.value?.getContent();
   }
 
   const editArgue = () =>{
@@ -252,6 +241,15 @@
 
 
 <style scoped>
+  .overall_container {
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    background-color: transparent;
+    border: none;
+    gap: 20px;
+    padding: 20px;
+  }
   .container {
     display: flex;
     flex-direction: column;
@@ -259,7 +257,7 @@
     background-color: transparent;
     border: none;
     gap: 20px;
-    padding: 40px;
+    /* padding: 20px; */
   }
   
   .toolbar {

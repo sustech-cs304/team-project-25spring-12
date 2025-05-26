@@ -68,6 +68,12 @@ const routes: RouteRecordRaw[] = [
                 meta: {title: '批改记录'},
                 component: () => import('../views/pages/mark.vue'),
             },
+            {
+                path: 'admin',
+                name: 'admin',
+                meta: {title: '管理员中心', noAuth: true},
+                component: () => import('../views/pages/admin.vue'),
+            },
         ],
     },
     {
