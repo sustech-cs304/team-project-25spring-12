@@ -6,9 +6,13 @@
         <div class="user-management">
           <div class="action-bar">
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
+            <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
+              <el-option label="按用户名" value="username" />
+              <el-option label="按ID" value="id" />
+            </el-select>
             <el-input
               v-model="userSearch"
-              placeholder="搜索用户名"
+              :placeholder="userSearchType === 'id' ? '搜索用户ID' : '搜索用户名'"
               style="width: 200px"
               clearable
               @input="filterUsers"
@@ -34,9 +38,13 @@
         <div class="course-management">
           <div class="action-bar">
             <el-button type="primary" @click="openAddCourseDialog">添加课程</el-button>
+            <el-select v-model="courseSearchType" style="width: 120px; margin-right: 10px">
+              <el-option label="按课程名" value="name" />
+              <el-option label="按ID" value="id" />
+            </el-select>
             <el-input
               v-model="courseSearch"
-              placeholder="搜索课程名"
+              :placeholder="courseSearchType === 'id' ? '搜索课程ID' : '搜索课程名'"
               style="width: 200px"
               clearable
               @input="filterCourses"
@@ -81,15 +89,15 @@
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="userForm.email" />
         </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="userForm.password" type="password" />
+        </el-form-item>
         <el-form-item label="角色" prop="role">
           <el-select v-model="userForm.role" placeholder="选择角色">
             <el-option label="管理员" value="admin" />
             <el-option label="教师" value="teacher" />
             <el-option label="学生" value="student" />
           </el-select>
-        </el-form-item>
-        <el-form-item label="密码" prop="password" v-if="!userForm.id">
-          <el-input v-model="userForm.password" type="password" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -172,6 +180,7 @@ import { ElMessage } from 'element-plus'
 // 用户管理相关
 const activeTab = ref('users')
 const userSearch = ref('')
+const userSearchType = ref('username') // 默认按用户名搜索
 const userDialogVisible = ref(false)
 const userDialogTitle = ref('添加用户')
 const userFormRef = ref(null)
@@ -198,9 +207,12 @@ const users = ref([
   { id: 4, username: 'student1', email: 'student1@example.com', role: 'student' }
 ])
 const filteredUsers = computed(() => {
-  return users.value.filter(user =>
-    user.username.toLowerCase().includes(userSearch.value.toLowerCase())
-  )
+  return users.value.filter(user => {
+    if (userSearchType.value === 'id') {
+      return user.id.toString().includes(userSearch.value)
+    }
+    return user.username.toLowerCase().includes(userSearch.value.toLowerCase())
+  })
 })
 
 const openAddUserDialog = () => {
@@ -246,6 +258,7 @@ const filterUsers = () => {
 
 // 课程管理相关
 const courseSearch = ref('')
+const courseSearchType = ref('name') // 默认按课程名搜索
 const courseDialogVisible = ref(false)
 const courseDialogTitle = ref('添加课程')
 const courseFormRef = ref(null)
@@ -267,9 +280,12 @@ const courses = ref([
   { id: 2, name: '编程入门', instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门' }
 ])
 const filteredCourses = computed(() => {
-  return courses.value.filter(course =>
-    course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-  )
+  return courses.value.filter(course => {
+    if (courseSearchType.value === 'id') {
+      return course.id.toString().includes(courseSearch.value)
+    }
+    return course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
+  })
 })
 
 const teachers = ref(users.value.filter(user => user.role === 'teacher'))
@@ -348,6 +364,7 @@ const filterCourses = () => {
   margin-bottom: 20px;
   display: flex;
   gap: 10px;
+  align-items: center;
 }
 .teacher-option {
   display: flex;
