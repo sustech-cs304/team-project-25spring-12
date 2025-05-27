@@ -79,7 +79,8 @@ async def update_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.delete(path="/class/semester/{semester_id}", response_model=Message)
+@router.delete(path="/class/semester/{semester_id}", response_model=Message,
+               dependencies=[Depends(common_permission.verify_admin)])
 async def delete_semester(db: SessionDep,
                           semester_id: int,
                           current_user: UserInDB = Depends(get_current_user)):
@@ -88,22 +89,26 @@ async def delete_semester(db: SessionDep,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.post(path="/class/user", response_model=list[ClassUserRoleName])
+@router.post(path="/class/user", response_model=list[ClassUserRoleName],
+             dependencies=[Depends(common_permission.verify_admin)])
 async def create_user_roll(db: SessionDep, enroll: ClassUserEnroll):
     return course_service.enroll_class_users(db, enroll)
 
 
-@router.patch(path="/class/user", response_model=ClassUserRoleName)
+@router.patch(path="/class/user", response_model=ClassUserRoleName,
+              dependencies=[Depends(common_permission.verify_admin)])
 async def update_user_roll(db: SessionDep, update: ClassUserUpdate):
     return course_service.update_class_user(db, update)
 
 
-@router.delete(path="/class/{cls_id}/user/{username}", response_model=Message)
+@router.delete(path="/class/{cls_id}/user/{username}", response_model=Message,
+               dependencies=[Depends(common_permission.verify_admin)])
 async def delete_user_roll(db: SessionDep, cls_id: int, username: str):
     return course_service.unroll_class_user(db, cls_id, username)
 
 
-@router.get(path="/class/{class_id}/user", response_model=list[ClassUserRoleName])
+@router.get(path="/class/{class_id}/user", response_model=list[ClassUserRoleName],
+            dependencies=[Depends(common_permission.verify_admin)])
 async def get_class_user(db: SessionDep, class_id: int):
     return course_service.get_class_role(db, class_id)
 
@@ -114,12 +119,14 @@ async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_u
 
 
 @router.get(path="/class/{clas_id}/assignments",
-            response_model=list[AssignmentWidget])
+            response_model=list[AssignmentWidget],
+            dependencies=[Depends(course_permission.verify_class_get)])
 def get_class_assignments(db: SessionDep, class_id: int,
                           current_user: UserInDB = Depends(get_current_user)) -> list[AssignmentWidget]:
     return widget_service.get_class_assignments(db, class_id, current_user)
 
 
-@router.get(path="/admin/semester/{semester_id}", response_model=list[ClassCard])
+@router.get(path="/admin/semester/{semester_id}", response_model=list[ClassCard],
+            dependencies=[Depends(course_permission.verify_admin)])
 def get_semester_classes(db: SessionDep, semester_id: int) -> list[ClassCard]:
     return course_service.get_semester_classes(db, semester_id)
