@@ -30,7 +30,7 @@ def entity2cls(cls_entity: ClassEntity, role: str) -> Class:
     return cls
 
 
-def cls2cls_card(cls_pair: Tuple[ClassEntity, ClassUserLink]) -> ClassCard:
+def cls_user_2cls_card(cls_pair: Tuple[ClassEntity, ClassUserLink]) -> ClassCard:
     cls, link = cls_pair
     class_card = ClassCard(id=cls.id,
                            name=cls.name,
@@ -40,6 +40,18 @@ def cls2cls_card(cls_pair: Tuple[ClassEntity, ClassUserLink]) -> ClassCard:
                            location=cls.location,
                            time=cls.time,
                            role=ClassRole(link.role))
+    return class_card
+
+
+def cls2cls_card(cls: ClassEntity) -> ClassCard:
+    class_card = ClassCard(id=cls.id,
+                           name=cls.name,
+                           course_code=cls.course_code,
+                           semester=cls.semester.name,
+                           lecturer=cls.lecturer,
+                           location=cls.location,
+                           time=cls.time,
+                           role=None)
     return class_card
 
 
@@ -67,7 +79,7 @@ def get_class(db: Session, cls_id: int) -> Class | None:
 
 def get_user_class_cards(db: Session, user: UserInDB) -> list[ClassCard] | None:
     cls_entities = crud_course.get_user_classes(db, user)
-    return [cls2cls_card(cls_entity) for cls_entity in cls_entities]
+    return [cls_user_2cls_card(cls_entity) for cls_entity in cls_entities]
 
 
 def create_class(db: Session, cls: ClassCreate) -> Class:
@@ -181,3 +193,8 @@ def get_ddl_calendar(db: Session, user: UserInDB) -> list[DDL]:
                         )
                         ddls.append(ddl)
     return ddls
+
+
+def get_semester_classes(db: Session, semester_id: int) -> list[ClassCard]:
+    entities = crud_course.get_semester_classes(db, semester_id)
+    return [cls2cls_card(entity) for entity in entities]

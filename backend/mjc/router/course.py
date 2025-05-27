@@ -118,3 +118,8 @@ async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_u
 def get_class_assignments(db: SessionDep, class_id: int,
                           current_user: UserInDB = Depends(get_current_user)) -> list[AssignmentWidget]:
     return widget_service.get_class_assignments(db, class_id, current_user)
+
+
+@router.get(path="/admin/semester/{semester_id}", response_model=list[ClassCard])
+def get_semester_classes(db: SessionDep, semester_id: int) -> list[ClassCard]:
+    return course_service.get_semester_classes(db, semester_id)
