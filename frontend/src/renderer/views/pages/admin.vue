@@ -38,6 +38,14 @@
         <div class="course-management">
           <div class="action-bar">
             <el-button type="primary" @click="openAddCourseDialog">添加课程</el-button>
+            <el-select v-model="semesterFilter" style="width: 150px; margin-right: 10px" placeholder="选择学期" clearable @change="filterCourses">
+              <el-option
+                v-for="semester in semesters"
+                :key="semester.value"
+                :label="semester.label"
+                :value="semester.value"
+              />
+            </el-select>
             <el-select v-model="courseSearchType" style="width: 120px; margin-right: 10px">
               <el-option label="按课程名" value="name" />
               <el-option label="按ID" value="id" />
@@ -275,16 +283,29 @@ const courseRules = {
   assistants: [{ required: true, type: 'array', min: 1, message: '请至少选择一名助教', trigger: 'change' }],
   description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
 }
+const semesters = ref([
+  { label: '2023春季', value: 1 },
+  { label: '2023秋季', value: 2 },
+  { label: '2024春季', value: 3 },
+  { label: '2024秋季', value: 4 },
+  { label: '2025春季', value: 5 },
+])
+const semesterFilter = ref('')
 const courses = ref([
-  { id: 1, name: '数学基础', instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程' },
-  { id: 2, name: '编程入门', instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门' }
+  { id: 1, name: '数学基础', instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程', semester: 1 },
+  { id: 2, name: '编程入门', instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门', semester: 2 },
 ])
 const filteredCourses = computed(() => {
   return courses.value.filter(course => {
-    if (courseSearchType.value === 'id') {
-      return course.id.toString().includes(courseSearch.value)
-    }
-    return course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
+    const matchesSearch = courseSearchType.value === 'id'
+      ? course.id.toString().includes(courseSearch.value)
+      : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
+    
+    const matchesSemester = semesterFilter.value
+      ? course.semester === semesterFilter.value
+      : true
+
+    return matchesSearch && matchesSemester
   })
 })
 
