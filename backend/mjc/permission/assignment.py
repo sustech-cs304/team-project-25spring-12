@@ -27,6 +27,14 @@ async def verify_all_submissions_get(db: SessionDep, widget_id: int,
     verify_class_admin(db, widget.page.class_id, current_user)
 
 
+async def verify_widget_get(db: SessionDep, widget_id: int,
+                            current_user: UserInDB = Depends(get_current_user)):
+    widget = crud_widget.get_widget(db, widget_id)
+    if widget is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+    verify_user_in_class(db, widget.class_id, current_user.username)
+
+
 async def verify_submission_create(db: SessionDep, submission: SubmittedAssignmentCreate,
                                    current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, submission.widget_id)
