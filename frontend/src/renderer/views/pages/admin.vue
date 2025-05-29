@@ -48,9 +48,9 @@
             <el-select v-model="semesterFilter" style="width: 150px; margin-right: 10px" placeholder="选择学期" clearable @change="filterCourses">
               <el-option
                 v-for="semester in invertedSemesters"
-                :key="semester.semester_id"
-                :label="semester.semester"
-                :value="semester.semester_id"
+                :key="semester.id"
+                :label="semester.name"
+                :value="semester.id"
               />
             </el-select>
             <el-select v-model="courseSearchType" style="width: 120px; margin-right: 10px">
@@ -115,12 +115,14 @@
             border
             @sort-change="handleSemesterSortChange"
           >
-            <el-table-column prop="semester_id" label="ID" width="100" sortable />
-            <el-table-column prop="semester" label="学期名称" sortable />
+            <el-table-column prop="id" label="ID" width="100" sortable />
+            <el-table-column prop="name" label="学期名称" sortable />
+            <el-table-column prop="start_time" label="开始时间" sortable />
+            <el-table-column prop="end_time" label="结束时间" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditSemesterDialog(row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="deleteSemester(row.semester_id)">删除</el-button>
+                <el-button type="danger" size="small" @click="deleteSemester(row.id)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -167,9 +169,9 @@
           <el-select v-model="courseForm.semester" placeholder="选择学期">
             <el-option
               v-for="semester in invertedSemesters"
-              :key="semester.semester_id"
-              :label="semester.semester"
-              :value="semester.semester_id"
+              :key="semester.id"
+              :label="semester.name"
+              :value="semester.id"
             />
           </el-select>
         </el-form-item>
@@ -268,8 +270,14 @@
       @close="resetSemesterForm"
     >
       <el-form :model="semesterForm" :rules="semesterRules" ref="semesterFormRef">
-        <el-form-item label="学期名称" prop="semester">
-          <el-input v-model="semesterForm.semester" />
+        <el-form-item label="学期名称" prop="name">
+          <el-input v-model="semesterForm.name" />
+        </el-form-item>
+        <el-form-item label="开始时间" prop="start_time">
+          <el-input v-model="semesterForm.start_time" />
+        </el-form-item>
+        <el-form-item label="结束时间" prop="end_time">
+          <el-input v-model="semesterForm.end_time" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -401,15 +409,15 @@ const courseRules = {
   time: [{ required: false, message: '请输入课程时间', trigger: 'blur' }]
 }
 const semesters = ref([
-  { semester_id: 1, semester: '2023 春季' },
-  { semester_id: 2, semester: '2023 秋季' },
-  { semester_id: 3, semester: '2024 春季' },
-  { semester_id: 4, semester: '2024 秋季' },
-  { semester_id: 5, semester: '2025 春季' },
+  { id: 1, name: '2023 春季', start_time: '2023-02-01', end_time: '2023-06-30' },
+  { id: 2, name: '2023 秋季', start_time: '2023-09-01', end_time: '2024-01-31' },
+  { id: 3, name: '2024 春季', start_time: '2024-02-01', end_time: '2024-06-30' },
+  { id: 4, name: '2024 秋季', start_time: '2024-09-01', end_time: '2025-01-31' },
+  { id: 5, name: '2025 春季', start_time: '2025-02-01', end_time: '2025-06-30' },
 ])
 const semesterFilter = ref('')
 const invertedSemesters = computed(() => {
-  return [...semesters.value].sort((a, b) => b.semester_id - a.semester_id)
+  return [...semesters.value].sort((a, b) => b.id - a.id)
 })
 
 const courses = ref([
@@ -429,7 +437,7 @@ const filteredCourses = computed(() => {
     })
     .map(course => ({
       ...course,
-      semester_name: semesters.value.find(sem => sem.semester_id === course.semester)?.semester || '未知学期'
+      semester_name: semesters.value.find(sem => sem.id === course.semester)?.name || '未知学期'
     }))
 })
 
@@ -501,16 +509,20 @@ const semesterDialogVisible = ref(false)
 const semesterDialogTitle = ref('添加学期')
 const semesterFormRef = ref(null)
 const semesterForm = ref({
-  semester_id: null,
-  semester: ''
+  id: null,
+  name: '',
+  start_time: '',
+  end_time: ''
 })
 const semesterRules = {
-  semester: [{ required: true, message: '请输入学期名称', trigger: 'blur' }]
+  name: [{ required: true, message: '请输入学期名称', trigger: 'blur' }],
+  start_time: [{ required: true, message: '请输入开始时间', trigger: 'blur' }],
+  end_time: [{ required: true, message: '请输入结束时间', trigger: 'blur' }]
 }
 
 const filteredSemesters = computed(() => {
   return semesters.value.filter(semester =>
-    semester.semester.toLowerCase().includes(semesterSearch.value.toLowerCase())
+    semester.name.toLowerCase().includes(semesterSearch.value.toLowerCase())
   )
 })
 
@@ -526,21 +538,23 @@ const openEditSemesterDialog = (semester) => {
 }
 
 const resetSemesterForm = () => {
-  semesterForm.value = { semester_id: null, semester: '' }
+  semesterForm.value = { id: null, name: '', start_time: '', end_time: '' }
   semesterFormRef.value?.resetFields()
 }
 
 const saveSemester = () => {
   semesterFormRef.value.validate((valid) => {
     if (valid) {
-      if (semesterForm.value.semester_id) {
-        const index = semesters.value.findIndex(s => s.semester_id === semesterForm.value.semester_id)
+      if (semesterForm.value.id) {
+        const index = semesters.value.findIndex(s => s.id === semesterForm.value.id)
         semesters.value[index] = { ...semesterForm.value }
         ElMessage.success('学期更新成功')
       } else {
         semesters.value.push({
-          semester_id: semesters.value.length + 1,
-          semester: semesterForm.value.semester
+          id: semesters.value.length + 1,
+          name: semesterForm.value.name,
+          start_time: semesterForm.value.start_time,
+          end_time: semesterForm.value.end_time
         })
         ElMessage.success('学期添加成功')
       }
@@ -549,13 +563,13 @@ const saveSemester = () => {
   })
 }
 
-const deleteSemester = (semester_id) => {
-  const isUsed = courses.value.some(course => course.semester === semester_id)
+const deleteSemester = (id) => {
+  const isUsed = courses.value.some(course => course.semester === id)
   if (isUsed) {
     ElMessage.error('无法删除正在被课程使用的学期')
     return
   }
-  semesters.value = semesters.value.filter(semester => semester.semester_id !== semester_id)
+  semesters.value = semesters.value.filter(semester => semester.id !== id)
   ElMessage.success('学期删除成功')
 }
 
