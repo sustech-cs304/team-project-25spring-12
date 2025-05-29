@@ -10,3 +10,5 @@ TOKEN_EXPIRE_MINUTES = timedelta(minutes=1800)
 
 # File Saving
 FILE_SAVE_ADDRESS = './resources/user_files/'
+JUDGE_SERVER_TOKEN = os.environ.get('MJC_JUDGE_SERVER_TOKEN')
+JUDGE_SERVER_URL = 'http://localhost:12358/judge'
