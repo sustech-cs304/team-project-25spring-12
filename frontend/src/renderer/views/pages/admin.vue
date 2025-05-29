@@ -8,7 +8,7 @@
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
             <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
               <el-option label="按用户名" value="username" />
-              <el-option label="按ID" value="id" />
+              <el-option label="按用户ID" value="id" />
             </el-select>
             <el-input
               v-model="userSearch"
@@ -18,11 +18,16 @@
               @input="filterUsers"
             />
           </div>
-          <el-table :data="filteredUsers" style="width: 100%" border>
-            <el-table-column prop="id" label="ID" width="100" />
-            <el-table-column prop="username" label="用户名" />
-            <el-table-column prop="email" label="邮箱" />
-            <el-table-column prop="role" label="角色" />
+          <el-table
+            :data="filteredUsers"
+            style="width: 100%"
+            border
+            @sort-change="handleUserSortChange"
+          >
+            <el-table-column prop="id" label="ID" width="100" sortable />
+            <el-table-column prop="username" label="用户名" sortable />
+            <el-table-column prop="email" label="邮箱" sortable />
+            <el-table-column prop="role" label="角色" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditUserDialog(row)">编辑</el-button>
@@ -40,7 +45,7 @@
             <el-button type="primary" @click="openAddCourseDialog">添加课程</el-button>
             <el-select v-model="semesterFilter" style="width: 150px; margin-right: 10px" placeholder="选择学期" clearable @change="filterCourses">
               <el-option
-                v-for="semester in semesters"
+                v-for="semester in invertedSemesters"
                 :key="semester.value"
                 :label="semester.label"
                 :value="semester.value"
@@ -48,19 +53,25 @@
             </el-select>
             <el-select v-model="courseSearchType" style="width: 120px; margin-right: 10px">
               <el-option label="按课程名" value="name" />
-              <el-option label="按ID" value="id" />
+              <el-option label="按课程代码" value="course_code" />
             </el-select>
             <el-input
               v-model="courseSearch"
-              :placeholder="courseSearchType === 'id' ? '搜索课程ID' : '搜索课程名'"
+              :placeholder="courseSearchType === 'course_code' ? '搜索课程代码' : '搜索课程名'"
               style="width: 200px"
               clearable
               @input="filterCourses"
             />
           </div>
-          <el-table :data="filteredCourses" style="width: 100%" border>
-            <el-table-column prop="id" label="ID" width="100" />
-            <el-table-column prop="name" label="课程名" />
+          <el-table
+            :data="filteredCourses"
+            style="width: 100%"
+            border
+            @sort-change="handleCourseSortChange"
+          >
+            <el-table-column prop="semester_label" label="学期" width="100" sortable />
+            <el-table-column prop="course_code" label="课程代码" sortable />
+            <el-table-column prop="name" label="课程名" sortable />
             <el-table-column label="讲师">
               <template #default="{ row }">
                 {{ row.instructor.join(', ') }}
@@ -71,7 +82,7 @@
                 {{ row.assistants.join(', ') }}
               </template>
             </el-table-column>
-            <el-table-column prop="description" label="描述" />
+            <el-table-column prop="description" label="描述" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditCourseDialog(row)">编辑</el-button>
@@ -95,9 +106,14 @@
               @input="filterSemesters"
             />
           </div>
-          <el-table :data="filteredSemesters" style="width: 100%" border>
-            <el-table-column prop="value" label="ID" width="100" />
-            <el-table-column prop="label" label="学期名称" />
+          <el-table
+            :data="filteredSemesters"
+            style="width: 100%"
+            border
+            @sort-change="handleSemesterSortChange"
+          >
+            <el-table-column prop="value" label="ID" width="100" sortable />
+            <el-table-column prop="label" label="学期名称" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditSemesterDialog(row)">编辑</el-button>
@@ -338,29 +354,38 @@ const courseRules = {
   description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
 }
 const semesters = ref([
-  { label: '2023春季', value: 1 },
-  { label: '2023秋季', value: 2 },
-  { label: '2024春季', value: 3 },
-  { label: '2024秋季', value: 4 },
-  { label: '2025春季', value: 5 },
+  { label: '2023 春季', value: 1 },
+  { label: '2023 秋季', value: 2 },
+  { label: '2024 春季', value: 3 },
+  { label: '2024 秋季', value: 4 },
+  { label: '2025 春季', value: 5 },
 ])
 const semesterFilter = ref('')
+const invertedSemesters = computed(() => {
+  return [...semesters.value].sort((a, b) => b.value - a.value)
+})
+
 const courses = ref([
-  { id: 1, name: '数学基础', semester: 1, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: '基础数学课程' },
-  { id: 2, name: '编程入门', semester: 2, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: 'Python编程入门' },
+  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: '基础数学课程' },
+  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: 'Python编程入门' },
 ])
 const filteredCourses = computed(() => {
-  return courses.value.filter(course => {
-    const matchesSearch = courseSearchType.value === 'id'
-      ? course.id.toString().includes(courseSearch.value)
-      : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-    
-    const matchesSemester = semesterFilter.value
-      ? course.semester === semesterFilter.value
-      : true
+  return courses.value
+    .filter(course => {
+      const matchesSearch = courseSearchType.value === 'course_code'
+        ? course.course_code.toString().includes(courseSearch.value)
+        : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
+      
+      const matchesSemester = semesterFilter.value
+        ? course.semester === semesterFilter.value
+        : true
 
-    return matchesSearch && matchesSemester
-  })
+      return matchesSearch && matchesSemester
+    })
+    .map(course => ({
+      ...course,
+      semester_label: semesters.value.find(sem => sem.value === course.semester)?.label || '未知学期'
+    }))
 })
 
 const teachers = ref(users.value.filter(user => user.role === 'teacher'))
