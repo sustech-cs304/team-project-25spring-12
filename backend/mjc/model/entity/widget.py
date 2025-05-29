@@ -97,6 +97,11 @@ class SubmitType(str, Enum):
     code = 'code'
 
 
+class TestCase(SQLModel, table=True):
+    __tablename__ = 'test_case'
+    id: int | None = Field(default=None, primary_key=True)
+
+
 class AssignmentWidget(SQLModel, table=True):
     """
     Assignment Widget 存储的数据
@@ -106,6 +111,7 @@ class AssignmentWidget(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
     submit_types: list[SubmitType] = Field(sa_column=Column(ARRAY(SQLEnum(SubmitType))))
+    test_case_id: int = Field(foreign_key="test_case.id", nullable=True)
     ddl: datetime
     max_score: float
 

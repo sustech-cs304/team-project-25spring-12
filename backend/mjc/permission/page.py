@@ -22,11 +22,12 @@ async def verify_page_get(db: SessionDep, page_id: int,
                     current_user: UserInDB = Depends(get_current_user)):
     page = verify_page_exist(db, page_id)
     role = course_service.get_user_class_role(db, current_user.username, page.class_id)
-    if role is None:
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
-    elif role is ClassRole.STUDENT:
-        if page.visible is False:
-            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have not permission")
+    if not current_user.is_admin:
+        if role is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
+        elif role is ClassRole.STUDENT:
+            if page.visible is False:
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have not permission")
 
 
 async def verify_page_create(db: SessionDep,
