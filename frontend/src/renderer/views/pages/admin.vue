@@ -45,7 +45,13 @@
         <div class="course-management">
           <div class="action-bar">
             <el-button type="primary" @click="openAddCourseDialog">添加课程</el-button>
-            <el-select v-model="semesterFilter" style="width: 150px; margin-right: 10px" placeholder="选择学期" clearable @change="filterCourses">
+            <el-select
+              v-model="semesterFilter"
+              style="width: 150px;
+              margin-right: 10px"
+              placeholder="选择学期"
+              clearable
+              @change="fetchCourses">
               <el-option
                 v-for="semester in invertedSemesters"
                 :key="semester.id"
@@ -289,7 +295,7 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
 import service from '../../utils/request'
 
@@ -404,6 +410,7 @@ const courseForm = ref({
   location: '',
   time: ''
 })
+
 const courseRules = {
   semester_id: [{ required: true, message: '请选择学期', trigger: 'change' }],
   course_code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
@@ -414,37 +421,54 @@ const courseRules = {
   location: [{ required: false, message: '请输入课程地点', trigger: 'blur' }],
   time: [{ required: false, message: '请输入课程时间', trigger: 'blur' }]
 }
-const semesters = ref([
-  { id: 1, name: '2023 春季', start_time: '2023-02-01', end_time: '2023-06-30' },
-  { id: 2, name: '2023 秋季', start_time: '2023-09-01', end_time: '2024-01-31' },
-  { id: 3, name: '2024 春季', start_time: '2024-02-01', end_time: '2024-06-30' },
-  { id: 4, name: '2024 秋季', start_time: '2024-09-01', end_time: '2025-01-31' },
-  { id: 5, name: '2025 春季', start_time: '2025-02-01', end_time: '2025-06-30' },
-])
-const semesterFilter = ref('')
-const invertedSemesters = computed(() => {
-  return [...semesters.value].sort((a, b) => b.id - a.id)
-})
 
-const courses = ref([
-  { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
-  { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
-])
+// const courses = ref([
+//   { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
+//   { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
+// ])
+const courses = ref([])
+
+const fetchCourses = async (semester_id) => {
+  if (!semester_id) {
+    courses.value = []
+    return
+  }
+  try {
+    // const response = await service.get(`/admin/semester/${semester_id}`)
+    // courses.value = response.data
+    // console.log('Loaded courses:', courses.value);
+    courses.value = [
+      { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
+      { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
+    ]
+    ElMessage.success(`已加载学期内课程信息`)
+  } catch (error) {
+    ElMessage.error('加载学期详细信息失败，请稍后重试')
+    courses.value = []
+  }
+}
 
 const filteredCourses = computed(() => {
-  return courses.value
-    .filter(course => {
+  // return courses.value.filter(course => {
+  //     const matchesSearch = courseSearchType.value === 'course_code'
+  //       ? course.course_code.toString().includes(courseSearch.value)
+  //       : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
+  //     const matchesSemester = semesterFilter.value
+  //       ? course.semester_id === semesterFilter.value
+  //       : true
+  //     return matchesSearch && matchesSemester
+  //   }).map(course => ({
+  //     ...course,
+  //     semester_name: semesters.value.find(sem => sem.id === course.semester_id)?.name || '未知学期'
+  //   }))
+  return courses.value.filter(course => {
       const matchesSearch = courseSearchType.value === 'course_code'
         ? course.course_code.toString().includes(courseSearch.value)
         : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-      const matchesSemester = semesterFilter.value
-        ? course.semester_id === semesterFilter.value
-        : true
-      return matchesSearch && matchesSemester
-    })
-    .map(course => ({
+      return matchesSearch
+    }).map(course => ({
       ...course,
-      semester_name: semesters.value.find(sem => sem.id === course.semester_id)?.name || '未知学期'
+      semester_name: semesters.value.find(sem => sem.name === course.semester)?.name || '未知学期'
     }))
 })
 
@@ -634,6 +658,32 @@ const semesterForm = ref({
   start_time: '',
   end_time: ''
 })
+const semesters = ref([
+  { id: 1, name: '2023 春季', start_time: '2023-02-01', end_time: '2023-06-30' },
+  { id: 2, name: '2023 秋季', start_time: '2023-09-01', end_time: '2024-01-31' },
+  { id: 3, name: '2024 春季', start_time: '2024-02-01', end_time: '2024-06-30' },
+  { id: 4, name: '2024 秋季', start_time: '2024-09-01', end_time: '2025-01-31' },
+  { id: 5, name: '2025 春季', start_time: '2025-02-01', end_time: '2025-06-30' },
+])
+
+const fetchSemesters = async () => {
+  try {
+    const response = await service.get('/class/semester')
+    semesters.value = response.data
+    console.log('Loaded semesters:', semesters.value);
+    ElMessage.success('学期数据加载成功')
+  } catch (error) {
+    ElMessage.error('加载学期数据失败，请稍后重试')
+    console.error('Error fetching semesters:', error)
+  }
+}
+
+const semesterFilter = ref('')
+
+const invertedSemesters = computed(() => {
+  return [...semesters.value].sort((a, b) => b.id - a.id)
+})
+
 const semesterRules = {
   name: [{ required: true, message: '请输入学期名称', trigger: 'blur' }],
   start_time: [{ required: true, message: '请输入开始时间', trigger: 'blur' }],
@@ -700,6 +750,8 @@ const deleteSemester = (id) => {
 }
 
 const filterSemesters = () => {}
+
+onMounted(fetchSemesters)
 </script>
 
 <style scoped>
