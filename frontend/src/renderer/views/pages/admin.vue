@@ -7,8 +7,8 @@
           <div class="action-bar">
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
             <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
-              <el-option label="按用户名" value="username" />
               <el-option label="按姓名" value="name" />
+              <el-option label="按用户名" value="username" />
             </el-select>
             <el-input
               v-model="userSearch"
