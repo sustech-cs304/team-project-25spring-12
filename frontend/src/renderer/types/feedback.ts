@@ -1,5 +1,5 @@
 import {FileMeta} from "./fileMeta";
-import {Code} from "@/api/courseMaterial";
+import {Code} from "../api/courseMaterial";
 
 interface Profile {
     username: string;
