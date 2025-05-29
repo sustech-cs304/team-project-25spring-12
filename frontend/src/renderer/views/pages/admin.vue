@@ -71,7 +71,7 @@
             border
             @sort-change="handleCourseSortChange"
           >
-            <el-table-column prop="semester_name" label="学期" width="100" sortable />
+            <el-table-column prop="semester_id" label="学期" width="100" sortable />
             <el-table-column prop="course_code" label="课程代码" sortable />
             <el-table-column prop="name" label="课程名" sortable />
             <el-table-column label="讲师">
@@ -395,7 +395,7 @@ const courseDialogTitle = ref('添加课程')
 const courseFormRef = ref(null)
 const courseForm = ref({
   id: null,
-  semester: '',
+  semester_id: '',
   course_code: '',
   name: '',
   lecturer: '',
@@ -405,7 +405,7 @@ const courseForm = ref({
   time: ''
 })
 const courseRules = {
-  semester: [{ required: true, message: '请选择学期', trigger: 'change' }],
+  semester_id: [{ required: true, message: '请选择学期', trigger: 'change' }],
   course_code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
   name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
   lecturer: [{ required: true, message: '请选择一名讲师', trigger: 'change' }],
@@ -427,8 +427,8 @@ const invertedSemesters = computed(() => {
 })
 
 const courses = ref([
-  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
-  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
+  { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
+  { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
 ])
 const filteredCourses = computed(() => {
   return courses.value
@@ -437,7 +437,7 @@ const filteredCourses = computed(() => {
         ? course.course_code.toString().includes(courseSearch.value)
         : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
       const matchesSemester = semesterFilter.value
-        ? course.semester === semesterFilter.value
+        ? course.semester_id === semesterFilter.value
         : true
       return matchesSearch && matchesSemester
     })
@@ -481,28 +481,136 @@ const openEditCourseDialog = (course) => {
   courseDialogVisible.value = true
 }
 const resetCourseForm = () => {
-  courseForm.value = { id: null, name: '', semester: '', lecturer: '', assistants: [], students: [], location: '', time: '' }
+  courseForm.value = {
+    id: null,
+    name: '',
+    semester_id: -1,
+    lecturer: '',
+    assistants: [],
+    students: [],
+    location: '',
+    time: '',
+  }
   courseFormRef.value?.resetFields()
   filteredUsersForCourse.value = users.value
 }
-const saveCourse = () => {
-  courseFormRef.value.validate((valid) => {
-    if (valid) {
+// const saveCourse = () => {
+//   courseFormRef.value.validate((valid) => {
+//     if (valid) {
+//       if (courseForm.value.id) {
+//         const index = courses.value.findIndex(c => c.id === courseForm.value.id)
+//         courses.value[index] = { ...courseForm.value }
+//         ElMessage.success('课程更新成功')
+//       } else {
+//         courses.value.push({
+//           ...courseForm.value,
+//           id: courses.value.length + 1
+//         })
+//         ElMessage.success('课程添加成功')
+//       }
+//       courseDialogVisible.value = false
+//     }
+//   })
+// }
+const saveCourse = async () => {
+  try {
+    await courseFormRef.value.validate(async (valid) => {
+      if (!valid) return;
+
+      const courseData = {
+        semester_id: courseForm.value.semester_id,
+        course_code: courseForm.value.course_code,
+        name: courseForm.value.name,
+        location: courseForm.value.location,
+        time: courseForm.value.time
+      };
+      console.log('Saving course data:', courseData);
+      
+
+      let courseId;
+
       if (courseForm.value.id) {
-        const index = courses.value.findIndex(c => c.id === courseForm.value.id)
-        courses.value[index] = { ...courseForm.value }
-        ElMessage.success('课程更新成功')
+        courseId = courseForm.value.id;
+        await service.patch(`/class`, courseData);
+        ElMessage.success('课程更新成功');
       } else {
+        const response = await service.post('/class', courseData);
+        courseId = response.data.id;
         courses.value.push({
-          ...courseForm.value,
-          id: courses.value.length + 1
-        })
-        ElMessage.success('课程添加成功')
+          ...courseData,
+          id: courseId,
+          lecturer: courseForm.value.lecturer,
+          assistants: courseForm.value.assistants,
+          students: courseForm.value.students
+        });
+        ElMessage.success('课程添加成功');
       }
-      courseDialogVisible.value = false
-    }
-  })
-}
+
+      // Handle user assignments
+      const newUsers = [
+        { username: courseForm.value.lecturer, role: 'teacher' },
+        ...courseForm.value.assistants.map(username => ({ username, role: 'assistant' })),
+        ...courseForm.value.students.map(username => ({ username, role: 'student' }))
+      ];
+
+      // If editing, get existing users to determine additions/removals
+      let existingUsers = [];
+      if (courseForm.value.id) {
+        const existingCourse = courses.value.find(c => c.id === courseForm.value.id);
+        existingUsers = [
+          { username: existingCourse.lecturer, role: 'teacher' },
+          ...existingCourse.assistants.map(username => ({ username, role: 'assistant' })),
+          ...existingCourse.students.map(username => ({ username, role: 'student' }))
+        ];
+      }
+
+      // Determine users to add
+      const usersToAdd = newUsers.filter(newUser => 
+        !existingUsers.some(existing => 
+          existing.username === newUser.username && existing.role === newUser.role
+        )
+      );
+
+      // Determine users to remove
+      const usersToRemove = existingUsers.filter(existing => 
+        !newUsers.some(newUser => 
+          newUser.username === existing.username && newUser.role === existing.role
+        )
+      );
+
+      // Add new users
+      if (usersToAdd.length > 0) {
+        await service.post(`/class/user`, {
+          class_id: courseId,
+          usernames: usersToAdd.map(u => u.username),
+          role: usersToAdd[0].role // API expects single role for all usernames in one request
+        });
+      }
+
+      // Remove users
+      for (const user of usersToRemove) {
+        await service.delete(`/class/${courseId}/user/${user.username}`);
+      }
+
+      // Update local courses array if editing
+      if (courseForm.value.id) {
+        const index = courses.value.findIndex(c => c.id === courseForm.value.id);
+        courses.value[index] = {
+          ...courses.value[index],
+          ...courseData,
+          lecturer: courseForm.value.lecturer,
+          assistants: courseForm.value.assistants,
+          students: courseForm.value.students
+        };
+      }
+
+      courseDialogVisible.value = false;
+    });
+  } catch (error) {
+    ElMessage.error('保存课程失败，请稍后重试');
+    console.error('Error saving course:', error);
+  }
+};
 const deleteCourse = (id) => {
   service.delete(`/class/${id}`)
     .then(() => {
