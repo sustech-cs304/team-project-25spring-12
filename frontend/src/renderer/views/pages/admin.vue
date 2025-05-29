@@ -267,7 +267,7 @@ import service from '../../utils/request'
 // 用户管理相关
 const activeTab = ref('users')
 const userSearch = ref('')
-const userSearchType = ref('username')
+const userSearchType = ref('name')
 const userDialogVisible = ref(false)
 const userDialogTitle = ref('添加用户')
 const userFormRef = ref(null)
