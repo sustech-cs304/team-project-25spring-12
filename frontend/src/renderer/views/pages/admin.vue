@@ -164,18 +164,21 @@
       @close="resetCourseForm"
     >
       <el-form :model="courseForm" :rules="courseRules" ref="courseFormRef">
-        <el-form-item label="课程名" prop="name">
-          <el-input v-model="courseForm.name" />
-        </el-form-item>
         <el-form-item label="学期" prop="semester">
           <el-select v-model="courseForm.semester" placeholder="选择学期">
             <el-option
-              v-for="semester in semesters"
+              v-for="semester in invertedSemesters"
               :key="semester.value"
               :label="semester.label"
               :value="semester.value"
             />
           </el-select>
+        </el-form-item>
+        <el-form-item label="课程代码" prop="course_code">
+          <el-input v-model="courseForm.course_code" />
+        </el-form-item>
+        <el-form-item label="课程名" prop="name">
+          <el-input v-model="courseForm.name" />
         </el-form-item>
         <el-form-item label="讲师" prop="instructor">
           <el-select
@@ -340,15 +343,17 @@ const courseDialogTitle = ref('添加课程')
 const courseFormRef = ref(null)
 const courseForm = ref({
   id: null,
-  name: '',
   semester: '',
+  course_code: '',
+  name: '',
   instructor: [],
   assistants: [],
   description: ''
 })
 const courseRules = {
-  name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
   semester: [{ required: true, message: '请选择学期', trigger: 'change' }],
+  course_code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
+  name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
   instructor: [{ required: true, type: 'array', min: 1, message: '请至少选择一名讲师', trigger: 'change' }],
   assistants: [{ required: true, type: 'array', min: 1, message: '请至少选择一名助教', trigger: 'change' }],
   description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
@@ -436,11 +441,12 @@ const saveCourse = () => {
       } else {
         courses.value.push({
           id: courses.value.length + 1,
-          name: courseForm.value.name,
           semester: courseForm.value.semester,
+          course_code: courseForm.value.course_code,
+          name: courseForm.value.name,
           instructor: courseForm.value.instructor,
           assistants: courseForm.value.assistants,
-          description: courseForm.value.description
+          description: courseForm.value.description,
         })
         ElMessage.success('课程添加成功')
       }
