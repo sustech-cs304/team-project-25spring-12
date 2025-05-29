@@ -63,7 +63,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         visible=entity.visible,
         id=entity.id,
         content=entity.content if entity.content else None,
-        submit_types=entity.assignment_widget.submit_types,
+        submit_type=entity.assignment_widget.submit_types[0],
         submitted_assignment=None,
         status='not submitted',
         ddl=entity.assignment_widget.ddl,
@@ -110,6 +110,7 @@ def entity2widget(entity: WidgetEntity) -> AssignmentWidget | NotePdfWidget | Do
         return entity2assignment(entity)
     elif entity.type == WidgetType.note_pdf:
         return entity2notepdf(entity)
+    return None
 
 
 def get_all_student_submissions(db: Session, widget_id: int) -> list[SubmittedAssignment] | None:

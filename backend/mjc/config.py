@@ -10,3 +10,6 @@ TOKEN_EXPIRE_MINUTES = timedelta(minutes=1800)
 
 # File Saving
 FILE_SAVE_ADDRESS = './resources/user_files/'
+OJ_TESTCASE_URL = './resources/tests/test_case'
+
+OJ_URL = 'http://localhost:12358/judge'
