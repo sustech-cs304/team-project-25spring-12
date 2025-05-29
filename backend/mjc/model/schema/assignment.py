@@ -64,3 +64,18 @@ class DDL(BaseModel):
     page_name: str
     ddl: datetime
     course_code: str
+
+
+class AIFeedbackCreate(BaseModel):
+    type: str | None = "text"
+    question: str | None = None
+    answer: str | None = None
+    student_answer: str | None = None
+    question_file_id: uuid.UUID | None = None
+    answer_file_id: uuid.UUID | None = None
+    student_answer_file_id: uuid.UUID | None = None
+
+
+class AIFeedback(BaseModel):
+    score: float | None = None
+    feedback: str
