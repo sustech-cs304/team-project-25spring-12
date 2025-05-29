@@ -95,3 +95,15 @@ class ClassUserRoleName(ClassUserRole):
     username: str
     name: str
     role: ClassRole
+
+
+class ClassTemplate(BaseModel):
+    pass
+
+
+class ClassTemplateCreate(BaseModel):
+    pass
+
+
+class ClassTemplateUpdate(BaseModel):
+    pass

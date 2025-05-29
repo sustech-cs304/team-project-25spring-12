@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from mjc.model.schema.common import Message
 from mjc.model.schema.assignment import DDL
 from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard,\
-    ClassUserEnroll, ClassUserRoleName, ClassUserUpdate
+    ClassUserEnroll, ClassUserRoleName, ClassUserUpdate, ClassTemplate, ClassTemplateCreate, ClassTemplateUpdate
 from mjc.model.schema.user import UserInDB
 from mjc.model.schema.widget import AssignmentWidget
 from mjc.service import course as course_service, widget as widget_service
@@ -130,3 +130,23 @@ def get_class_assignments(db: SessionDep, class_id: int,
             dependencies=[Depends(course_permission.verify_admin)])
 def get_semester_classes(db: SessionDep, semester_id: int) -> list[ClassCard]:
     return course_service.get_semester_classes(db, semester_id)
+
+
+@router.get(path="/class/template/{template_id}", response_model=ClassTemplate)
+def get_cls_template(db: SessionDep, template_id: int):
+    pass
+
+
+@router.post(path="/class/template", response_model=ClassTemplate)
+def create_cls_template(db: SessionDep, template: ClassTemplateCreate):
+    pass
+
+
+@router.patch(path="/class/template", response_model=ClassTemplate)
+def update_cls_template(db: SessionDep, template: ClassTemplateUpdate):
+    pass
+
+
+@router.delete(path="/class/template/{template_id}", response_model=Message)
+def delete_cls_template(db: SessionDep, template_id: int):
+    pass
