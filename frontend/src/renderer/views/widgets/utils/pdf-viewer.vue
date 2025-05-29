@@ -189,6 +189,13 @@ onBeforeUnmount(() => {
 
 defineExpose({
   isDirty: () => {
+    if (pdfViewer._pages) {
+      pdfViewer._pages.forEach((page) => {
+        if (page.annotationEditorLayer) {
+          page.annotationEditorLayer.annotationEditorLayer.commitOrRemove();
+        }
+      });
+    }
     return !!pdfViewer.pdfDocument?.annotationStorage.size;
   },
   getDocument: () => {
