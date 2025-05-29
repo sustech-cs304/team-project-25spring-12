@@ -1,21 +1,16 @@
 <template>
   <div class="widget-layout">
     <!-- 菜单 + 切换按钮区域 -->
-    <div class="widget-menu-wrapper" :class="{ collapsed }">
-      <!-- 折叠按钮 -->
-      <div class="menu-toggle" @click="toggleCollapse">
-        <el-icon>
-          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
-        </el-icon>
-        <span v-if="showTitle" class="menu-title">{{ title }}</span>
+    <div class="widget-menu-wrapper">
+      <!-- 标题 -->
+      <div class="menu-toggle">
+        <span class="menu-title">{{ title }}</span>
       </div>
 
       <!-- 菜单栏 -->
       <el-menu
           class="widget-menu"
           :default-active="activeWidgetId"
-          :collapse="collapsed"
-          :collapse-transition="true"
           mode="vertical"
           @select="handleMenuSelect"
       >
@@ -29,7 +24,7 @@
           <el-icon v-if="getIconComponent(widget)">
             <component :is="getIconComponent(widget)"/>
           </el-icon>
-          <span v-if="!collapsed">{{ widget.title }}</span>
+          <span>{{ widget.title }}</span>
         </el-menu-item>
       </el-menu>
       <el-popover
@@ -79,10 +74,10 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
+import {computed, onMounted, ref, resolveComponent} from 'vue'
 import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
-import type {AssignmentWidget, WidgetUnion, BaseWidget, NotePdfWidget} from '@/types/widgets'
+import type {AssignmentWidget, WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
 import {createWidget, getPage} from "@/api/courseMaterial"
@@ -98,9 +93,7 @@ const WidgetTypes = [
 const route = useRoute()
 
 const activeWidgetId = ref<string>('')
-const collapsed = ref(false)
 const widgetRefs = new Map<string, any>()
-const showTitle = ref(!collapsed.value)
 
 const widgets = ref<WidgetUnion[]>([])
 const title = ref('')
@@ -145,7 +138,7 @@ const getMenuItemStyle = (widget: WidgetUnion) => {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    justifyContent: 'flex-start',
     transition: 'all 0.2s',
   }
 }
@@ -153,11 +146,6 @@ const getMenuItemStyle = (widget: WidgetUnion) => {
 const getIconComponent = (widget: WidgetUnion) => {
   const iconName = getWidgetStyle(widget.type).icon
   return resolveComponent(iconName)
-}
-
-const toggleCollapse = async () => {
-  collapsed.value = !collapsed.value
-  await nextTick()
 }
 
 const setWidgetRef = (id: string, el: any) => {
@@ -218,16 +206,6 @@ const handleUploadAttachment: void = (file: FileMeta) => {
   console.log('here');
   (activeWidget.value as AssignmentWidget).attachments.push(file);
 }
-
-watch(collapsed, (val) => {
-  if (val) { // 收起菜单：立即隐藏文字
-    showTitle.value = false
-  } else { // 展开菜单：动画结束后显示文字
-    setTimeout(() => {
-      showTitle.value = true
-    }, 300)
-  }
-})
 </script>
 
 <style scoped>
@@ -250,14 +228,6 @@ watch(collapsed, (val) => {
   transition: width 0.3s ease-in-out;
   width: 300px;
   flex-shrink: 0;
-}
-
-.widget-menu-wrapper.collapsed {
-  width: 64px;
-}
-
-:deep(.el-menu--collapse) {
-  width: 64px;
 }
 
 .menu-toggle {

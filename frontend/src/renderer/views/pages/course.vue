@@ -1,21 +1,16 @@
 <template>
   <div class="widget-layout">
     <!-- 左侧菜单 -->
-    <div class="widget-menu-wrapper" :class="{ collapsed }">
-      <!-- 折叠按钮 -->
-      <div class="menu-toggle" @click="toggleCollapse">
-        <el-icon>
-          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
-        </el-icon>
-        <span v-if="showTitle" class="menu-title">课程内容</span>
+    <div class="widget-menu-wrapper">
+      <!-- 标题 -->
+      <div class="menu-toggle">
+        <span class="menu-title">课程内容</span>
       </div>
 
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
           :default-active="activeFolderId"
-          :collapse="collapsed"
-          :collapse-transition="true"
           mode="vertical"
           @select="handleMenuSelect"
       >
@@ -26,10 +21,10 @@
             class="hoverable-item"
             :style="getMenuItemStyle(folder)"
             @mouseenter="hoveredFolderId = folder.id"
-            @mouseleave="hoveredFolderId = null"
+            @mouseleave="hoveredFolderId = ''"
         >
           <el-icon><Folder/></el-icon>
-          <span v-if="!collapsed">{{ folder.name }}</span>
+          <span>{{ folder.name }}</span>
         </el-menu-item>
       </el-menu>
       <el-popover
@@ -72,7 +67,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ComputedRef, nextTick, onMounted, ref, watch} from 'vue'
+import {computed, ComputedRef, onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder, FolderPageItem} from '@/types/folder'
@@ -124,24 +119,17 @@ const getMenuItemStyle = (folder: Folder) => {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    justifyContent: 'flex-start',
     transition: 'all 0.2s',
     cursor: 'pointer',
   }
 }
 
-const collapsed = ref(false)
-const showTitle = ref(true)
 const foldersSorted = computed(() =>
     [...folders.value].sort((a, b) => a.index - b.index)
 )
 const activeFolderId = ref('')
 const activeFolder: ComputedRef<Folder | null> = computed(() => folders.value.find(f => f.id == activeFolderId.value))
-
-const toggleCollapse = async () => {
-  collapsed.value = !collapsed.value
-  await nextTick()
-}
 
 const initActiveFolder = () => {
   const id = route.query.folder as string
@@ -156,16 +144,6 @@ const initActiveFolder = () => {
 const handleMenuSelect = (folderId: string) => {
   activeFolderId.value = folderId
 }
-
-watch(collapsed, (val) => {
-  if (val) {
-    showTitle.value = false
-  } else {
-    setTimeout(() => {
-      showTitle.value = true
-    }, 300)
-  }
-})
 
 const dialogVisible = ref<boolean>(false)
 const newFolderTitle = ref<string>('')
