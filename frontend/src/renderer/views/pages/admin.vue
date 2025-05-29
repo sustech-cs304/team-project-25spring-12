@@ -12,7 +12,7 @@
             </el-select>
             <el-input
               v-model="userSearch"
-              :placeholder="userSearchType === 'name' ? '搜索姓名' : '搜索用户名'"
+              :placeholder="userSearchType === 'username' ? '搜索用户名' : '搜索姓名'"
               style="width: 200px"
               clearable
               @input="filterUsers"
