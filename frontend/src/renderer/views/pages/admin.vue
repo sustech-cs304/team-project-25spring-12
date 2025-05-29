@@ -377,8 +377,14 @@ const saveUser = () => {
   })
 }
 const deleteUser = (username) => {
-  users.value = users.value.filter(user => user.username !== username)
-  ElMessage.success('用户删除成功')
+  service.delete(`/users/${username}`) // 嘻嘻后端现在没有这个接口
+    .then(() => {
+      users.value = users.value.filter(user => user.username !== username)
+      ElMessage.success('用户删除成功')
+    })
+    .catch(() => {
+      ElMessage.error('删除用户失败，请稍后重试')
+    })
 }
 
 // 课程管理相关
@@ -498,8 +504,14 @@ const saveCourse = () => {
   })
 }
 const deleteCourse = (id) => {
-  courses.value = courses.value.filter(course => course.id !== id)
-  ElMessage.success('课程删除成功')
+  service.delete(`/class/${id}`)
+    .then(() => {
+      courses.value = courses.value.filter(course => course.id !== id)
+      ElMessage.success('课程删除成功')
+    })
+    .catch(() => {
+      ElMessage.error('删除课程失败，请稍后重试')
+    })
 }
 const filterCourses = () => {}
 
@@ -569,8 +581,14 @@ const deleteSemester = (id) => {
     ElMessage.error('无法删除正在被课程使用的学期')
     return
   }
-  semesters.value = semesters.value.filter(semester => semester.id !== id)
-  ElMessage.success('学期删除成功')
+  service.delete(`/class/semester/${id}`)
+    .then(() => {
+      semesters.value = semesters.value.filter(semester => semester.id !== id)
+      ElMessage.success('学期删除成功')
+    })
+    .catch(() => {
+      ElMessage.error('删除学期失败，请稍后重试')
+    })
 }
 
 const filterSemesters = () => {}

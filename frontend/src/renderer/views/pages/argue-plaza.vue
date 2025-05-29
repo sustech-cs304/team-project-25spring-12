@@ -77,7 +77,6 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import axios from 'axios';
 import service from '../../utils/request';
 
 // const list = ref([]);
