@@ -224,6 +224,29 @@
             </el-option>
           </el-select>
         </el-form-item>
+        <el-form-item label="学生" prop="students">
+          <el-select
+            v-model="courseForm.students"
+            placeholder="选择学生"
+            filterable
+            clearable
+            multiple
+            style="width: 100%"
+            :filter-method="filterUsers"
+          >
+            <el-option
+              v-for="user in filteredUsersForCourse"
+              :key="user.username"
+              :label="user.name"
+              :value="user.username"
+            >
+              <div class="user-option">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
+              </div>
+            </el-option>
+          </el-select>
+        </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input v-model="courseForm.description" type="textarea" />
         </el-form-item>
@@ -360,6 +383,7 @@ const courseForm = ref({
   name: '',
   instructor: [],
   assistants: [],
+  students: [],
   description: ''
 })
 const courseRules = {
@@ -368,7 +392,8 @@ const courseRules = {
   name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
   instructor: [{ required: true, type: 'array', min: 1, message: '请至少选择一名讲师', trigger: 'change' }],
   assistants: [{ required: true, type: 'array', min: 1, message: '请至少选择一名助教', trigger: 'change' }],
-  description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
+  students: [{ required: false, type: 'array', trigger: 'change' }],
+  description: [{ required: false, message: '请输入课程描述', trigger: 'blur' }]
 }
 const semesters = ref([
   { label: '2023 春季', value: 1 },
@@ -383,8 +408,8 @@ const invertedSemesters = computed(() => {
 })
 
 const courses = ref([
-  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程' },
-  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门' },
+  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, instructor: ['teacher1'], assistants: ['student1'], students: ['student1'], description: '基础数学课程' },
+  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, instructor: ['teacher1'], assistants: ['student1'], students: ['student1'], description: 'Python编程入门' },
 ])
 const filteredCourses = computed(() => {
   return courses.value
@@ -432,7 +457,7 @@ const openEditCourseDialog = (course) => {
   courseDialogVisible.value = true
 }
 const resetCourseForm = () => {
-  courseForm.value = { id: null, name: '', semester: '', instructor: [], assistants: [], description: '' }
+  courseForm.value = { id: null, name: '', semester: '', instructor: [], assistants: [], students: [], description: '' }
   courseFormRef.value?.resetFields()
   filteredUsersForCourse.value = users.value
 }
@@ -451,6 +476,7 @@ const saveCourse = () => {
           name: courseForm.value.name,
           instructor: courseForm.value.instructor,
           assistants: courseForm.value.assistants,
+          students: courseForm.value.students,
           description: courseForm.value.description,
         })
         ElMessage.success('课程添加成功')
