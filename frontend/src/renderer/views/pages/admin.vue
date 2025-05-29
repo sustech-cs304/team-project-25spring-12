@@ -81,6 +81,32 @@
           </el-table>
         </div>
       </el-tab-pane>
+
+      <!-- 学期管理 -->
+      <el-tab-pane label="学期管理" name="semesters">
+        <div class="semester-management">
+          <div class="action-bar">
+            <el-button type="primary" @click="openAddSemesterDialog">添加学期</el-button>
+            <el-input
+              v-model="semesterSearch"
+              placeholder="搜索学期名称"
+              style="width: 200px"
+              clearable
+              @input="filterSemesters"
+            />
+          </div>
+          <el-table :data="filteredSemesters" style="width: 100%" border>
+            <el-table-column prop="value" label="ID" width="100" />
+            <el-table-column prop="label" label="学期名称" />
+            <el-table-column label="操作" width="200">
+              <template #default="{ row }">
+                <el-button type="warning" size="small" @click="openEditSemesterDialog(row)">编辑</el-button>
+                <el-button type="danger" size="small" @click="deleteSemester(row.value)">删除</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+      </el-tab-pane>
     </el-tabs>
 
     <!-- 添加/编辑用户对话框 -->
@@ -124,6 +150,16 @@
       <el-form :model="courseForm" :rules="courseRules" ref="courseFormRef">
         <el-form-item label="课程名" prop="name">
           <el-input v-model="courseForm.name" />
+        </el-form-item>
+        <el-form-item label="学期" prop="semester">
+          <el-select v-model="courseForm.semester" placeholder="选择学期">
+            <el-option
+              v-for="semester in semesters"
+              :key="semester.value"
+              :label="semester.label"
+              :value="semester.value"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item label="讲师" prop="instructor">
           <el-select
@@ -178,6 +214,24 @@
         <el-button type="primary" @click="saveCourse">保存</el-button>
       </template>
     </el-dialog>
+
+    <!-- 添加/编辑学期对话框 -->
+    <el-dialog
+      :title="semesterDialogTitle"
+      v-model="semesterDialogVisible"
+      width="30%"
+      @close="resetSemesterForm"
+    >
+      <el-form :model="semesterForm" :rules="semesterRules" ref="semesterFormRef">
+        <el-form-item label="学期名称" prop="label">
+          <el-input v-model="semesterForm.label" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="semesterDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveSemester">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -188,7 +242,7 @@ import { ElMessage } from 'element-plus'
 // 用户管理相关
 const activeTab = ref('users')
 const userSearch = ref('')
-const userSearchType = ref('username') // 默认按用户名搜索
+const userSearchType = ref('username')
 const userDialogVisible = ref(false)
 const userDialogTitle = ref('添加用户')
 const userFormRef = ref(null)
@@ -211,7 +265,7 @@ const userRules = {
 const users = ref([
   { id: 1, username: 'admin', email: 'admin@example.com', role: 'admin' },
   { id: 2, username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' },
-  { id: 3, username: 'teacher1', email: 'teacher2@example.com', role: 'teacher' },
+  { id: 3, username: 'teacher2', email: 'teacher2@example.com', role: 'teacher' },
   { id: 4, username: 'student1', email: 'student1@example.com', role: 'student' }
 ])
 const filteredUsers = computed(() => {
@@ -260,25 +314,25 @@ const deleteUser = (id) => {
   users.value = users.value.filter(user => user.id !== id)
   ElMessage.success('用户删除成功')
 }
-const filterUsers = () => {
-  // 触发 computed 属性更新
-}
+const filterUsers = () => {}
 
 // 课程管理相关
 const courseSearch = ref('')
-const courseSearchType = ref('name') // 默认按课程名搜索
+const courseSearchType = ref('name')
 const courseDialogVisible = ref(false)
 const courseDialogTitle = ref('添加课程')
 const courseFormRef = ref(null)
 const courseForm = ref({
   id: null,
   name: '',
+  semester: '',
   instructor: [],
   assistants: [],
   description: ''
 })
 const courseRules = {
   name: [{ required: true, message: '请输入课程名', trigger: 'blur' }],
+  semester: [{ required: true, message: '请选择学期', trigger: 'change' }],
   instructor: [{ required: true, type: 'array', min: 1, message: '请至少选择一名讲师', trigger: 'change' }],
   assistants: [{ required: true, type: 'array', min: 1, message: '请至少选择一名助教', trigger: 'change' }],
   description: [{ required: true, message: '请输入课程描述', trigger: 'blur' }]
@@ -292,8 +346,8 @@ const semesters = ref([
 ])
 const semesterFilter = ref('')
 const courses = ref([
-  { id: 1, name: '数学基础', instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程', semester: 1 },
-  { id: 2, name: '编程入门', instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门', semester: 2 },
+  { id: 1, name: '数学基础', semester: 1, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: '基础数学课程' },
+  { id: 2, name: '编程入门', semester: 2, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: 'Python编程入门' },
 ])
 const filteredCourses = computed(() => {
   return courses.value.filter(course => {
@@ -342,7 +396,7 @@ const openEditCourseDialog = (course) => {
   courseDialogVisible.value = true
 }
 const resetCourseForm = () => {
-  courseForm.value = { id: null, name: '', instructor: [], assistants: [], description: '' }
+  courseForm.value = { id: null, name: '', semester: '', instructor: [], assistants: [], description: '' }
   courseFormRef.value?.resetFields()
   teachers.value = users.value.filter(user => user.role === 'teacher')
   assistants.value = users.value.filter(user => user.role === 'student')
@@ -358,6 +412,7 @@ const saveCourse = () => {
         courses.value.push({
           id: courses.value.length + 1,
           name: courseForm.value.name,
+          semester: courseForm.value.semester,
           instructor: courseForm.value.instructor,
           assistants: courseForm.value.assistants,
           description: courseForm.value.description
@@ -372,9 +427,74 @@ const deleteCourse = (id) => {
   courses.value = courses.value.filter(course => course.id !== id)
   ElMessage.success('课程删除成功')
 }
-const filterCourses = () => {
-  // 触发 computed 属性更新
+const filterCourses = () => {}
+
+// 学期管理相关
+const semesterSearch = ref('')
+const semesterDialogVisible = ref(false)
+const semesterDialogTitle = ref('添加学期')
+const semesterFormRef = ref(null)
+const semesterForm = ref({
+  value: null,
+  label: ''
+})
+const semesterRules = {
+  label: [{ required: true, message: '请输入学期名称', trigger: 'blur' }]
 }
+
+const filteredSemesters = computed(() => {
+  return semesters.value.filter(semester =>
+    semester.label.toLowerCase().includes(semesterSearch.value.toLowerCase())
+  )
+})
+
+const openAddSemesterDialog = () => {
+  semesterDialogTitle.value = '添加学期'
+  semesterDialogVisible.value = true
+}
+
+const openEditSemesterDialog = (semester) => {
+  semesterDialogTitle.value = '编辑学期'
+  semesterForm.value = { ...semester }
+  semesterDialogVisible.value = true
+}
+
+const resetSemesterForm = () => {
+  semesterForm.value = { value: null, label: '' }
+  semesterFormRef.value?.resetFields()
+}
+
+const saveSemester = () => {
+  semesterFormRef.value.validate((valid) => {
+    if (valid) {
+      if (semesterForm.value.value) {
+        const index = semesters.value.findIndex(s => s.value === semesterForm.value.value)
+        semesters.value[index] = { ...semesterForm.value }
+        ElMessage.success('学期更新成功')
+      } else {
+        semesters.value.push({
+          value: semesters.value.length + 1,
+          label: semesterForm.value.label
+        })
+        ElMessage.success('学期添加成功')
+      }
+      semesterDialogVisible.value = false
+    }
+  })
+}
+
+const deleteSemester = (value) => {
+  // Check if semester is used by any course
+  const isUsed = courses.value.some(course => course.semester === value)
+  if (isUsed) {
+    ElMessage.error('无法删除正在被课程使用的学期')
+    return
+  }
+  semesters.value = semesters.value.filter(semester => semester.value !== value)
+  ElMessage.success('学期删除成功')
+}
+
+const filterSemesters = () => {}
 </script>
 
 <style scoped>
