@@ -8,11 +8,11 @@
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
             <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
               <el-option label="按用户名" value="username" />
-              <el-option label="按用户ID" value="id" />
+              <el-option label="按姓名" value="name" />
             </el-select>
             <el-input
               v-model="userSearch"
-              :placeholder="userSearchType === 'id' ? '搜索用户ID' : '搜索用户名'"
+              :placeholder="userSearchType === 'name' ? '搜索姓名' : '搜索用户名'"
               style="width: 200px"
               clearable
               @input="filterUsers"
@@ -24,14 +24,14 @@
             border
             @sort-change="handleUserSortChange"
           >
-            <el-table-column prop="id" label="ID" width="100" sortable />
             <el-table-column prop="username" label="用户名" sortable />
+            <el-table-column prop="name" label="姓名" sortable />
             <el-table-column prop="email" label="邮箱" sortable />
             <el-table-column prop="role" label="角色" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditUserDialog(row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="deleteUser(row.id)">删除</el-button>
+                <el-button type="danger" size="small" @click="deleteUser(row.username)">删除</el-button>
               </template>
             </el-table-column>
           </el-table>
@@ -74,12 +74,12 @@
             <el-table-column prop="name" label="课程名" sortable />
             <el-table-column label="讲师">
               <template #default="{ row }">
-                {{ row.instructor.join(', ') }}
+                {{ getUserNames(row.instructor).join(', ') }}
               </template>
             </el-table-column>
             <el-table-column label="助教">
               <template #default="{ row }">
-                {{ row.assistants.join(', ') }}
+                {{ getUserNames(row.assistants).join(', ') }}
               </template>
             </el-table-column>
             <el-table-column prop="description" label="描述" sortable />
@@ -133,6 +133,9 @@
       @close="resetUserForm"
     >
       <el-form :model="userForm" :rules="userRules" ref="userFormRef">
+        <el-form-item label="姓名" prop="name">
+          <el-input v-model="userForm.name" />
+        </el-form-item>
         <el-form-item label="用户名" prop="username">
           <el-input v-model="userForm.username" />
         </el-form-item>
@@ -192,11 +195,12 @@
           >
             <el-option
               v-for="teacher in teachers"
-              :key="teacher.email"
-              :value="teacher.email"
+              :key="teacher.username"
+              :label="teacher.name"
+              :value="teacher.username"
             >
               <div class="teacher-option">
-                <span class="teacher-name">{{ teacher.username }}</span>
+                <span class="teacher-name">{{ teacher.name }}</span>
                 <span class="teacher-email">{{ teacher.email }}</span>
               </div>
             </el-option>
@@ -214,11 +218,12 @@
           >
             <el-option
               v-for="assistant in assistants"
-              :key="assistant.email"
-              :value="assistant.email"
+              :key="assistant.username"
+              :label="assistant.name"
+              :value="assistant.username"
             >
               <div class="teacher-option">
-                <span class="teacher-name">{{ assistant.username }}</span>
+                <span class="teacher-name">{{ assistant.name }}</span>
                 <span class="teacher-email">{{ assistant.email }}</span>
               </div>
             </el-option>
@@ -257,6 +262,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
+import service from '../../utils/request'
 
 // 用户管理相关
 const activeTab = ref('users')
@@ -266,13 +272,14 @@ const userDialogVisible = ref(false)
 const userDialogTitle = ref('添加用户')
 const userFormRef = ref(null)
 const userForm = ref({
-  id: null,
+  name: '',
   username: '',
   email: '',
   role: '',
   password: ''
 })
 const userRules = {
+  name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
@@ -282,15 +289,15 @@ const userRules = {
   password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
 }
 const users = ref([
-  { id: 1, username: 'admin', email: 'admin@example.com', role: 'admin' },
-  { id: 2, username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' },
-  { id: 3, username: 'teacher2', email: 'teacher2@example.com', role: 'teacher' },
-  { id: 4, username: 'student1', email: 'student1@example.com', role: 'student' }
+  { name: 'Admin User', username: 'admin', email: 'admin@example.com', role: 'admin' },
+  { name: 'Teacher One', username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' },
+  { name: 'Teacher Two', username: 'teacher2', email: 'teacher2@example.com', role: 'teacher' },
+  { name: 'Student One', username: 'student1', email: 'student1@example.com', role: 'student' }
 ])
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
-    if (userSearchType.value === 'id') {
-      return user.id.toString().includes(userSearch.value)
+    if (userSearchType.value === 'name') {
+      return user.name.toLowerCase().includes(userSearch.value.toLowerCase())
     }
     return user.username.toLowerCase().includes(userSearch.value.toLowerCase())
   })
@@ -306,19 +313,19 @@ const openEditUserDialog = (user) => {
   userDialogVisible.value = true
 }
 const resetUserForm = () => {
-  userForm.value = { id: null, username: '', email: '', role: '', password: '' }
+  userForm.value = { name: '', username: '', email: '', role: '', password: '' }
   userFormRef.value?.resetFields()
 }
 const saveUser = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
-      if (userForm.value.id) {
-        const index = users.value.findIndex(u => u.id === userForm.value.id)
+      if (userForm.value.username in users.value.map(u => u.username)) {
+        const index = users.value.findIndex(u => u.username === userForm.value.username)
         users.value[index] = { ...userForm.value, password: undefined }
         ElMessage.success('用户更新成功')
       } else {
         users.value.push({
-          id: users.value.length + 1,
+          name: userForm.value.name,
           username: userForm.value.username,
           email: userForm.value.email,
           role: userForm.value.role
@@ -329,8 +336,8 @@ const saveUser = () => {
     }
   })
 }
-const deleteUser = (id) => {
-  users.value = users.value.filter(user => user.id !== id)
+const deleteUser = (username) => {
+  users.value = users.value.filter(user => user.username !== username)
   ElMessage.success('用户删除成功')
 }
 const filterUsers = () => {}
@@ -371,8 +378,8 @@ const invertedSemesters = computed(() => {
 })
 
 const courses = ref([
-  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: '基础数学课程' },
-  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, instructor: ['teacher1@example.com'], assistants: ['student1@example.com'], description: 'Python编程入门' },
+  { id: 1, course_code: "MA-101", name: '数学基础', semester: 1, instructor: ['teacher1'], assistants: ['student1'], description: '基础数学课程' },
+  { id: 2, course_code: "CS-101", name: '编程入门', semester: 2, instructor: ['teacher1'], assistants: ['student1'], description: 'Python编程入门' },
 ])
 const filteredCourses = computed(() => {
   return courses.value
@@ -400,6 +407,7 @@ const filterTeachers = (query) => {
   const lowerQuery = query.toLowerCase()
   teachers.value = users.value.filter(user => 
     user.role === 'teacher' && (
+      user.name.toLowerCase().includes(lowerQuery) || 
       user.username.toLowerCase().includes(lowerQuery) || 
       user.email.toLowerCase().includes(lowerQuery)
     )
@@ -410,10 +418,18 @@ const filterAssistants = (query) => {
   const lowerQuery = query.toLowerCase()
   assistants.value = users.value.filter(user => 
     user.role === 'student' && (
+      user.name.toLowerCase().includes(lowerQuery) || 
       user.username.toLowerCase().includes(lowerQuery) || 
       user.email.toLowerCase().includes(lowerQuery)
     )
   )
+}
+
+const getUserNames = (usernames) => {
+  return usernames.map(username => {
+    const user = users.value.find(u => u.username === username)
+    return user ? user.name : '未知用户'
+  })
 }
 
 const openAddCourseDialog = () => {
@@ -515,7 +531,6 @@ const saveSemester = () => {
 }
 
 const deleteSemester = (value) => {
-  // Check if semester is used by any course
   const isUsed = courses.value.some(course => course.semester === value)
   if (isUsed) {
     ElMessage.error('无法删除正在被课程使用的学期')
