@@ -9,10 +9,12 @@
             <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
               <el-option label="按姓名" value="name" />
               <el-option label="按用户名" value="username" />
+              <el-option label="按部门" value="department" />
+              <el-option label="按邮箱" value="email" />
             </el-select>
             <el-input
               v-model="userSearch"
-              :placeholder="userSearchType === 'username' ? '搜索用户名' : '搜索姓名'"
+              :placeholder="getUserSearchPlaceholder"
               style="width: 200px"
               clearable
               @input="filterUsers"
@@ -26,8 +28,8 @@
           >
             <el-table-column prop="username" label="用户名" sortable />
             <el-table-column prop="name" label="姓名" sortable />
+            <el-table-column prop="department" label="部门" sortable />
             <el-table-column prop="email" label="邮箱" sortable />
-            <el-table-column prop="role" label="角色" sortable />
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditUserDialog(row)">编辑</el-button>
@@ -139,18 +141,11 @@
         <el-form-item label="用户名" prop="username">
           <el-input v-model="userForm.username" />
         </el-form-item>
+        <el-form-item label="部门" prop="department">
+          <el-input v-model="userForm.department" />
+        </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="userForm.email" />
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="userForm.password" type="password" />
-        </el-form-item>
-        <el-form-item label="角色" prop="role">
-          <el-select v-model="userForm.role" placeholder="选择角色">
-            <el-option label="管理员" value="admin" />
-            <el-option label="教师" value="teacher" />
-            <el-option label="学生" value="student" />
-          </el-select>
         </el-form-item>
       </el-form>
       <template #footer>
@@ -191,17 +186,17 @@
             clearable
             multiple
             style="width: 100%"
-            :filter-method="filterTeachers"
+            :filter-method="filterUsers"
           >
             <el-option
-              v-for="teacher in teachers"
-              :key="teacher.username"
-              :label="teacher.name"
-              :value="teacher.username"
+              v-for="user in filteredUsersForCourse"
+              :key="user.username"
+              :label="user.name"
+              :value="user.username"
             >
-              <div class="teacher-option">
-                <span class="teacher-name">{{ teacher.name }}</span>
-                <span class="teacher-email">{{ teacher.email }}</span>
+              <div class="user-option">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
               </div>
             </el-option>
           </el-select>
@@ -214,17 +209,17 @@
             clearable
             multiple
             style="width: 100%"
-            :filter-method="filterAssistants"
+            :filter-method="filterUsers"
           >
             <el-option
-              v-for="assistant in assistants"
-              :key="assistant.username"
-              :label="assistant.name"
-              :value="assistant.username"
+              v-for="user in filteredUsersForCourse"
+              :key="user.username"
+              :label="user.name"
+              :value="user.username"
             >
-              <div class="teacher-option">
-                <span class="teacher-name">{{ assistant.name }}</span>
-                <span class="teacher-email">{{ assistant.email }}</span>
+              <div class="user-option">
+                <span class="user-name">{{ user.name }}</span>
+                <span class="user-email">{{ user.email }}</span>
               </div>
             </el-option>
           </el-select>
@@ -274,33 +269,49 @@ const userFormRef = ref(null)
 const userForm = ref({
   name: '',
   username: '',
-  email: '',
-  role: '',
-  password: ''
+  department: '',
+  email: ''
 })
 const userRules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  department: [{ required: true, message: '请输入部门', trigger: 'blur' }],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
-  ],
-  role: [{ required: true, message: '请选择角色', trigger: 'change' }],
-  password: [{ required: true, message: '请输入密码', trigger: 'blur' }]
+  ]
 }
 const users = ref([
-  { name: 'Admin User', username: 'admin', email: 'admin@example.com', role: 'admin' },
-  { name: 'Teacher One', username: 'teacher1', email: 'teacher1@example.com', role: 'teacher' },
-  { name: 'Teacher Two', username: 'teacher2', email: 'teacher2@example.com', role: 'teacher' },
-  { name: 'Student One', username: 'student1', email: 'student1@example.com', role: 'student' }
+  { name: 'Admin User', username: 'admin', department: 'Administration', email: 'admin@example.com' },
+  { name: 'Teacher One', username: 'teacher1', department: 'Mathematics', email: 'teacher1@example.com' },
+  { name: 'Teacher Two', username: 'teacher2', department: 'Computer Science', email: 'teacher2@example.com' },
+  { name: 'Student One', username: 'student1', department: 'Physics', email: 'student1@example.com' }
 ])
 const filteredUsers = computed(() => {
   return users.value.filter(user => {
     if (userSearchType.value === 'name') {
       return user.name.toLowerCase().includes(userSearch.value.toLowerCase())
+    } else if (userSearchType.value === 'username') {
+      return user.username.toLowerCase().includes(userSearch.value.toLowerCase())
+    } else if (userSearchType.value === 'department') {
+      return user.department.toLowerCase().includes(userSearch.value.toLowerCase())
+    } else {
+      return user.email.toLowerCase().includes(userSearch.value.toLowerCase())
     }
-    return user.username.toLowerCase().includes(userSearch.value.toLowerCase())
   })
+})
+
+const getUserSearchPlaceholder = computed(() => {
+  switch (userSearchType.value) {
+    case 'username':
+      return '搜索用户名'
+    case 'department':
+      return '搜索部门'
+    case 'email':
+      return '搜索邮箱'
+    default:
+      return '搜索姓名'
+  }
 })
 
 const openAddUserDialog = () => {
@@ -309,27 +320,22 @@ const openAddUserDialog = () => {
 }
 const openEditUserDialog = (user) => {
   userDialogTitle.value = '编辑用户'
-  userForm.value = { ...user, password: '' }
+  userForm.value = { ...user }
   userDialogVisible.value = true
 }
 const resetUserForm = () => {
-  userForm.value = { name: '', username: '', email: '', role: '', password: '' }
+  userForm.value = { name: '', username: '', department: '', email: '' }
   userFormRef.value?.resetFields()
 }
 const saveUser = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
-      if (userForm.value.username in users.value.map(u => u.username)) {
-        const index = users.value.findIndex(u => u.username === userForm.value.username)
-        users.value[index] = { ...userForm.value, password: undefined }
+      const index = users.value.findIndex(u => u.username === userForm.value.username)
+      if (index !== -1) {
+        users.value[index] = { ...userForm.value }
         ElMessage.success('用户更新成功')
       } else {
-        users.value.push({
-          name: userForm.value.name,
-          username: userForm.value.username,
-          email: userForm.value.email,
-          role: userForm.value.role
-        })
+        users.value.push({ ...userForm.value })
         ElMessage.success('用户添加成功')
       }
       userDialogVisible.value = false
@@ -340,7 +346,6 @@ const deleteUser = (username) => {
   users.value = users.value.filter(user => user.username !== username)
   ElMessage.success('用户删除成功')
 }
-const filterUsers = () => {}
 
 // 课程管理相关
 const courseSearch = ref('')
@@ -387,11 +392,9 @@ const filteredCourses = computed(() => {
       const matchesSearch = courseSearchType.value === 'course_code'
         ? course.course_code.toString().includes(courseSearch.value)
         : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-      
       const matchesSemester = semesterFilter.value
         ? course.semester === semesterFilter.value
         : true
-
       return matchesSearch && matchesSemester
     })
     .map(course => ({
@@ -400,28 +403,15 @@ const filteredCourses = computed(() => {
     }))
 })
 
-const teachers = ref(users.value.filter(user => user.role === 'teacher'))
-const assistants = ref(users.value.filter(user => user.role === 'student'))
+const filteredUsersForCourse = ref(users.value)
 
-const filterTeachers = (query) => {
+const filterUsers = (query) => {
   const lowerQuery = query.toLowerCase()
-  teachers.value = users.value.filter(user => 
-    user.role === 'teacher' && (
-      user.name.toLowerCase().includes(lowerQuery) || 
-      user.username.toLowerCase().includes(lowerQuery) || 
-      user.email.toLowerCase().includes(lowerQuery)
-    )
-  )
-}
-
-const filterAssistants = (query) => {
-  const lowerQuery = query.toLowerCase()
-  assistants.value = users.value.filter(user => 
-    user.role === 'student' && (
-      user.name.toLowerCase().includes(lowerQuery) || 
-      user.username.toLowerCase().includes(lowerQuery) || 
-      user.email.toLowerCase().includes(lowerQuery)
-    )
+  filteredUsersForCourse.value = users.value.filter(user => 
+    user.name.toLowerCase().includes(lowerQuery) || 
+    user.username.toLowerCase().includes(lowerQuery) || 
+    user.email.toLowerCase().includes(lowerQuery) ||
+    user.department.toLowerCase().includes(lowerQuery)
   )
 }
 
@@ -444,8 +434,7 @@ const openEditCourseDialog = (course) => {
 const resetCourseForm = () => {
   courseForm.value = { id: null, name: '', semester: '', instructor: [], assistants: [], description: '' }
   courseFormRef.value?.resetFields()
-  teachers.value = users.value.filter(user => user.role === 'teacher')
-  assistants.value = users.value.filter(user => user.role === 'student')
+  filteredUsersForCourse.value = users.value
 }
 const saveCourse = () => {
   courseFormRef.value.validate((valid) => {
@@ -553,16 +542,16 @@ const filterSemesters = () => {}
   gap: 10px;
   align-items: center;
 }
-.teacher-option {
+.user-option {
   display: flex;
   justify-content: space-between;
   width: 100%;
 }
-.teacher-name {
+.user-name {
   flex: 1;
   text-align: left;
 }
-.teacher-email {
+.user-email {
   flex: 1;
   text-align: right;
   color: #909399;
