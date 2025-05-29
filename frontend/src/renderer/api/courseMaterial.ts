@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {Note} from "../types/widgets";
+import {Note, WidgetUnion} from "../types/widgets";
 import {Page} from "../types/page";
 
 export function getPage(id: number) {
@@ -34,13 +34,17 @@ export function createPage(page: Page, classId: number, folderId: number) {
     return request.post('/class/page', payload)
 }
 
+export function createWidget(widget: WidgetUnion) {
+    return request.post('/class/widget/' + widget.type, widget)
+}
+
 export interface Code {
     code: string,
     language: string,
 }
 
 export interface Submission {
-    widgetId: integer,
+    widgetId: number,
     content: string,
     attachments: File[],
     code: Code,

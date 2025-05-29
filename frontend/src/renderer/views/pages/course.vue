@@ -77,16 +77,17 @@ import {useRoute} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder, FolderPageItem} from '@/types/folder'
 import {createFolder, getFolders} from "@/api/course";
-import {useUserStore} from "@/store/user";
+import {getRoleByCourseId} from "@/composables/useUserData"
 import type {Page} from "@/types/page";
 
 const route = useRoute()
-const userStore = useUserStore()
 
 const folders = ref<Folder[]>([])
-const role = ref<string>(null)
+const role = ref<string>('')
 const courseId = ref<number>(0)
-const canEdit = computed(() => role.value == 'ta' || role.value == 'teacher')
+const canEdit = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
+
+const numberOrNull = (num: number | null) => num ?? 0;
 
 onMounted(async () => {
   courseId.value = Number(route.params.courseId)
@@ -94,8 +95,14 @@ onMounted(async () => {
   const response = await getFolders(courseId.value)
   folders.value = response.data as Folder[]
 
+  // 有一个 id 为 null 的文件夹，收录未分类的页面
+  folders.value = (response.data as Folder[]).map(folder => ({
+    ...folder,
+    id: numberOrNull(folder.id)
+  }))
+
   initActiveFolder()
-  role.value = await userStore.getRoleByCourseId(courseId.value)
+  role.value = await getRoleByCourseId(courseId.value)
 })
 
 const hoveredFolderId = ref<string>('')
@@ -144,7 +151,6 @@ const initActiveFolder = () => {
   } else if (foldersSorted.value.length > 0) {
     activeFolderId.value = foldersSorted.value[0].id.toString()
   }
-  console.log(activeFolderId.value)
 }
 
 const handleMenuSelect = (folderId: string) => {

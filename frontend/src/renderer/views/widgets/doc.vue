@@ -26,7 +26,7 @@ const props = defineProps<{
   data: DocWidget;
 }>();
 
-const computedTitle = computed(() => props.data?.title);
+const computedTitle = computed(() => props.data?.title || "文档");
 const authenticated = ref(true);
 const isEditing = ref(false);
 

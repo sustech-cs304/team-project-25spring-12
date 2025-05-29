@@ -83,7 +83,7 @@ const props = defineProps<{
   data: NotePdfWidget;
 }>();
 
-const computedTitle = computed(() => props.data.title || '互动式课件');
+const computedTitle = computed(() => props.data.title || "互动式课件");
 
 // refs
 const authenticated = ref<boolean>(true); // TODO: 鉴权

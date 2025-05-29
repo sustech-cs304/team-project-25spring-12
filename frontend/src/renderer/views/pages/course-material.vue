@@ -36,12 +36,12 @@
           :visible="showCreateWidgetPopover"
           placement="top"
           :width="180"
-          v-if="authenticated"
+          v-if="canEdit"
       >
         <p>
           <el-select v-model="newWidgetType" placeholder="请选择类型">
             <el-option
-                v-for="item in widgetTypes"
+                v-for="item in WidgetTypes"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -82,15 +82,20 @@
 import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
 import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
-import type {AssignmentWidget, WidgetUnion} from '@/types/widgets'
+import type {AssignmentWidget, WidgetUnion, BaseWidget, NotePdfWidget} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
-import {getPage} from "@/api/courseMaterial"
-import {useUserStore} from "@/store/user";
+import {createWidget, getPage} from "@/api/courseMaterial"
 import {FileMeta} from "@/types/fileMeta";
+import {getRoleByCourseId} from "@/composables/useUserData";
+
+const WidgetTypes = [
+    { value: 'notepdf', label: "互动式课件" },
+    { value: 'doc', label: "文档" },
+    { value: 'assignment', label: "作业" },
+];
 
 const route = useRoute()
-const userStore = useUserStore()
 
 const activeWidgetId = ref<string>('')
 const collapsed = ref(false)
@@ -100,21 +105,25 @@ const showTitle = ref(!collapsed.value)
 const widgets = ref<WidgetUnion[]>([])
 const title = ref('')
 
+const pageId = ref<number>(-1)
 const courseId = ref<number>(-1)
 const role = ref<string>('')
-const canEdit = computed(() => role.value === 'ta' || role.value === 'teacher')
+const canEdit = computed(() => role.value === 'teaching assistant' || role.value === 'teacher')
 
 onMounted(async () => {
-  const response = await getPage()
+  pageId.value = Number(route.params.pageId)
+  const response = await getPage(pageId.value)
   const data = response.data as Page
   title.value = data.name
   widgets.value = data.widgets
+
   initActiveWidget()
   setTimeout(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.()
   }, 50)
+
   courseId.value = Number(route.params.courseId)
-  role.value = await userStore.getRoleByCourseId(courseId.value)
+  role.value = await getRoleByCourseId(courseId.value)
 })
 
 const widgetsSortedByIndex = computed(() => {
@@ -178,12 +187,31 @@ const newWidgetType = ref('')
 
 const handleShowCreateWidgetPopover = () => {
   showCreateWidgetPopover.value = true
-  newWidgetType.value = undefined
+  newWidgetType.value = ''
 }
 
-const handleCreateWidget = () => {
+const handleCreateWidget = async () => {
   showCreateWidgetPopover.value = false
-  // TODO: 创建widget
+
+  if (newWidgetType.value.length) {
+    let newWidget: WidgetUnion = {
+      index: widgets.value.length,
+      type: newWidgetType.value,
+      visible: true,
+      page_id: pageId.value,
+      title: WidgetTypes.find(item => item.value === newWidgetType.value)?.label,
+    }
+    switch (newWidgetType.value) {
+      case "notepdf":
+        break
+      case "doc":
+        break
+      case "assignment":
+        break
+    }
+    const response = await createWidget(newWidget)
+    widgets.value.push(response.data)
+  }
 }
 
 const handleUploadAttachment: void = (file: FileMeta) => {

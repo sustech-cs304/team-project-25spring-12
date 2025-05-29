@@ -5,7 +5,7 @@ import Assignment from '@/views/widgets/assignment.vue';
 
 export type WidgetType = 'notepdf' | 'doc' | 'assignment';
 
-interface BaseWidget {
+export interface BaseWidget {
     id: number;
     type: WidgetType;
     index: number;
