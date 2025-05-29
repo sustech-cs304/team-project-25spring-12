@@ -78,13 +78,14 @@ const emit = defineEmits<{
 
 const displayTotalScore = computed(() => props.maxScore);
 
-const score = ref();
+const score = ref<number>();
 const content = ref("");
-const submissionContainer = ref();
+const submissionContainer = ref<InstanceType<typeof MdAndFileMark>>();
 
 const errorMessage = computed(() => {
   if (score.value === undefined || score.value === null) return "请输入分数";
   if (score.value < 0 || score.value > props.maxScore) return "分数超出范围";
+  if (!isDirty() && !isPatchDirty() && !submissionContainer.value?.isDirty()) return "当前内容已提交";
   return null;
 });
 
@@ -99,20 +100,29 @@ const handleUpdateFile = (fileId: string, dataPromise: Promise<Uint8Array>) => {
 };
 
 const handleSubmit = () => {
-  submissionContainer.value.save();
-  emit("submit", props.submission.id, score.value, content.value);
+  submissionContainer.value?.save();
+  if (score.value !== undefined) {
+    emit("submit", props.submission.id, score.value, content.value);
+  }
 };
 
 const isDirty = () => {
   return score.value !== props.feedback.score || content.value !== (props.feedback.content || "");
 };
 
+const isPatchDirty = () => {
+  const files = props.submission.feedback?.attachments || props.submission.attachments;
+  return files?.some(file => file.id in props.patch) ?? false;
+};
+
 watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedback], [oldSubmission, oldFeedback]) => {
   if (oldSubmission) {
-    if (submissionContainer.value.isDirty()) {
+    if (submissionContainer.value?.isDirty()) {
       submissionContainer.value.save();
     }
-    emit("save", oldSubmission.id, score.value, content.value);
+    if (score.value !== undefined) {
+      emit("save", oldSubmission.id, score.value, content.value);
+    }
   }
   score.value = newFeedback.score;
   content.value = newFeedback.content || "";

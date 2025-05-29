@@ -31,7 +31,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from "vue";
+import {computed, onUnmounted, ref, watch} from "vue";
 import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import ViewFileList from "./view-file-list.vue";
@@ -76,21 +76,21 @@ const textContent = computed(() => typeof(content.value) === "string" ? content.
 const pdfViewer = ref();
 
 const isDirty = () => {
-  return (FileType.PDF === selectedFileType.value && pdfViewer.value.isDirty()) || [FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value);
+  return FileType.PDF === selectedFileType.value && pdfViewer.value.isDirty();
 };
 
 const handleSave = () => {
-  if (selectedFileId.value) {
-    if (FileType.PDF === selectedFileType.value) {
-      const dataPromise = pdfViewer.value.getDocument();
-      if (dataPromise) {
-        emit("update-file", selectedFileId.value, dataPromise);
-      }
-    } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
-      if (content.value) {
-        URL.revokeObjectURL(content.value);
-      }
+  if (selectedFileId.value && FileType.PDF === selectedFileType.value) {
+    const dataPromise = pdfViewer.value.getDocument();
+    if (dataPromise) {
+      emit("update-file", selectedFileId.value, dataPromise);
     }
+  }
+};
+
+const handleFree = () => {
+  if (selectedFileId.value && [FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
+    URL.revokeObjectURL(content.value);
   }
 };
 
@@ -98,6 +98,7 @@ const updateSelectFileId = async (fileId: string | null) => {
   if (isDirty()) {
     handleSave();
   }
+  handleFree();
   content.value = null;
   selectedFileId.value = fileId;
   if (fileId !== null) {
@@ -105,7 +106,6 @@ const updateSelectFileId = async (fileId: string | null) => {
     if (FileType.PDF === selectedFileType.value) {
       content.value = blob;
     } else if ([FileType.PLAIN, FileType.MARKDOWN].includes(selectedFileType.value)) {
-      content.value = "";
       content.value = await blob.text();
     } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
       content.value = URL.createObjectURL(blob);
@@ -128,9 +128,11 @@ watch(() => props.fileList, () => {
   updateSelectFileId(null);
 });
 
+onUnmounted(handleFree);
+
 defineExpose({
   isDirty,
-  save: () => handleSave(),
+  save: handleSave,
 });
 </script>
 
