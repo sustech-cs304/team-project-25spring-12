@@ -67,6 +67,7 @@
             :data="activeWidget"
             :can-edit="canEdit"
             :ref="el => setWidgetRef(activeWidget.id, el)"
+            @update="handleWidgetUpdate"
         />
       </el-scrollbar>
     </div>
@@ -77,11 +78,10 @@
 import {computed, onMounted, ref, resolveComponent} from 'vue'
 import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
-import type {AssignmentWidget, WidgetUnion} from '@/types/widgets'
+import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
 import {createWidget, getPage} from "@/api/courseMaterial"
-import {FileMeta} from "@/types/fileMeta";
 import {getRoleByCourseId} from "@/composables/useUserData";
 
 const WidgetTypes = [
@@ -202,9 +202,11 @@ const handleCreateWidget = async () => {
   }
 }
 
-const handleUploadAttachment: void = (file: FileMeta) => {
-  console.log('here');
-  (activeWidget.value as AssignmentWidget).attachments.push(file);
+const handleWidgetUpdate = (data: WidgetUnion) => {
+  const index = widgets.value.findIndex(w => w.id === data.id);
+  if (index !== -1) {
+    widgets.value[index] = data;
+  }
 }
 </script>
 

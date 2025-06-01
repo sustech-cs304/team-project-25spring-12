@@ -73,7 +73,7 @@ import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
 import {Download} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import type {Note, NotePdfWidget} from '@/types/widgets';
-
+import {Upload} from "@element-plus/icons-vue";
 import {createNote} from "@/api/courseMaterial";
 import {useDownloader} from "@/composables/useDownloader";
 

@@ -3,6 +3,7 @@
       :is="Component"
       v-bind="{ data, canEdit }"
       ref="innerWidgetRef"
+      @update="handleUpdate"
   />
 </template>
 

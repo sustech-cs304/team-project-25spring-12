@@ -46,6 +46,7 @@
       <div>
         <el-text class="section-title">作业信息</el-text>
         <md-and-file-editor
+            ref="homeworkContentEditor"
             :fileList="props.data.attachments"
             :content="props.data.content"
         />
@@ -190,15 +191,20 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
-import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload} from "@element-plus/icons-vue";
+import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check} from "@element-plus/icons-vue";
 import type {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
-import {AssignmentType} from "@/types/widgets"
 import {FileMeta} from "@/types/fileMeta";
+import {editAssignmentWidget} from "@/api/courseMaterial";
 
 const props = defineProps<{
   data: AssignmentWidget;
   canEdit: boolean;
 }>();
+
+const AssignmentType = [
+  {label: "文本及附件", value: "file"},
+  {label: "评测代码", value: "code"},
+]
 
 const isEditingHomework = ref(false);
 const callback = computed(() => props.canEdit ? toggleEditingSituation : null)
@@ -232,7 +238,8 @@ const updateMode = () => {
 };
 
 const codeEditor = ref<InstanceType<typeof CodeEditor> | null>(null);
-const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);  // 提交文本作业时用的编辑器
+const homeworkContentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);  // 编辑作业信息时用的编辑器
 
 // 本卡片的标题
 const computedTitle = computed(() => props.data?.title || "作业");
@@ -305,10 +312,12 @@ const postArgue = () => {
 }
 
 // 教师编辑当前作业信息
-const toggleEditingSituation = () => {
-  if (isEditingHomework.value) {  // 保存并上传信息
-    console.log(form)
-  } else {  // 将现有信息填入表单
+const toggleEditingSituation = async () => {
+  if (isEditingHomework.value) {  // 点保存：上传至后端
+    form.value.content = homeworkContentEditor.value?.getContent()
+    console.log(form.value)
+    await editAssignmentWidget(form.value as AssignmentWidget)
+  } else {  // 点编辑：将现有信息填入表单
     form.value = JSON.parse(JSON.stringify(props.data))
   }
   isEditingHomework.value = !isEditingHomework.value;

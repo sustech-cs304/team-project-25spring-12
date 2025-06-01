@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {Note, WidgetUnion} from "../types/widgets";
+import {AssignmentWidget, DocWidget, Note, WidgetUnion} from "../types/widgets";
 import {Page} from "../types/page";
 
 export function getPage(id: number) {
@@ -50,4 +50,20 @@ export interface Submission {
     code: Code,
 }
 
-export function createSubmission()
+export function createSubmission() {}
+
+export function createAssignmentWidget(widget: AssignmentWidget) {
+    return request.post('/class/widget/assignment', widget)
+}
+
+export function editAssignmentWidget(widget: AssignmentWidget) {
+    return request.patch('/class/widget/assignment', widget)
+}
+
+export function createDocWidget(widget: DocWidget) {
+    return request.post('/class/widget/doc', widget)
+}
+
+export function editDocWidget(widget: DocWidget) {
+    return request.patch('/class/widget/doc', widget)
+}
