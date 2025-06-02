@@ -11,7 +11,9 @@ TOKEN_EXPIRE_MINUTES = timedelta(minutes=1800)
 # File Saving
 FILE_SAVE_ADDRESS = './resources/user_files/'
 
-OJ_TESTCASE_URL = './resources/tests/test_case'
+# Online Judge
+OJ_TOKEN = os.environ.get('MJC_OJ_TOKEN')
+OJ_TESTCASE_URL = '~/JudgeServer/tests/test_case'
 OJ_URL = 'http://localhost:12358/judge'
 
 API_URL = 'https://api.deepseek.com/chat/completions'

@@ -15,7 +15,7 @@ md = hashlib.md5()
 def build_judge_request(src: str, lang_cfg: dict, test_case_id: str,
                         max_cpu_time: int = 1000, max_memory: int = 134217728):
     request_header = {
-        "X-Judge-Server-Token": mjc_config.JUDGE_SERVER_TOKEN,
+        "X-Judge-Server-Token": mjc_config.OJ_TOKEN,
     }
     request_body = {
         "src": src,
@@ -31,7 +31,7 @@ def judge(src: str, language: str, test_case_id: str,
           max_cpu_time: int = 1000, max_memory: int = 134217728):
     config = judger_config.configs[language]
     header, body = build_judge_request(src, config, test_case_id, max_cpu_time, max_memory)
-    result = requests.post(mjc_config.JUDGE_SERVER_URL, headers=header, json=body)
+    result = requests.post(mjc_config.OJ_URL, headers=header, json=body)
     if result.status_code == 200:
         return result.json()
     else:
