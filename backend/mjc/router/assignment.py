@@ -94,16 +94,18 @@ async def get_ai_feedback(db: SessionDep, request: AIFeedbackCreate):
 
 
 @router.get(path="/class/widget/{widget_id}/testcase",
-            dependencies=[Depends(widget_permission.verify_widget_delete)])
-async def get_testcase(db: Session, widget_id: int):
+            dependencies=[Depends(assignment_permission.verify_test_case_get)])
+async def get_testcase(db: SessionDep, widget_id: int):
     return assignment_service.get_widget_test_case(db, widget_id)
 
 
-@router.post(path='/class/widget/testcase')
-async def create_testcase(db: Session, testcase: TestCaseCreate):
+@router.post(path='/class/widget/testcase',
+             dependencies=[Depends(assignment_permission.verify_test_case_create)])
+async def create_testcase(db: SessionDep, testcase: TestCaseCreate):
     return assignment_service.create_test_case(db, testcase)
 
 
-@router.patch(path="/class/widget/testcase")
-async def update_testcase(db: Session, testcase: TestCaseUpdate):
+@router.patch(path="/class/widget/testcase",
+              dependencies=[Depends(assignment_permission.verify_test_case_update)])
+async def update_testcase(db: SessionDep, testcase: TestCaseUpdate):
     return assignment_service.update_test_case(db, testcase)

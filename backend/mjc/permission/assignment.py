@@ -5,6 +5,7 @@ from sqlmodel import Session
 
 from mjc.model.entity.assignment import SubmittedAssignment, FeedbackAttachment
 from mjc.model.schema.assignment import SubmittedAssignmentCreate, SubmissionAttachment, FeedbackCreate, FeedbackUpdate
+from mjc.model.schema.widget import TestCaseCreate, TestCaseUpdate
 from mjc.utils.database import SessionDep
 from mjc.model.schema.user import UserInDB
 from mjc.service.user import get_current_user
@@ -88,3 +89,27 @@ async def verify_feedback_attach_delete(db: SessionDep, file_id: uuid.UUID,
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
     if attach.feedback.marker != current_user.username:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to do this")
+
+
+async def verify_test_case_get(db: SessionDep, widget_id: int,
+                               current_user: UserInDB = Depends(get_current_user)):
+    widget = crud_widget.get_widget(db, widget_id)
+    if not widget:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+    verify_class_admin(db, widget.page.class_id, current_user)
+
+
+async def verify_test_case_create(db: Session, test_case: TestCaseCreate,
+                                  current_user: UserInDB = Depends(get_current_user)):
+    widget = crud_widget.get_widget(db, test_case.widget_id)
+    if not widget:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+    verify_class_admin(db, widget.page.class_id, current_user)
+
+
+async def verify_test_case_update(db: Session, test_case: TestCaseUpdate,
+                                  current_user: UserInDB = Depends(get_current_user)):
+    widget = crud_widget.get_widget(db, test_case.widget_id)
+    if not widget:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+    verify_class_admin(db, widget.page.class_id, current_user)
