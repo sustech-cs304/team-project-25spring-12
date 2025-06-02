@@ -117,6 +117,7 @@ def get_widget_submissions_for_student(db: Session,
     entity = crud_widget.get_widget(db, widget_id)
     if entity:
         return get_student_submissions(db, entity, current_user.username)
+    return None
 
 
 def get_student_submissions(db: Session,
@@ -191,6 +192,8 @@ def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase:
         test_case_entity = crud_assignment.create_test_case(db, test_case)
         try:
             _, info = oj.extract_test_cases(path, test_case_entity.id)
+            test_case_entity.info = json.dumps(info)
+            db.commit()
         except Exception as e:
             test_case_entity.assignment_widget.test_case_id = None
             db.commit()
@@ -219,6 +222,7 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
             os.rename(old_test_case_path, old_test_case_path + '_old')
             _, info = oj.extract_test_cases(file_entity.path, test_case.id)
             os.removedirs(old_test_case_path + '_old')
+            test_case_entity.info = json.dumps(info)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                                 detail=f"extract test case failed, reason: {str(e)}")
@@ -230,3 +234,14 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
         info=TestCaseInfo.model_validate(info) if info else None
     )
 
+
+def get_widget_test_case(db: Session, widget_id: int) -> TestCase:
+    test_case = crud_assignment.get_test_case(db, widget_id)
+    if not test_case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test case not found")
+    return TestCase(
+        id=test_case.id,
+        max_memory=test_case.max_memory,
+        max_cpu_time=test_case.max_cpu_time,
+        info=TestCaseInfo.model_validate(json.loads(test_case.info)) if test_case.info else None
+    )

@@ -141,13 +141,21 @@ def create_feedback_attachment(db: Session, feedback_attachment: FeedbackAttachm
 
 
 def delete_feedback_attachment(db: Session, file_id: uuid.UUID) -> FeedbackAttachmentEntity:
-    stmt = select(FeedbackAttachmentEntity) .where(FeedbackAttachmentEntity.file_id == file_id)
+    stmt = select(FeedbackAttachmentEntity).where(FeedbackAttachmentEntity.file_id == file_id)
     attachment: FeedbackAttachmentEntity = db.exec(stmt).first()
     if attachment:
         attachment.is_deleted = True
     db.commit()
     db.refresh(attachment)
     return attachment
+
+
+def get_widget_test_case(db: Session, widget_id: int) -> TestCase:
+    stmt = select(TestCase).join(TestCase.assignment_widget) \
+                           .join(AssignmentWidget.widget) \
+                           .where(Widget.id == widget_id)
+    test_case = db.exec(stmt).first()
+    return test_case
 
 
 def get_test_case(db: Session, test_case_id: int) -> TestCase:

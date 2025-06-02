@@ -106,6 +106,7 @@ class TestCase(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     max_cpu_time: int = Field(default=1000)
     max_memory: int = Field(default=134217728)
+    info: str = Field(nullable=True)
 
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="test_case")
 
