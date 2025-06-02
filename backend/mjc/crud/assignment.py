@@ -150,7 +150,31 @@ def delete_feedback_attachment(db: Session, file_id: uuid.UUID) -> FeedbackAttac
     return attachment
 
 
-def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase:
-    entity = TestCase(
+def get_test_case(db: Session, test_case_id: int) -> TestCase:
+    stmt = select(TestCase).where(TestCase.id == test_case_id)
+    return db.exec(stmt).first()
 
-    )
+
+def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase | None:
+    assignment_widget = get_widget(db, test_case.widget_id).assignment_widget
+    if assignment_widget:
+        entity = TestCase(
+            max_cpu_times=test_case.max_cpu_time,
+            max_memory=test_case.max_memory
+        )
+        db.add(entity)
+        assignment_widget.test_case_id = entity.id
+        db.commit()
+        db.refresh(entity)
+        return entity
+    return None
+
+
+def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
+    stmt = select(TestCase).where(TestCase.id == test_case.id)
+    entity: TestCase = db.exec(stmt).first()
+    if entity:
+        entity.max_cpu_time = test_case.max_cpu_time
+        entity.max_memory = test_case.max_memory
+        db.commit()
+    return entity

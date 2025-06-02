@@ -126,13 +126,28 @@ class TestCaseBase(BaseModel):
     max_memory: int | None = 134217728
 
 
+class TestPoint(BaseModel):
+    stripped_output_md5: str
+    output_size: int
+    input_name: str
+    input_size: int
+    output_name: str
+
+
+class TestCaseInfo(BaseModel):
+    spj: bool | None = False
+    test_cases: list[TestPoint]
+
+
 class TestCase(TestCaseBase):
     id: int
+    info: TestCaseInfo | None = None
 
 
 class TestCaseCreate(TestCaseBase):
     file_id: uuid.UUID
+    widget_id: int
 
 
-class TestCaseUpdate(TestCaseBase):
-    file_id: uuid.UUID
+class TestCaseUpdate(TestCase):
+    file_id: uuid.UUID | None = None

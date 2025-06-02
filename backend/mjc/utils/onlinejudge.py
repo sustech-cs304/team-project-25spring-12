@@ -89,4 +89,4 @@ def extract_test_cases(path: str, test_case_id: int):
     info = build_test_case_info(extract_path)
     with open('info', 'w', encoding='utf-8') as f:
         json.dump(info, f)
-    return path
+    return extract_path, info

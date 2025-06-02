@@ -106,7 +106,6 @@ class TestCase(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     max_cpu_time: int = Field(default=1000)
     max_memory: int = Field(default=134217728)
-    assignment_widget_id: int = Field(foreign_key="assignment_widget.id")
 
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="test_case")
 
@@ -122,6 +121,7 @@ class AssignmentWidget(SQLModel, table=True):
     submit_type: SubmitType = Field(sa_column=Column(SQLEnum(SubmitType)))
     ddl: datetime
     max_score: float
+    test_case_id = Field(foreign_key="test_case.id")
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
     submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment_widget")
