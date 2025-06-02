@@ -101,9 +101,13 @@ class TestCase(SQLModel, table=True):
     """
     用于 OJ 评测的 TestCase
     """
+    __tablename__ = 'test_case'
+
     id: int | None = Field(default=None, primary_key=True)
     max_cpu_time: int = Field(default=1000)
     max_memory: int = Field(default=134217728)
+
+    assignment_widget: "AssignmentWidget" = Relationship(back_populates="test_case")
 
 
 class AssignmentWidget(SQLModel, table=True):
@@ -121,3 +125,4 @@ class AssignmentWidget(SQLModel, table=True):
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
     submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment_widget")
+    test_case: "TestCase" = Relationship(back_populates="assignment_widget")
