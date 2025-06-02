@@ -28,12 +28,7 @@ onMounted(async () => {
   const course = courseResponse.data as Course;
   courseName.value = course.name;
   const assignmentsResponse = await getAllAssignments(courseId.value);
-  const widgetIds = assignmentsResponse.data as number[];
-  for (const widgetId of widgetIds) {
-    const widgetResponse = await getWidget(widgetId);
-    const widget = widgetResponse.data as AssignmentWidget;
-    widgets.value.push(widget);
-  }
+  widgets.value = assignmentsResponse.data as AssignmentWidget[];
 });
 </script>
 

@@ -5,7 +5,7 @@
         <el-icon style="margin-right: 8px;">
           <Collection/>
         </el-icon>
-        课程列表
+        我负责的课程
       </div>
     </template>
     <CourseListWidget/>

@@ -65,7 +65,7 @@ import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 import {useRoute} from "vue-router";
 import {useUserStore} from "@/store/user";
-import {getAllSubmissions, getWidget} from "@/api/feedback";
+import {getAllAssignments, getAllSubmissions} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
 import {AssignmentWidget} from "@/types/widgets";
@@ -137,10 +137,12 @@ const initActiveSubmission = () => {
   const matched = submissions.value.find((s) => s.id.toString() === id);
   if (matched) {
     activeSubmissionId.value = matched.id;
-  } else {
+  } else if (submissionsSorted.value.length > 0) {
     activeSubmissionId.value = submissionsSorted.value[0].id;
   }
-  updateBlobList(activeSubmissionId.value);
+  if (activeSubmissionId.value !== null) {
+    updateBlobList(activeSubmissionId.value);
+  }
 };
 
 const handleMenuSelect = (submissionId: string) => {
@@ -193,9 +195,12 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 };
 
 onMounted(async () => {
+  const courseId = Number(route.params.courseId);
   const widgetId = Number(route.params.widgetId);
-  const response = await getWidget(widgetId);
-  assignmentWidget.value = response.data as AssignmentWidget;
+  const response = await getAllAssignments(courseId);
+  const assignments = response.data as AssignmentWidget[];
+  assignmentWidget.value = assignments.find(a => a.id === widgetId);
+  console.log(assignmentWidget.value);
   const submissionsResponse = await getAllSubmissions(widgetId);
   submissions.value = submissionsResponse.data as SubmissionForMark[];
   submissions.value.forEach(submission => {
