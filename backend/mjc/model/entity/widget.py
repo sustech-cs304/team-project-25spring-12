@@ -97,6 +97,15 @@ class SubmitType(str, Enum):
     code = 'code'
 
 
+class TestCase(SQLModel, table=True):
+    """
+    用于 OJ 评测的 TestCase
+    """
+    id: int | None = Field(default=None, primary_key=True)
+    max_cpu_time: int = Field(default=1000)
+    max_memory: int = Field(default=134217728)
+
+
 class AssignmentWidget(SQLModel, table=True):
     """
     Assignment Widget 存储的数据
@@ -106,6 +115,7 @@ class AssignmentWidget(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
     submit_types: list[SubmitType] = Field(sa_column=Column(ARRAY(SQLEnum(SubmitType))))
+    test_case_id: int = Field(foreign_key="test_case.id", nullable=True)
     ddl: datetime
     max_score: float
 
