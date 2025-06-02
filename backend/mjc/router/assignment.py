@@ -1,7 +1,6 @@
 import uuid
 
 from fastapi import APIRouter, Depends
-from requests.sessions import Session
 
 from mjc.model.schema.assignment import SubmittedAssignment, Feedback, SubmittedAssignmentCreate, \
     SubmissionAttachment, FeedbackCreate, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate
@@ -12,7 +11,6 @@ from mjc.service.user import get_current_user
 from mjc.service import assignment as assignment_service
 from mjc.utils.database import SessionDep
 from mjc.permission import assignment as assignment_permission
-from mjc.permission import widget as widget_permission
 
 
 router = APIRouter()
