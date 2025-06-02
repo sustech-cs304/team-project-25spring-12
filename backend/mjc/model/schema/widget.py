@@ -119,3 +119,20 @@ class NotePdfWidgetUpdate(WidgetBase):
 class WidgetAttachmentCreate(BaseModel):
     widget_id: int
     file_id: uuid.UUID
+
+
+class TestCaseBase(BaseModel):
+    max_cpu_time: int | None = 1000
+    max_memory: int | None = 134217728
+
+
+class TestCase(TestCaseBase):
+    id: int
+
+
+class TestCaseCreate(TestCaseBase):
+    file_id: uuid.UUID
+
+
+class TestCaseUpdate(TestCaseBase):
+    file_id: uuid.UUID
