@@ -46,7 +46,7 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
         index=argue.widget.index,
         visible=argue.widget.visible,
         type=argue.widget.type,
-        submit_type=argue.widget.assignment_widget.submit_types[0],
+        submit_type=argue.widget.assignment_widget.submit_type,
         status=' ',  # TODO: 批改状态
         ddl=argue.widget.assignment_widget.ddl,
         max_score=argue.widget.assignment_widget.max_score,

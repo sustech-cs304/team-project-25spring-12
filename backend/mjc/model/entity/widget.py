@@ -119,7 +119,7 @@ class AssignmentWidget(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     widget_id: int = Field(foreign_key="widget.id")
-    submit_types: list[SubmitType] = Field(sa_column=Column(ARRAY(SQLEnum(SubmitType))))
+    submit_type: SubmitType = Field(sa_column=Column(SQLEnum(SubmitType)))
     ddl: datetime
     max_score: float
 
