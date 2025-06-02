@@ -4,9 +4,10 @@ from datetime import datetime
 from sqlmodel import Session, select, desc
 
 from mjc.crud.widget import get_widget
+from mjc.model.schema.widget import TestCaseCreate, TestCaseUpdate
 from mjc.model.schema.assignment import SubmittedAssignmentCreate, FeedbackCreate, FeedbackUpdate
 from mjc.model.schema.assignment import SubmissionAttachment, FeedbackAttachment
-from mjc.model.entity.widget import Widget, AssignmentWidget
+from mjc.model.entity.widget import Widget, AssignmentWidget, TestCase
 from mjc.model.entity.assignment import SubmittedAssignment, SubmittedAssignmentFeedback, \
     SubmittedAssignmentAttachment, FeedbackAttachment as FeedbackAttachmentEntity
 
@@ -147,3 +148,9 @@ def delete_feedback_attachment(db: Session, file_id: uuid.UUID) -> FeedbackAttac
     db.commit()
     db.refresh(attachment)
     return attachment
+
+
+def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase:
+    entity = TestCase(
+
+    )
