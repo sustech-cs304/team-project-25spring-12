@@ -35,7 +35,7 @@
             type="danger"
             link
             :icon="Delete"
-            @click="handleRemoveFile(file.id)"
+            @click="handleRemoveFile(file)"
         >
           删除
         </el-button>
@@ -111,9 +111,9 @@ const handleUpload = async (options: any) => {
 };
 
 // 删除文件
-const handleRemoveFile = async (fileId: string) => {
+const handleRemoveFile = async (file: FileMeta) => {
   // 本项目中删除文件无需告知后端，后端会离线扫描没有引用的文件进行删除
-  emit("remove", fileId);
+  emit("remove", file);
 }
 </script>
 

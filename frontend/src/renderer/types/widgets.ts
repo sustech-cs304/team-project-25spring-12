@@ -1,11 +1,8 @@
 import {FileMeta} from "./fileMeta";
-import NotePdf from '@/views/widgets/notepdf.vue';
-import Doc from '@/views/widgets/doc.vue';
-import Assignment from '@/views/widgets/assignment.vue';
 
 export type WidgetType = 'notepdf' | 'doc' | 'assignment';
 
-interface BaseWidget {
+export interface BaseWidget {
     id: number;
     type: WidgetType;
     index: number;
@@ -60,29 +57,4 @@ export interface Note {
     x: number;
     y: number;
     text: string;
-}
-
-/*
- * End of util interfaces.
- */
-
-export const widgetMap: Record<WidgetType, any> = {
-    notepdf: NotePdf,
-    doc: Doc,
-    assignment: Assignment,
-};
-
-export const widgetNameMap: Record<WidgetType, string> = {
-    notepdf: '互动式课件',
-    doc: '文档和文件',
-    assignment: '作业',
-};
-
-export const AssignmentType = [
-    {label: "文本及附件", value: "file"},
-    {label: "评测代码", value: "code"},
-]
-
-export interface AssignmentCreate extends AssignmentWidget {
-    pageId: number,
 }

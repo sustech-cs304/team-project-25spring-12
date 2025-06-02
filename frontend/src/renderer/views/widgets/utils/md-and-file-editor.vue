@@ -8,7 +8,9 @@
     <!-- 附加文件列表 -->
     <download-upload-file-list
         title="已上传文件"
-        :upload="true"
+        :editable="true"
+        @upload="handleUploadFile"
+        @remove="handleRemoveFile"
         :fileList="files"
         ref="fileUploader"
     />
@@ -37,6 +39,19 @@ const props = defineProps({
 const content = ref<string>(props.content);
 const files = ref<FileMeta[]>([...props.fileList]);
 const fileUploader = ref<InstanceType<typeof DownloadUploadFileList>>();
+
+const emit = defineEmits<{
+  (e: "upload", file: FileMeta): void;
+  (e: "remove", file: FileMeta): void;
+}>();
+
+const handleUploadFile = (file: FileMeta) => {
+  emit("upload", file)
+}
+
+const handleRemoveFile = (file: FileMeta) => {
+  emit("remove", file)
+}
 
 defineExpose({
   getContent: (): string => content.value,

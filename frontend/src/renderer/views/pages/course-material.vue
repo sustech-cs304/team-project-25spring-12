@@ -1,21 +1,16 @@
 <template>
   <div class="widget-layout">
     <!-- 菜单 + 切换按钮区域 -->
-    <div class="widget-menu-wrapper" :class="{ collapsed }">
-      <!-- 折叠按钮 -->
-      <div class="menu-toggle" @click="toggleCollapse">
-        <el-icon>
-          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
-        </el-icon>
-        <span v-if="showTitle" class="menu-title">{{ title }}</span>
+    <div class="widget-menu-wrapper">
+      <!-- 标题 -->
+      <div class="menu-toggle">
+        <span class="menu-title">{{ title }}</span>
       </div>
 
       <!-- 菜单栏 -->
       <el-menu
           class="widget-menu"
           :default-active="activeWidgetId"
-          :collapse="collapsed"
-          :collapse-transition="true"
           mode="vertical"
           @select="handleMenuSelect"
       >
@@ -29,19 +24,19 @@
           <el-icon v-if="getIconComponent(widget)">
             <component :is="getIconComponent(widget)"/>
           </el-icon>
-          <span v-if="!collapsed">{{ widget.title }}</span>
+          <span>{{ widget.title }}</span>
         </el-menu-item>
       </el-menu>
       <el-popover
           :visible="showCreateWidgetPopover"
           placement="top"
           :width="180"
-          v-if="authenticated"
+          v-if="canEdit"
       >
         <p>
           <el-select v-model="newWidgetType" placeholder="请选择类型">
             <el-option
-                v-for="item in widgetTypes"
+                v-for="item in WidgetTypes"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -72,6 +67,7 @@
             :data="activeWidget"
             :can-edit="canEdit"
             :ref="el => setWidgetRef(activeWidget.id, el)"
+            @update="handleWidgetUpdate"
         />
       </el-scrollbar>
     </div>
@@ -79,42 +75,48 @@
 </template>
 
 <script setup lang="ts">
-import {computed, nextTick, onMounted, ref, resolveComponent, watch} from 'vue'
+import {computed, onMounted, ref, resolveComponent} from 'vue'
 import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
-import type {AssignmentWidget, WidgetUnion} from '@/types/widgets'
+import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
-import {getPage} from "@/api/courseMaterial"
-import {useUserStore} from "@/store/user";
-import {FileMeta} from "@/types/fileMeta";
+import {createWidget, getPage} from "@/api/courseMaterial"
+import {getRoleByCourseId} from "@/composables/useUserData";
+
+const WidgetTypes = [
+    { value: 'notepdf', label: "互动式课件" },
+    { value: 'doc', label: "文档" },
+    { value: 'assignment', label: "作业" },
+];
 
 const route = useRoute()
-const userStore = useUserStore()
 
 const activeWidgetId = ref<string>('')
-const collapsed = ref(false)
 const widgetRefs = new Map<string, any>()
-const showTitle = ref(!collapsed.value)
 
 const widgets = ref<WidgetUnion[]>([])
 const title = ref('')
 
+const pageId = ref<number>(-1)
 const courseId = ref<number>(-1)
 const role = ref<string>('')
-const canEdit = computed(() => role.value === 'ta' || role.value === 'teacher')
+const canEdit = computed(() => role.value === 'teaching assistant' || role.value === 'teacher')
 
 onMounted(async () => {
-  const response = await getPage()
+  pageId.value = Number(route.params.pageId)
+  const response = await getPage(pageId.value)
   const data = response.data as Page
   title.value = data.name
   widgets.value = data.widgets
+
   initActiveWidget()
   setTimeout(() => {
     widgetRefs.get(activeWidgetId.value)?.init?.()
   }, 50)
+
   courseId.value = Number(route.params.courseId)
-  role.value = await userStore.getRoleByCourseId(courseId.value)
+  role.value = await getRoleByCourseId(courseId.value)
 })
 
 const widgetsSortedByIndex = computed(() => {
@@ -136,7 +138,7 @@ const getMenuItemStyle = (widget: WidgetUnion) => {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    justifyContent: 'flex-start',
     transition: 'all 0.2s',
   }
 }
@@ -144,11 +146,6 @@ const getMenuItemStyle = (widget: WidgetUnion) => {
 const getIconComponent = (widget: WidgetUnion) => {
   const iconName = getWidgetStyle(widget.type).icon
   return resolveComponent(iconName)
-}
-
-const toggleCollapse = async () => {
-  collapsed.value = !collapsed.value
-  await nextTick()
 }
 
 const setWidgetRef = (id: string, el: any) => {
@@ -178,28 +175,39 @@ const newWidgetType = ref('')
 
 const handleShowCreateWidgetPopover = () => {
   showCreateWidgetPopover.value = true
-  newWidgetType.value = undefined
+  newWidgetType.value = ''
 }
 
-const handleCreateWidget = () => {
+const handleCreateWidget = async () => {
   showCreateWidgetPopover.value = false
-  // TODO: 创建widget
-}
 
-const handleUploadAttachment: void = (file: FileMeta) => {
-  console.log('here');
-  (activeWidget.value as AssignmentWidget).attachments.push(file);
-}
-
-watch(collapsed, (val) => {
-  if (val) { // 收起菜单：立即隐藏文字
-    showTitle.value = false
-  } else { // 展开菜单：动画结束后显示文字
-    setTimeout(() => {
-      showTitle.value = true
-    }, 300)
+  if (newWidgetType.value.length) {
+    let newWidget: WidgetUnion = {
+      index: widgets.value.length,
+      type: newWidgetType.value,
+      visible: true,
+      page_id: pageId.value,
+      title: WidgetTypes.find(item => item.value === newWidgetType.value)?.label,
+    }
+    switch (newWidgetType.value) {
+      case "notepdf":
+        break
+      case "doc":
+        break
+      case "assignment":
+        break
+    }
+    const response = await createWidget(newWidget)
+    widgets.value.push(response.data)
   }
-})
+}
+
+const handleWidgetUpdate = (data: WidgetUnion) => {
+  const index = widgets.value.findIndex(w => w.id === data.id);
+  if (index !== -1) {
+    widgets.value[index] = data;
+  }
+}
 </script>
 
 <style scoped>
@@ -222,14 +230,6 @@ watch(collapsed, (val) => {
   transition: width 0.3s ease-in-out;
   width: 300px;
   flex-shrink: 0;
-}
-
-.widget-menu-wrapper.collapsed {
-  width: 64px;
-}
-
-:deep(.el-menu--collapse) {
-  width: 64px;
 }
 
 .menu-toggle {
