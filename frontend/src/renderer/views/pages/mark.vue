@@ -44,15 +44,15 @@
     <div class="widget-content">
       <el-scrollbar>
         <assignment-mark
-            v-if="activeSubmission !== undefined"
+            :assignment-widget="assignmentWidget"
             :submission="activeSubmission"
             :feedback="activeFeedback"
-            :max-score="maxScore"
             :blob-list="blobs"
             :patch="patch"
             @update-file="handleUpdateFile"
             @save="handleSave"
             @submit="handleSubmit"
+            v-if="assignmentWidget !== undefined && activeSubmission !== undefined"
         />
       </el-scrollbar>
     </div>
@@ -68,8 +68,6 @@ import {useUserStore} from "@/store/user";
 import {getAllSubmissions, getWidget} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
-import {Page} from "@/types/page";
-import {getPage} from "@/api/courseMaterial";
 import {AssignmentWidget} from "@/types/widgets";
 
 const route = useRoute();
@@ -84,12 +82,11 @@ const feedbacks = ref<Record<number, FeedbackForm>>({});
 const blobs = ref<Record<string, Blob>>({});
 const patch = ref<Record<string, Uint8Array>>({});
 
-const maxScore = ref(100);
-
 const activeSubmissionId = ref<number | null>(null);
 const hoveredSubmissionId = ref<string | null>(null);
 const activeSubmission = computed(() => submissions.value.find(s => s.id === activeSubmissionId.value));
 const activeFeedback = computed(() => feedbacks.value[Number(activeSubmissionId.value)]);
+const assignmentWidget = ref<AssignmentWidget>();
 
 const collapsed = ref(false);
 const showTitle = ref(true);
@@ -198,8 +195,7 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 onMounted(async () => {
   const widgetId = Number(route.params.widgetId);
   const response = await getWidget(widgetId);
-  const widget = response.data as AssignmentWidget;
-  maxScore.value = widget.maxScore;
+  assignmentWidget.value = response.data as AssignmentWidget;
   const submissionsResponse = await getAllSubmissions(widgetId);
   submissions.value = submissionsResponse.data as SubmissionForMark[];
   submissions.value.forEach(submission => {

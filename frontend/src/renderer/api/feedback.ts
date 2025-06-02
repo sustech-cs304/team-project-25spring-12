@@ -41,3 +41,17 @@ export function getAllAssignments(courseId: number) {
 export function getWidget(widgetId: number) {
     return request.get("/class/widget/" + widgetId);
 }
+
+export interface AIFeedbackCreate {
+    type: "text" | "pdf";
+    question?: string;
+    answer?: string;
+    studentAnswer?: string;
+    questionFileId?: string;
+    answerFileId?: string;
+    studentAnswerFileId?: string;
+}
+
+export function postAIFeedback(payload: AIFeedbackCreate) {
+    return request.post("/class/widget/assignment/feedback/AI", payload);
+}
