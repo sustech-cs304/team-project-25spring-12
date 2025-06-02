@@ -117,7 +117,9 @@ def get_assignment_widget_by_widget_id(db: Session, widget_id: int) -> Assignmen
 
 
 def get_assignment_widgets_by_class_id(db: Session, class_id: int) -> list[Widget]:
-    stmt = select(Widget).join(Widget.page).where(Page.class_id == class_id).where(Widget.is_deleted == False)
+    stmt = select(Widget).join(Widget.page).where(Page.class_id == class_id) \
+                         .where(Widget.type == WidgetType.assignment) \
+                         .where(Widget.is_deleted == False)
     return db.exec(stmt).all()
 
 
