@@ -86,5 +86,5 @@ async def verify_feedback_attach_delete(db: SessionDep, file_id: uuid.UUID,
     attach = crud_assignment.get_feedback_attach(db, file_id)
     if attach is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Submission not found")
-    if attach.submitted_assignment.username != current_user.username:
+    if attach.feedback.marker != current_user.username:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to do this")
