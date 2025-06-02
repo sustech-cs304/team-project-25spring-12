@@ -3,7 +3,7 @@ import uuid
 from fastapi import APIRouter, Depends
 
 from mjc.model.schema.assignment import SubmittedAssignment, Feedback, SubmittedAssignmentCreate, \
-    SubmissionAttachment, FeedbackCreate, FeedbackUpdate, FeedbackAttachment
+    SubmissionAttachment, FeedbackCreate, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate
 from mjc.model.schema.common import Message
 from mjc.model.schema.user import UserInDB
 from mjc.service.user import get_current_user
@@ -83,3 +83,8 @@ def delete_feedback_attachment(db: SessionDep, file_id: uuid.UUID) -> Message:
 def get_widget_submissions_for_student(db: SessionDep, widget_id: int,
                                        current_user: UserInDB = Depends(get_current_user)):
     return assignment_service.get_widget_submissions_for_student(db, widget_id, current_user)
+
+
+@router.post(path="/class/widget/assignment/feedback/AI")
+def get_ai_feedback(db: SessionDep, request: AIFeedbackCreate):
+    return assignment_service.get_ai_feedback(db, request)

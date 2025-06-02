@@ -118,7 +118,7 @@ async def get_ddl(db: SessionDep, current_user: UserInDB = Depends(get_current_u
     return course_service.get_ddl_calendar(db, current_user)
 
 
-@router.get(path="/class/{clas_id}/assignments",
+@router.get(path="/class/{class_id}/assignments",
             response_model=list[AssignmentWidget],
             dependencies=[Depends(course_permission.verify_class_get)])
 def get_class_assignments(db: SessionDep, class_id: int,
