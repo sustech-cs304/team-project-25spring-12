@@ -8,6 +8,7 @@ from mjc.model.schema.widget import WidgetAttachmentCreate
 from mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
 from mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
+from mjc.model.entity.course import Page
 from mjc.model.entity.widget import Widget, WidgetType, WidgetAttachment, AssignmentWidget, NotePDFWidget, SubmitType, \
     Note
 
@@ -116,7 +117,7 @@ def get_assignment_widget_by_widget_id(db: Session, widget_id: int) -> Assignmen
 
 
 def get_assignment_widgets_by_class_id(db: Session, class_id: int) -> list[Widget]:
-    stmt = select(Widget).join(Widget.page).where(Widget.page.class_id == class_id)
+    stmt = select(Widget).join(Widget.page).where(Page.class_id == class_id).where(Widget.is_deleted == False)
     return db.exec(stmt).all()
 
 
