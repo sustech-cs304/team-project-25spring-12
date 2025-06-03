@@ -82,12 +82,7 @@
             <el-table-column prop="name" label="课程名" sortable />
             <el-table-column label="讲师">
               <template #default="{ row }">
-                {{ getUserName(row.lecturer) }}
-              </template>
-            </el-table-column>
-            <el-table-column label="助教">
-              <template #default="{ row }">
-                {{ getUserNames(row.assistants).join(', ') }}
+                {{ row.lecturer }}
               </template>
             </el-table-column>
             <el-table-column prop="location" label="地点" sortable />
@@ -430,40 +425,28 @@ const courses = ref([])
 
 const fetchCourses = async (semester_id) => {
   if (!semester_id) {
-    courses.value = []
-    return
+    courses.value = [];
+    return;
   }
+
   try {
-    // const response = await service.get(`/admin/semester/${semester_id}`)
-    // courses.value = response.data
-    // console.log('Loaded courses:', courses.value);
-    courses.value = [
-      { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
-      { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
-    ]
-    ElMessage.success(`已加载学期内课程信息`)
+    const response = await service.get(`/admin/semester/${semester_id}`);
+    console.log('resp:', response);
+    courses.value = response.data;
+    console.log('Loaded courses:', courses.value);
+    ElMessage.success('已成功加载学期内课程信息');
+    
   } catch (error) {
-    ElMessage.error('加载学期详细信息失败，请稍后重试')
-    courses.value = []
+    courses.value = [];
+    console.error('获取课程数据失败:', error);
+    ElMessage.error('加载学期详细信息失败，请稍后重试');
   }
-}
+};
 
 const filteredCourses = computed(() => {
-  // return courses.value.filter(course => {
-  //     const matchesSearch = courseSearchType.value === 'course_code'
-  //       ? course.course_code.toString().includes(courseSearch.value)
-  //       : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-  //     const matchesSemester = semesterFilter.value
-  //       ? course.semester_id === semesterFilter.value
-  //       : true
-  //     return matchesSearch && matchesSemester
-  //   }).map(course => ({
-  //     ...course,
-  //     semester_name: semesters.value.find(sem => sem.id === course.semester_id)?.name || '未知学期'
-  //   }))
   return courses.value.filter(course => {
       const matchesSearch = courseSearchType.value === 'course_code'
-        ? course.course_code.toString().includes(courseSearch.value)
+        ? course.course_code.includes(courseSearch.value.toLowerCase())
         : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
       return matchesSearch
     }).map(course => ({
@@ -482,18 +465,6 @@ const filterUsers = (query) => {
     user.email.toLowerCase().includes(lowerQuery) ||
     user.department.toLowerCase().includes(lowerQuery)
   )
-}
-
-const getUserName = (username) => {
-  const user = users.value.find(u => u.username === username)
-  return user ? user.name : '未知用户'
-}
-
-const getUserNames = (usernames) => {
-  return usernames.map(username => {
-    const user = users.value.find(u => u.username === username)
-    return user ? user.name : '未知用户'
-  })
 }
 
 const openAddCourseDialog = () => {
@@ -533,104 +504,123 @@ const saveCourse = async () => {
         course_code: courseForm.value.course_code,
         name: courseForm.value.name,
         location: courseForm.value.location,
-        time: courseForm.value.time
+        time: courseForm.value.time,
       };
-      // console.log('Saving course data:', courseData);
-      
-      let courseId;
 
-      if (courseForm.value.id) {
-        // Update existing course
-        courseId = courseForm.value.id;
-        await service.put(`/class/${courseId}`, courseData);
+      let courseId = courseForm.value.id;
+
+      // 如果是编辑现有课程
+      if (courseId) {
+        // 更新课程基本信息
+        await service.patch(`/class/${courseId}`, courseData);
+
+        // 获取当前课程的用户数据
+        const userResponse = await service.get(`/class/${courseId}/user`);
+        const existingUsers = userResponse.data;
+
+        // 按角色分组现有用户
+        const existingUsersByRole = {
+          teacher: existingUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
+          assistant: existingUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          student: existingUsers.filter((u) => u.role === 'student').map((u) => u.username),
+        };
+
+        // 新分配的用户
+        const newUsers = [
+          { username: courseForm.value.lecturer, role: 'teacher' },
+          ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
+          ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
+        ];
+
+        // 按角色分组新用户
+        const newUsersByRole = {
+          teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username).filter(Boolean),
+          assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
+        };
+
+        // 添加新用户
+        for (const role of ['teacher', 'assistant', 'student']) {
+          const usersToAdd = newUsersByRole[role].filter(
+            (username) => !existingUsersByRole[role].includes(username)
+          );
+          if (usersToAdd.length > 0) {
+            await service.post(`/class/user`, {
+              class_id: courseId,
+              usernames: usersToAdd,
+              role,
+            });
+          }
+        }
+
+        // 删除被移除的用户
+        for (const role of ['teacher', 'assistant', 'student']) {
+          const usersToRemove = existingUsersByRole[role].filter(
+            (username) => !newUsersByRole[role].includes(username)
+          );
+          for (const username of usersToRemove) {
+            await service.delete(`/class/${courseId}/user/${username}`);
+          }
+        }
+
+        // 更新本地 courses 数组
+        const index = courses.value.findIndex((c) => c.id === courseId);
+        if (index !== -1) {
+          courses.value[index] = {
+            ...courses.value[index],
+            ...courseData,
+            lecturer: courseForm.value.lecturer,
+            assistants: courseForm.value.assistants,
+            students: courseForm.value.students,
+          };
+        }
+
         ElMessage.success('课程更新成功');
       } else {
-        // Create new course
+        // 创建新课程
         const response = await service.post('/class', courseData);
         courseId = response.data.id;
+
+        // 添加新用户
+        const newUsers = [
+          { username: courseForm.value.lecturer, role: 'teacher' },
+          ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
+          ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
+        ].filter((u) => u.username); // 过滤掉空用户名
+
+        const usersByRole = {
+          teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
+          assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
+        };
+
+        for (const role of ['teacher', 'assistant', 'student']) {
+          if (usersByRole[role].length > 0) {
+            await service.post(`/class/user`, {
+              class_id: courseId,
+              usernames: usersByRole[role],
+              role,
+            });
+          }
+        }
+
+        // 更新本地 courses 数组
         courses.value.push({
           ...courseData,
           id: courseId,
           lecturer: courseForm.value.lecturer,
           assistants: courseForm.value.assistants,
-          students: courseForm.value.students
+          students: courseForm.value.students,
         });
+
         ElMessage.success('课程添加成功');
-      }
-
-      // Handle user assignments by role
-      const newUsers = [
-        { username: courseForm.value.lecturer, role: 'teacher' },
-        ...courseForm.value.assistants.map(username => ({ username, role: 'assistant' })),
-        ...courseForm.value.students.map(username => ({ username, role: 'student' }))
-      ];
-
-      // Get existing users for comparison
-      let existingUsers = [];
-      if (courseForm.value.id) {
-        const existingCourse = courses.value.find(c => c.id === courseForm.value.id);
-        existingUsers = [
-          { username: existingCourse.lecturer, role: 'teacher' },
-          ...existingCourse.assistants.map(username => ({ username, role: 'assistant' })),
-          ...existingCourse.students.map(username => ({ username, role: 'student' }))
-        ];
-      }
-
-      // Group users to add by role
-      const usersToAddByRole = {
-        teacher: newUsers.filter(u => u.role === 'teacher').map(u => u.username),
-        assistant: newUsers.filter(u => u.role === 'assistant').map(u => u.username),
-        student: newUsers.filter(u => u.role === 'student').map(u => u.username)
-      };
-
-      // Group existing users by role
-      const existingUsersByRole = {
-        teacher: existingUsers.filter(u => u.role === 'teacher').map(u => u.username),
-        assistant: existingUsers.filter(u => u.role === 'assistant').map(u => u.username),
-        student: existingUsers.filter(u => u.role === 'student').map(u => u.username)
-      };
-
-      // Add new users for each role
-      for (const role of ['teacher', 'assistant', 'student']) {
-        const usersToAdd = usersToAddByRole[role].filter(
-          username => !existingUsersByRole[role].includes(username)
-        );
-        if (usersToAdd.length > 0) {
-          await service.post(`/class/user`, {
-            class_id: courseId,
-            usernames: usersToAdd,
-            role
-          });
-        }
-      }
-
-      // Remove users for each role
-      for (const role of ['teacher', 'assistant', 'student']) {
-        const usersToRemove = existingUsersByRole[role].filter(
-          username => !usersToAddByRole[role].includes(username)
-        );
-        for (const username of usersToRemove) {
-          await service.delete(`/class/${courseId}/user/${username}`);
-        }
-      }
-
-      // Update local courses array if editing
-      if (courseForm.value.id) {
-        const index = courses.value.findIndex(c => c.id === courseForm.value.id);
-        courses.value[index] = {
-          ...courses.value[index],
-          ...courseData,
-          lecturer: courseForm.value.lecturer,
-          assistants: courseForm.value.assistants,
-          students: courseForm.value.students
-        };
       }
 
       courseDialogVisible.value = false;
     });
   } catch (error) {
+    console.error('保存课程失败:', error);
     ElMessage.error('保存课程失败，请稍后重试');
-    console.error('Error saving course:', error);
   }
 };
 
@@ -712,26 +702,46 @@ const resetSemesterForm = () => {
   semesterFormRef.value?.resetFields()
 }
 
-const saveSemester = () => {
-  semesterFormRef.value.validate((valid) => {
-    if (valid) {
+const saveSemester = async () => {
+  try {
+    await semesterFormRef.value.validate(async (valid) => {
+      if (!valid) return;
+
+      const semesterData = {
+        name: semesterForm.value.name,
+        start_time: semesterForm.value.start_time,
+        end_time: semesterForm.value.end_time,
+      };
+
       if (semesterForm.value.id) {
-        const index = semesters.value.findIndex(s => s.id === semesterForm.value.id)
-        semesters.value[index] = { ...semesterForm.value }
-        ElMessage.success('学期更新成功')
+        // 更新现有学期
+        await service.patch(`/class/semester/${semesterForm.value.id}`, semesterData);
+        const index = semesters.value.findIndex((s) => s.id === semesterForm.value.id);
+        if (index !== -1) {
+          semesters.value[index] = { ...semesterForm.value };
+        }
+        ElMessage.success('学期更新成功');
       } else {
-        semesters.value.push({
-          id: semesters.value.length + 1,
-          name: semesterForm.value.name,
-          start_time: semesterForm.value.start_time,
-          end_time: semesterForm.value.end_time
-        })
-        ElMessage.success('学期添加成功')
+        // 创建新学期
+        const response = await service.post('/class/semester', semesterData);
+        console.log("New Semester Res: ", response);
+        const newSemester = {
+          id: response.data.id, // 假设后端返回新学期的 id
+          ...semesterData,
+        };
+        console.log("New Semester: ", newSemester);
+        
+        semesters.value.push(newSemester);
+        ElMessage.success('学期添加成功');
       }
-      semesterDialogVisible.value = false
-    }
-  })
-}
+
+      semesterDialogVisible.value = false;
+    });
+  } catch (error) {
+    console.error('保存学期失败:', error);
+    ElMessage.error('保存学期失败，请稍后重试');
+  }
+};
 
 const deleteSemester = (id) => {
   const isUsed = courses.value.some(course => course.semester === id)

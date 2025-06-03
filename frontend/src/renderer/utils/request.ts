@@ -5,8 +5,8 @@ import router from '../router/index';
 import {ElMessage} from "element-plus";
 
 const service = axios.create({
-    // baseURL: 'http://10.16.165.147:8001/api/v1/',
-    baseURL: 'http://127.0.0.1:4523/m1/5946426-5634400-default',
+    baseURL: 'http://10.16.165.147:8001/api/v1/',
+    // baseURL: 'http://127.0.0.1:4523/m1/5946426-5634400-default',
     timeout: 10000,
 })
 
