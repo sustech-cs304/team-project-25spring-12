@@ -15,6 +15,10 @@ def get_session() -> Generator[Session, None, None]:
         yield session
 
 
+def get_session_sync():
+    return Session(engine)
+
+
 def create_db_and_tables():
     """
     根据 SQLModel 定义的 metadata 创建并初始化数据库.

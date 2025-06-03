@@ -29,7 +29,6 @@ async def verify_widget_create(db: SessionDep, widget: WidgetCreate,
 async def verify_widget_update(db: SessionDep, widget: WidgetUpdate,
                                 current_user: UserInDB = Depends(get_current_user)):
     widget = verify_widget_exist(db, widget.id)
-    print(widget.id)
     verify_class_admin(db, widget.page.class_id, current_user)
 
 
@@ -42,8 +41,8 @@ async def verify_widget_delete(db: SessionDep, widget_id: int,
 async def verify_add_attach(db: SessionDep, attach: WidgetAttachmentCreate,
                             current_user: UserInDB = Depends(get_current_user)):
     verify_widget_exist(db, attach.widget_id)
-    page = crud_page.get_page(db, attach.page_id)
-    verify_user_in_class(db, page.class_id, current_user.username)
+    widget = crud_widget.get_widget(db, attach.widget_id)
+    verify_user_in_class(db, widget.page.class_id, current_user)
 
 
 async def verify_delete_attach(db: SessionDep, file_id: uuid.UUID):
@@ -54,16 +53,16 @@ async def verify_delete_attach(db: SessionDep, file_id: uuid.UUID):
 async def verify_add_note(db: SessionDep, note: NoteCreate,
                           current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, note.widget_id)
-    verify_user_in_class(db, widget.page.class_id, current_user.username)
+    verify_user_in_class(db, widget.page.class_id, current_user)
 
 
 async def verify_update_note(db: SessionDep, note: NoteUpdate,
                              current_user: UserInDB = Depends(get_current_user)):
     note = crud_widget.get_note(db, note.note_id)
-    verify_user_in_class(db, note.class_id, current_user.username)
+    verify_user_in_class(db, note.class_id, current_user)
 
 
 async def verify_delete_note(db: SessionDep, note_id: int,
                              current_user: UserInDB = Depends(get_current_user)):
     note = crud_widget.get_note(db, note_id)
-    verify_user_in_class(db, note.note_pdf_widget.widget.page.class_id, current_user.username)
+    verify_user_in_class(db, note.note_pdf_widget.widget.page.class_id, current_user)

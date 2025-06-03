@@ -8,6 +8,7 @@ from mjc.model.schema.widget import WidgetAttachmentCreate
 from mjc.model.schema.widget import DocWidgetCreate, DocWidgetUpdate
 from mjc.model.schema.widget import AssignmentWidgetCreate, AssignmentWidgetUpdate
 from mjc.model.schema.widget import NotePdfWidgetCreate, NotePdfWidgetUpdate, NoteCreate, NoteUpdate
+from mjc.model.entity.page import Page
 from mjc.model.entity.widget import Widget, WidgetType, WidgetAttachment, AssignmentWidget, NotePDFWidget, SubmitType, \
     Note
 
@@ -68,6 +69,7 @@ def delete_widget_attachment(db: Session, file_id: uuid.UUID) -> WidgetAttachmen
     attachment: WidgetAttachment = db.exec(stmt).first()
     if attachment:
         attachment.is_deleted = True
+    db.commit()
     db.refresh(attachment)
     return attachment
 
@@ -90,7 +92,7 @@ def create_assignment_widget(db: Session, widget: AssignmentWidgetCreate, editor
     assignment = AssignmentWidget(
         widget_id=widget_entity.id,
         ddl=widget.ddl,
-        submit_types=[SubmitType(widget.submit_type)],
+        submit_type=SubmitType(widget.submit_type),
         max_score=widget.max_score,
     )
     db.add(assignment)
@@ -102,7 +104,7 @@ def create_assignment_widget(db: Session, widget: AssignmentWidgetCreate, editor
 
 def update_assignment_widget(db: Session, widget: AssignmentWidgetUpdate, editor: UserInDB) -> Widget:
     widget_entity = update_widget(db, widget, editor)
-    widget_entity.assignment_widget.submit_types = [SubmitType(widget.submit_type)]
+    widget_entity.assignment_widget.submit_type = SubmitType(widget.submit_type)
     widget_entity.assignment_widget.ddl = widget.ddl
     widget_entity.assignment_widget.max_score = widget.max_score
     db.commit()
@@ -116,7 +118,9 @@ def get_assignment_widget_by_widget_id(db: Session, widget_id: int) -> Assignmen
 
 
 def get_assignment_widgets_by_class_id(db: Session, class_id: int) -> list[Widget]:
-    stmt = select(Widget).join(Widget.page).where(Widget.page.class_id == class_id)
+    stmt = select(Widget).join(Widget.page).where(Page.class_id == class_id) \
+                         .where(Widget.type == WidgetType.assignment) \
+                         .where(Widget.is_deleted == False)
     return db.exec(stmt).all()
 
 

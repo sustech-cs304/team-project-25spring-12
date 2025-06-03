@@ -1,30 +1,36 @@
 import uuid
+import json
 
 from fastapi import HTTPException, status
+from sqlalchemy import false
 from sqlmodel import Session
 
 from mjc.crud import widget as crud_widget, assignment as crud_assignment
+from mjc.model.entity.course import ClassRole
 from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, Note, NoteCreate, NoteUpdate, \
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from mjc.model.schema.common import File, Message
-from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as NoteEntity
+from mjc.model.schema.widget import TestCase as TestCaseSchema, TestCaseInfo
+from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as NoteEntity, TestCase
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, \
     SubmittedAssignmentFeedback as FeedbackEntity
 from mjc.service.assignment import entity2submission, get_student_submissions
+from mjc.service.course import  get_user_class_role
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
     attach: list[File] = []
     if entity.attachments:
         for attachment in entity.attachments:
-            file: File = File(id=attachment.file_id,
-                              filename=attachment.file.filename,
-                              visibility=attachment.file.visibility,
-                              url=None)
-            attach.append(file)
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     doc_widget = DocWidget(
         title=entity.title,
         index=entity.index,
@@ -45,7 +51,11 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
     if entity:
         feedback = Feedback(score=entity.score,
                             content=entity.content,
-                            attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+                            attachments=[File(url=None,
+                                              id=file.file_id,
+                                              visibility=file.file.visibility,
+                                              filename=file.file.filename)
+                                         for file in entity.attachments if entity.attachments],
                             create_time=entity.create_time,
                             id=entity.id)
         return feedback
@@ -53,6 +63,15 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
 
 
 def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
+    attach: list[File] = []
+    if entity.attachments:
+        for attachment in entity.attachments:
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     assignment_widget = AssignmentWidget(
         title=entity.title,
         index=entity.index,
@@ -63,14 +82,14 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         visible=entity.visible,
         id=entity.id,
         content=entity.content if entity.content else None,
-        submit_type=entity.assignment_widget.submit_types[0],
+        submit_type=entity.assignment_widget.submit_type,
         submitted_assignment=None,
-        status='not submitted',
+        status='pending',
         ddl=entity.assignment_widget.ddl,
         score=None,
         max_score=entity.assignment_widget.max_score,
         feedback=None,
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments]
+        attachments=attach
     )
     return assignment_widget
 
@@ -97,7 +116,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
             filename=entity.note_pdf_widget.pdf_file.filename,
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
-        ),
+        ) if entity.note_pdf_widget else None,
         notes=[entity2note(note) for note in entity.note_pdf_widget.notes],
     )
     return note_pdf_widget
@@ -177,7 +196,9 @@ def create_note_pdf_widget(db:Session, editor:UserInDB, note_pdf_widget_create: 
 
 def update_note_pdf_widget(db: Session, editor:UserInDB, note_pdf_widget_update: NotePdfWidgetUpdate) -> NotePdfWidget:
     if note_pdf_widget_update.type == WidgetType.note_pdf:
-        widget_entity = crud_widget.update_widget(db, note_pdf_widget_update,editor)
+        widget_entity = crud_widget.update_widget(db, note_pdf_widget_update, editor)
+        widget_entity.note_pdf_widget.pdf_file_id = note_pdf_widget_update.pdf_file
+        db.commit()
         if widget_entity:
             note_pdf_widget = entity2widget(widget_entity)
             return note_pdf_widget
@@ -229,4 +250,23 @@ def get_class_assignments(db: Session,
     for entity in entities:
         widgets.append(get_student_submissions(db, entity, current_user.username))
     return widgets
-        
+
+
+def get_widget(db: Session,
+               widget_id: int,
+               current_user: UserInDB) -> AssignmentWidget | DocWidget | NotePdfWidget | None:
+    entity = crud_widget.get_widget(db, widget_id)
+    if entity is None or entity.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+
+    role = get_user_class_role(db, current_user.username, entity.page.class_id)
+    if not current_user.is_admin and role == ClassRole.STUDENT and entity.visible == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to view this widget")
+    if entity.type == WidgetType.assignment:
+        return entity2assignment(entity)
+    elif entity.type == WidgetType.doc:
+        return entity2doc(entity)
+    elif entity.type == WidgetType.note_pdf:
+        return entity2notepdf(entity)
+    return None
+

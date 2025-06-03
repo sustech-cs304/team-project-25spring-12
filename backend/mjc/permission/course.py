@@ -9,7 +9,7 @@ from mjc.service import course as course_service
 from mjc.model.schema.course import ClassUpdate
 
 
-def verify_class_exist(db: Session, class_id: int):
+def verify_class_exist(db: SessionDep, class_id: int):
     if course_service.get_class(db, class_id) is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Class not found")
 
@@ -17,6 +17,11 @@ def verify_class_exist(db: Session, class_id: int):
 def verify_admin(current_user: UserInDB):
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not system admin")
+
+
+async def verify_semester_class_get(semester_id: int,
+                                    current_user: UserInDB = Depends(get_current_user)):
+    verify_admin(current_user)
 
 
 async def verify_class_get(db: SessionDep,

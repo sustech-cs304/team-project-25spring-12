@@ -16,6 +16,19 @@ def get_user(db: Session, username: str) -> User:
     return db.exec(stmt).first()
 
 
+def get_profile_fuzz(db: Session, username: str | None, department: str | None, email: str | None,
+                     limit: int = 10, offset: int = 0) -> list[Profile]:
+    stmt = select(Profile)
+    if username:
+        stmt = stmt.where(Profile.username.like(f'%{username}%'))
+    if department:
+        stmt = stmt.where(Profile.department.like(f'%{department}%'))
+    if email:
+        stmt = stmt.where(Profile.email.like(f'%{email}%'))
+    stmt = stmt.offset(offset).limit(limit)
+    return db.exec(stmt).all()
+
+
 def get_profile(db: Session, username: str) -> Profile:
     stmt = select(Profile).where(Profile.username == username)
     return db.exec(stmt).first()
