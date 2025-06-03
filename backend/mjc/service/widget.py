@@ -65,7 +65,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         content=entity.content if entity.content else None,
         submit_type=entity.assignment_widget.submit_types[0],
         submitted_assignment=None,
-        status='not submitted',
+        status='pending',
         ddl=entity.assignment_widget.ddl,
         score=None,
         max_score=entity.assignment_widget.max_score,

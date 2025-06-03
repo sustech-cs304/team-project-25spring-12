@@ -53,13 +53,18 @@ def get_last_feedback(db: Session, widget_id: int, username: str) -> SubmittedAs
 
 
 def get_submission_attach(db: Session, file_id: uuid.UUID) -> SubmittedAssignmentAttachment:
-    stmt = select(SubmittedAssignmentAttachment).where(SubmittedAssignmentAttachment.file_id == file_id)
+    stmt = select(SubmittedAssignmentAttachment) \
+            .where(SubmittedAssignmentAttachment.file_id == file_id) \
+            .where(SubmittedAssignmentAttachment.is_deleted == False)
+
     attachment: SubmittedAssignmentAttachment = db.exec(stmt).first()
     return attachment
 
 
 def get_feedback_attach(db: Session, file_id: uuid.UUID) -> FeedbackAttachmentEntity:
-    stmt = select(FeedbackAttachmentEntity).where(FeedbackAttachmentEntity.file_id == file_id)
+    stmt = select(FeedbackAttachmentEntity) \
+            .where(FeedbackAttachmentEntity.file_id == file_id) \
+            .where(FeedbackAttachmentEntity.is_deleted == False)
     attachment: FeedbackAttachment = db.exec(stmt).first()
     return attachment
 
