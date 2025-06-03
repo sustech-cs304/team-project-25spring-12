@@ -20,11 +20,12 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
     attach: list[File] = []
     if entity.attachments:
         for attachment in entity.attachments:
-            file: File = File(id=attachment.file_id,
-                              filename=attachment.file.filename,
-                              visibility=attachment.file.visibility,
-                              url=None)
-            attach.append(file)
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     doc_widget = DocWidget(
         title=entity.title,
         index=entity.index,
