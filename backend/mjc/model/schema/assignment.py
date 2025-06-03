@@ -68,6 +68,8 @@ class DDL(BaseModel):
 
 class AIFeedbackCreate(BaseModel):
     type: str | None = "text"
+    prompt: str | None = None
+    max_score: int | None = None
     question: str | None = None
     answer: str | None = None
     student_answer: str | None = None

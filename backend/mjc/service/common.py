@@ -39,6 +39,8 @@ def get_local_resource_file(db: Session, file_id: uuid.UUID) -> FileResponse:
 
 def ocr4pdf(db: Session, file_id: uuid.UUID) -> str:
     file = common_crud.get_local_resource_file(db, file_id)
+    print(file_id)
+    print(file.system_path)
     with open(file.system_path, 'rb') as pf:
         pdf_file = pf.read()
 
@@ -50,9 +52,9 @@ def ocr4pdf(db: Session, file_id: uuid.UUID) -> str:
     for word in res_pdf['words_result']:
         result += word['words']
     # 剩余页
-    for page_num in range(1, int(res_pdf['pdf_file_size']) + 1):
-        res_pdf = client.basicGeneralPdf(pdf_file, {"pdf_file_num": page_num})
-        for word in res_pdf['words_result']:
-            result += word['words']
-
+    if int(res_pdf['pdf_file_size']) > 1:
+        for page_num in range(2, int(res_pdf['pdf_file_size']) + 1):
+            res_pdf = client.basicGeneralPdf(pdf_file, {"pdf_file_num": page_num})
+            for word in res_pdf['words_result']:
+                result += word['words']
     return result

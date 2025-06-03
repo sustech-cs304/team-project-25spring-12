@@ -155,9 +155,11 @@ def get_student_submissions(db: Session,
     return None
 
 
-def chat_with_ai(question: str, answer: str, student_answer: str) -> str:
+def chat_with_ai(question: str, answer: str, student_answer: str, max_score: float, teacher_prompt: str = None) -> str:
     api_key: str = config.API_KEY
-    prompt: str = config.SYSTEM_PROMPT
+    prompt: str = config.SYSTEM_PROMPT % max_score
+    if teacher_prompt:
+        prompt = prompt + "\n### 教师要求\n" + teacher_prompt
     content: str = f"question: {question} \nstandard_answer: {answer} \n student_answer: {student_answer}"
     url: str = config.API_URL
     headers = {
@@ -186,7 +188,8 @@ def chat_with_ai(question: str, answer: str, student_answer: str) -> str:
 
 def get_ai_feedback(db: Session, request: AIFeedbackCreate) -> AIFeedback | None:
     if request.type == "text":
-        feedback = json.loads(chat_with_ai(request.question, request.answer, request.student_answer))
+        feedback = json.loads(chat_with_ai(request.question, request.answer, request.student_answer,
+                                           request.max_score, request.prompt))
         if feedback:
             return AIFeedback(score=feedback['score'],feedback=feedback['feedback'])
         return None
@@ -194,7 +197,8 @@ def get_ai_feedback(db: Session, request: AIFeedbackCreate) -> AIFeedback | None
         question = common_service.ocr4pdf(db, request.question_file_id)
         answer = common_service.ocr4pdf(db, request.answer_file_id)
         student_answer = common_service.ocr4pdf(db, request.student_answer_file_id)
-        feedback = json.loads(chat_with_ai(question, answer, student_answer))
+        feedback = json.loads(chat_with_ai(question, answer, student_answer,
+                                           request.max_score, request.prompt))
         if feedback:
             return AIFeedback(score=feedback['score'],feedback=feedback['feedback'] )
         return None
