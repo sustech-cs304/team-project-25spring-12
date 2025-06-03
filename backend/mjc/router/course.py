@@ -127,6 +127,6 @@ def get_class_assignments(db: SessionDep, class_id: int,
 
 
 @router.get(path="/admin/semester/{semester_id}", response_model=list[ClassCard],
-            dependencies=[Depends(course_permission.verify_admin)])
+            dependencies=[Depends(course_permission.verify_semester_class_get)])
 def get_semester_classes(db: SessionDep, semester_id: int) -> list[ClassCard]:
     return course_service.get_semester_classes(db, semester_id)
