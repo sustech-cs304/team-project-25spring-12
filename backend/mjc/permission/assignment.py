@@ -99,7 +99,7 @@ async def verify_test_case_get(db: SessionDep, widget_id: int,
     verify_class_admin(db, widget.page.class_id, current_user)
 
 
-async def verify_test_case_create(db: Session, test_case: TestCaseCreate,
+async def verify_test_case_create(db: SessionDep, test_case: TestCaseCreate,
                                   current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, test_case.widget_id)
     if not widget:
@@ -107,7 +107,7 @@ async def verify_test_case_create(db: Session, test_case: TestCaseCreate,
     verify_class_admin(db, widget.page.class_id, current_user)
 
 
-async def verify_test_case_update(db: Session, test_case: TestCaseUpdate,
+async def verify_test_case_update(db: SessionDep, test_case: TestCaseUpdate,
                                   current_user: UserInDB = Depends(get_current_user)):
     widget = crud_widget.get_widget(db, test_case.widget_id)
     if not widget:

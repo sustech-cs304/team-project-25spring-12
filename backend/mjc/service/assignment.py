@@ -206,12 +206,12 @@ def judge(submission: SubmittedAssignment,
     result = oj.judge(src=submission.code.code, language=submission.code.language, test_case_id=str(test_case_id),
                       max_cpu_time=max_cpu_time, max_memory=max_memory)
     if result:
-        # NOT CE
-        if type(result) is list:
-            result = sorted(result, key=lambda x: x['test_case'])
-            correct, total = 0, len(result)
+        # NOT ERR
+        if result.get('err') is None:
+            test_points = sorted(result['data'], key=lambda x: x['test_case'])
+            correct, total = 0, len(test_points)
             content = ''
-            for test_point in result:
+            for test_point in test_points:
                 correct += 1 if test_point['result'] == 0 else 0
                 content += f'Test case {test_point["test_case"]}, {oj.translate_judge_result(test_point["result"])}\n'
             score = correct / total * max_score
@@ -220,7 +220,7 @@ def judge(submission: SubmittedAssignment,
                 content=content,
                 submission_id=submission.id
             )
-        elif type(result) is dict and result.get('err'):
+        elif result.get('err'):
             content = result['err']
             feedback = FeedbackCreate(
                 score=0,
@@ -240,7 +240,7 @@ def judge(submission: SubmittedAssignment,
         db.close()
 
 
-def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase:
+def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase | None:
     file_entity = crud_common.get_local_resource_file(db, test_case.file_id)
     if file_entity:
         path = file_entity.system_path

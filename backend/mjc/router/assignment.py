@@ -1,12 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, BackgroundTasks
 
 from mjc.model.schema.assignment import SubmittedAssignment, Feedback, SubmittedAssignmentCreate, \
     SubmissionAttachment, FeedbackCreate, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate
 from mjc.model.schema.common import Message
 from mjc.model.schema.user import UserInDB
-from mjc.model.schema.widget import TestCaseCreate, TestCaseUpdate
+from mjc.model.schema.widget import TestCaseCreate, TestCaseUpdate, TestCase
 from mjc.service.user import get_current_user
 from mjc.service import assignment as assignment_service
 from mjc.utils.database import SessionDep
@@ -27,9 +27,10 @@ async def get_all_submissions(db: SessionDep, widget_id: int) -> list[SubmittedA
              response_model=SubmittedAssignment,
              dependencies=[Depends(assignment_permission.verify_submission_create)])
 async def create_submission(db: SessionDep,
-                      submission: SubmittedAssignmentCreate,
-                    current_user: UserInDB = Depends(get_current_user)) -> SubmittedAssignment:
-    return assignment_service.create_submission(db, submission, current_user)
+                            background_tasks: BackgroundTasks,
+                            submission: SubmittedAssignmentCreate,
+                            current_user: UserInDB = Depends(get_current_user)) -> SubmittedAssignment:
+    return assignment_service.create_submission(db, submission, current_user, background_tasks)
 
 
 @router.post(path="/class/widget/assignment/submit/attach",
@@ -50,8 +51,8 @@ async def delete_submission_attachment(db: SessionDep, file_id: uuid.UUID) -> Me
              response_model=Feedback,
              dependencies=[Depends(assignment_permission.verify_feedback_create)])
 async def create_feedback(db: SessionDep,
-                    feedback: FeedbackCreate,
-                    current_user: UserInDB = Depends(get_current_user)) -> Feedback:
+                          feedback: FeedbackCreate,
+                          current_user: UserInDB = Depends(get_current_user)) -> Feedback:
     return assignment_service.create_feedback(db, feedback, current_user)
 
 
@@ -59,8 +60,8 @@ async def create_feedback(db: SessionDep,
               response_model=Feedback,
               dependencies=[Depends(assignment_permission.verify_feedback_update)])
 async def update_feedback(db: SessionDep,
-                    feedback: FeedbackUpdate,
-                    current_user: UserInDB = Depends(get_current_user)) -> Feedback:
+                          feedback: FeedbackUpdate,
+                          current_user: UserInDB = Depends(get_current_user)) -> Feedback:
     return assignment_service.update_feedback(db, feedback, current_user)
 
 
@@ -98,12 +99,14 @@ async def get_testcase(db: SessionDep, widget_id: int):
 
 
 @router.post(path='/class/widget/testcase',
-             dependencies=[Depends(assignment_permission.verify_test_case_create)])
+             dependencies=[Depends(assignment_permission.verify_test_case_create)],
+             response_model=TestCase)
 async def create_testcase(db: SessionDep, testcase: TestCaseCreate):
     return assignment_service.create_test_case(db, testcase)
 
 
 @router.patch(path="/class/widget/testcase",
-              dependencies=[Depends(assignment_permission.verify_test_case_update)])
+              dependencies=[Depends(assignment_permission.verify_test_case_update)],
+              response_model=TestCase)
 async def update_testcase(db: SessionDep, testcase: TestCaseUpdate):
     return assignment_service.update_test_case(db, testcase)
