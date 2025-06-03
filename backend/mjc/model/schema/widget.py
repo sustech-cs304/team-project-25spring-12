@@ -114,6 +114,7 @@ class NotePdfWidgetUpdate(WidgetBase):
     id: int
     pdf_file: uuid.UUID
     visible: bool | None = True
+    content: str | None = None
 
 
 class WidgetAttachmentCreate(BaseModel):
