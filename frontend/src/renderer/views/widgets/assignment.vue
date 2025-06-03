@@ -469,6 +469,7 @@ const submit = async () => {
     }
     if (!failed) {
       ElMessage.success("提交成功！");
+      window.location.reload();
     }
   } else {
     ElMessage.error("提交失败：未能创建提交，请稍后再试");
