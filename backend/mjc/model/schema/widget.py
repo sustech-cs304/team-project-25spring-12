@@ -1,4 +1,5 @@
 import uuid
+from typing import Type
 from datetime import datetime
 
 from pydantic import BaseModel
@@ -54,7 +55,7 @@ class AssignmentWidget(WidgetBase):
     score: float | None = None
     max_score: float
     feedback: Feedback | None = None
-    test_case: "TestCase" | None = None
+    test_case: Type["TestCase"] | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
