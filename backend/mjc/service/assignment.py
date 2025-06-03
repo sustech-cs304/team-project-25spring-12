@@ -49,7 +49,7 @@ def entity2feedback(entity: SubmittedAssignmentFeedback) -> Feedback:
         attachments=[File(url=None,
                           id=file.file_id,
                           filename=file.file.filename,
-                          visibility=Visibility.public) for file in entity.attachments if entity.attachments and file.is_deleted],
+                          visibility=Visibility.public) for file in entity.attachments if entity.attachments and not file.is_deleted],
         create_time=entity.create_time,
         marker=entity.marker
     )
