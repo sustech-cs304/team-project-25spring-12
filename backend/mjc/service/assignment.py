@@ -9,7 +9,7 @@ from mjc.crud import assignment as crud_assignment, widget as crud_widget
 from mjc.crud.user import get_profile
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, SubmittedAssignmentFeedback
 from mjc.model.entity.common import Visibility
-from mjc.model.entity.widget import Widget as WidgetEntity
+from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate, AIFeedback
 from mjc.model.schema.common import Message, File, Code
@@ -113,7 +113,7 @@ def get_widget_submissions_for_student(db: Session,
                                        widget_id: int,
                                        current_user: UserInDB)-> AssignmentWidget| None:
     entity = crud_widget.get_widget(db, widget_id)
-    if entity:
+    if entity and entity.type == WidgetType.assignment:
         return get_student_submissions(db, entity, current_user.username)
 
 
