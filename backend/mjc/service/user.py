@@ -74,7 +74,7 @@ def get_profile_fuzz(db: Session, username: str | None, department: str | None, 
     profiles = crud.get_profile_fuzz(db, username, department, email, limit, offset)
     if profiles:
         return [Profile.model_validate(profile.model_dump()) for profile in profiles]
-    return None
+    return []
 
 
 @cache(expire=2)
