@@ -39,8 +39,6 @@ def get_local_resource_file(db: Session, file_id: uuid.UUID) -> FileResponse:
 
 def ocr4pdf(db: Session, file_id: uuid.UUID) -> str:
     file = common_crud.get_local_resource_file(db, file_id)
-    print(file_id)
-    print(file.system_path)
     with open(file.system_path, 'rb') as pf:
         pdf_file = pf.read()
 
