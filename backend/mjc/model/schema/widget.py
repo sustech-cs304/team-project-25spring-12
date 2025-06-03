@@ -136,7 +136,7 @@ class TestPoint(BaseModel):
 
 class TestCaseInfo(BaseModel):
     spj: bool | None = False
-    test_cases: list[TestPoint]
+    test_cases: dict[str, TestPoint]
 
 
 class TestCase(TestCaseBase):

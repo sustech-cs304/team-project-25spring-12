@@ -60,15 +60,13 @@ def build_test_point_info(case_name: str, in_path: str, out_path: str):
     output = output.strip()
     md.update(output.encode('utf-8'))
 
-    return {
-        case_name: {
+    return case_name.split('/')[-1], {
             "stripped_output_md5": md.hexdigest(),
             "output_size": output_size,
             "input_name": input_name,
             "input_size": input_size,
             "output_name": output_name,
         }
-    }
 
 
 def build_test_case_info(path: str):
@@ -79,16 +77,14 @@ def build_test_case_info(path: str):
     in_files = map(lambda x: x.removesuffix('.in'), in_files)
     out_files = map(lambda x: x.removesuffix('.out'), out_files)
     samples = set(in_files) & set(out_files)
-    test_cases = []
+    test_cases = {}
 
     for sample in samples:
         in_path, out_path = sample + '.in', sample + '.out'
-        test_cases.append(build_test_point_info(sample, in_path, out_path))
+        k, v = build_test_point_info(sample, in_path, out_path)
+        test_cases[k] = v
 
-    return {
-        "spj": False,
-        "test_cases": test_cases
-    }
+    return { "spj": False, "test_cases": test_cases }
 
 
 def extract_test_cases(path: str, test_case_id: int):
@@ -96,8 +92,9 @@ def extract_test_cases(path: str, test_case_id: int):
     shutil.unpack_archive(path, extract_path)
 
     info = build_test_case_info(extract_path)
-    with open('info', 'w', encoding='utf-8') as f:
+    with open(os.path.join(extract_path, 'info'), 'w', encoding='utf-8') as f:
         json.dump(info, f)
+    shutil.move(extract_path, mjc_config.OJ_TESTCASE_URL)
     return extract_path, info
 
 

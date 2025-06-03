@@ -221,7 +221,7 @@ def judge(submission: SubmittedAssignment,
                 submission_id=submission.id
             )
         elif result.get('err'):
-            content = result['err']
+            content = result['err'] + ', ' + result.get('data')
             feedback = FeedbackCreate(
                 score=0,
                 content=content,

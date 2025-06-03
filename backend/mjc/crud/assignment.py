@@ -171,6 +171,7 @@ def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase | None:
             max_memory=test_case.max_memory
         )
         db.add(entity)
+        db.commit()
         assignment_widget.test_case_id = entity.id
         db.commit()
         db.refresh(entity)
