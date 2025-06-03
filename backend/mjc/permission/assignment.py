@@ -33,7 +33,7 @@ async def verify_widget_get(db: SessionDep, widget_id: int,
     widget = crud_widget.get_widget(db, widget_id)
     if widget is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
-    verify_user_in_class(db, widget.class_id, current_user.username)
+    verify_user_in_class(db, widget.class_id, current_user)
 
 
 async def verify_submission_create(db: SessionDep, submission: SubmittedAssignmentCreate,
@@ -41,7 +41,7 @@ async def verify_submission_create(db: SessionDep, submission: SubmittedAssignme
     widget = crud_widget.get_widget(db, submission.widget_id)
     if widget is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
-    verify_user_in_class(db, widget.page.class_id, current_user.username)
+    verify_user_in_class(db, widget.page.class_id, current_user)
 
 
 async def verify_attach_add(db: SessionDep, attach: SubmissionAttachment,
@@ -49,7 +49,7 @@ async def verify_attach_add(db: SessionDep, attach: SubmissionAttachment,
     submission = verify_submission_exists(db, attach.submission_id)
     if submission.username != current_user.username:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to do this")
-    verify_user_in_class(db, submission.assignment_widget.widget.page.class_id, current_user.username)
+    verify_user_in_class(db, submission.assignment_widget.widget.page.class_id, current_user)
 
 
 async def verify_attach_delete(db: SessionDep, file_id: uuid.UUID,

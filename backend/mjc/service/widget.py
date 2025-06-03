@@ -22,11 +22,12 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
     attach: list[File] = []
     if entity.attachments:
         for attachment in entity.attachments:
-            file: File = File(id=attachment.file_id,
-                              filename=attachment.file.filename,
-                              visibility=attachment.file.visibility,
-                              url=None)
-            attach.append(file)
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     doc_widget = DocWidget(
         title=entity.title,
         index=entity.index,
@@ -55,6 +56,15 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
 
 
 def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
+    attach: list[File] = []
+    if entity.attachments:
+        for attachment in entity.attachments:
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     assignment_widget = AssignmentWidget(
         title=entity.title,
         index=entity.index,
@@ -67,12 +77,12 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         content=entity.content if entity.content else None,
         submit_type=entity.assignment_widget.submit_type,
         submitted_assignment=None,
-        status='not submitted',
+        status='pending',
         ddl=entity.assignment_widget.ddl,
         score=None,
         max_score=entity.assignment_widget.max_score,
         feedback=None,
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+        attachments=attach
     )
     return assignment_widget
 
