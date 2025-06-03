@@ -89,7 +89,12 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         score=None,
         max_score=entity.assignment_widget.max_score,
         feedback=None,
-        attachments=attach
+        attachments=attach,
+        test_case=TestCaseSchema(
+            id=entity.assignment_widget.test_case.id,
+            max_cpu_time=entity.assignment_widget.test_case.max_cpu_time,
+            max_memory=entity.assignment_widget.test_case.max_memory
+        ) if entity.assignment_widget.test_case else None
     )
     return assignment_widget
 
