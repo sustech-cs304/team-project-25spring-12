@@ -39,12 +39,22 @@ def get_local_resource_file(db: Session, file_id: uuid.UUID) -> FileResponse:
 
 def ocr4pdf(db: Session, file_id: uuid.UUID) -> str:
     file = common_crud.get_local_resource_file(db, file_id)
+    print(file_id)
+    print(file.system_path)
     with open(file.system_path, 'rb') as pf:
         pdf_file = pf.read()
 
     result = ''
     client = AipOcr(config.OCR_APP_ID, config.OCR_API_KEY, config.OCR_SECRET_KEY)
+
+    # 第一页
     res_pdf = client.basicGeneralPdf(pdf_file)
     for word in res_pdf['words_result']:
         result += word['words']
+    # 剩余页
+    if int(res_pdf['pdf_file_size']) > 1:
+        for page_num in range(2, int(res_pdf['pdf_file_size']) + 1):
+            res_pdf = client.basicGeneralPdf(pdf_file, {"pdf_file_num": page_num})
+            for word in res_pdf['words_result']:
+                result += word['words']
     return result
