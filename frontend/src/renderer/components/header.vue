@@ -102,7 +102,7 @@ const userAvatar = ref('../assets/img/img.jpg');
 const unreadCount = ref(1); // TODO: 从API获取未读消息数
 
 const goToHome = () => {
-  router.push('/')
+  router.push('/homepage')
 };
 
 const goToArguePost = () => {

@@ -35,7 +35,7 @@
             type="danger"
             link
             :icon="Delete"
-            @click="handleRemoveFile(file.id)"
+            @click="handleRemoveFile(file)"
         >
           删除
         </el-button>
@@ -101,19 +101,25 @@ const handleUpload = async (options: any) => {
   const {file, onSuccess, onError} = options;
 
   try {
-    const result = await upload(file);
-    emit("upload", result as FileMeta);
-    onSuccess(result);
+    const response = await upload(file);
+    if (response.status === 200) {
+      ElMessage.success("上传成功");
+      emit("upload", response.data as FileMeta);
+      onSuccess(response.data);
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+      onError(response)
+    }
   } catch (err) {
-    ElMessage.error("上传失败，请稍后重试");
+    ElMessage.error("上传失败，未知错误");
     onError(err);
   }
 };
 
 // 删除文件
-const handleRemoveFile = async (fileId: string) => {
+const handleRemoveFile = async (file: FileMeta) => {
   // 本项目中删除文件无需告知后端，后端会离线扫描没有引用的文件进行删除
-  emit("remove", fileId);
+  emit("remove", file);
 }
 </script>
 

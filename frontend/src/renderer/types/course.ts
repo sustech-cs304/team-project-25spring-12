@@ -6,5 +6,5 @@ export interface Course {
     location: string
     time: string
     lecturer: string
-    role: 'student' | 'teacher' | 'ta'
+    role: 'student' | 'teacher' | 'teaching assistant'
 }

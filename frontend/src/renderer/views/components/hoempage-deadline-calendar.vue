@@ -84,18 +84,6 @@
           </el-icon>
           前往完成
         </el-button>
-        <el-button
-            type="danger"
-            @click="dismissReminder"
-            size="large"
-            class="action-button"
-            plain
-        >
-          <el-icon>
-            <BellFilled/>
-          </el-icon>
-          不再提醒
-        </el-button>
       </div>
     </template>
   </el-drawer>
@@ -106,22 +94,34 @@ import {onBeforeUnmount, onMounted, ref} from 'vue'
 import FullCalendar from '@fullcalendar/vue3'
 import dayGridPlugin from '@fullcalendar/daygrid'
 import interactionPlugin from '@fullcalendar/interaction'
-import {AlarmClock, BellFilled, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
+import {AlarmClock, Clock, Collection, Document, Link, Notebook} from '@element-plus/icons-vue'
 import {getCourseColor, getTextColor} from "@/utils/courseColorGenerator";
 import type {Deadline} from '@/types/deadline'
-import {getDeadlines} from "@/api/deadline";
 import {useUserStore} from "@/store/user";
 import {useRouter} from "vue-router";
+import {ensureDeadlinesLoaded} from "@/composables/useUserData";
 
 const deadlines = ref<Deadline[]>([])
 const router = useRouter()
 const userStore = useUserStore()
 
 onMounted(async () => {
-  const response = await getDeadlines();
-  const data: Deadline[] = response.data as Deadline[];
-  deadlines.value = data;
-  userStore.setDeadlines(data);
+  await ensureDeadlinesLoaded();
+  deadlines.value = userStore.deadlines;
+  calendarRefresh();
+})
+
+/*
+* AI generated
+* 我要求ChatGPT生成了一份FullCalendar库的基本配置和操作方法
+* */
+
+const drawerVisible = ref(false)
+const selectedDeadline = ref<Deadline>(null)
+const calendar = ref()
+const calendarWrapper = ref()
+
+function calendarRefresh() {
   if (calendar.value) {
     const calendarApi = calendar.value.getApi();
     const calcColor = (item: Deadline) =>
@@ -138,20 +138,9 @@ onMounted(async () => {
     }))
     calendarApi.removeAllEvents();
     calendarApi.addEventSource(events);
-    console.log('success')
-    console.log(events)
   }
-})
+}
 
-const drawerVisible = ref(false)
-const selectedDeadline = ref<Deadline>(null)
-const calendar = ref()
-const calendarWrapper = ref()
-
-/*
-* AI generated
-* 我要求ChatGPT生成了一份FullCalendar的基本配置
-* */
 const calendarOptions = ref({
   plugins: [dayGridPlugin, interactionPlugin],
   initialView: 'dayGridMonth',
@@ -213,17 +202,6 @@ const goToTask = () => {
         + '?widget=' + selectedDeadline.value.widgetId)
   }
 }
-
-const dismissReminder = () => {
-  drawerVisible.value = false;
-  if (calendar.value && selectedDeadline.value) {
-    const calendarApi = calendar.value.getApi();
-    const eventToRemove = calendarApi.getEventById(selectedDeadline.value.widgetId);
-    eventToRemove?.remove();
-  }
-
-  // TODO: 后端
-};
 
 const onDrawerOpen = () => {
   // Nothing

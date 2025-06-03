@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {Note} from "../types/widgets";
+import {AssignmentWidget, DocWidget, Note, NotePdfWidget, WidgetUnion} from "../types/widgets";
 import {Page} from "../types/page";
 
 export function getPage(id: number) {
@@ -34,16 +34,57 @@ export function createPage(page: Page, classId: number, folderId: number) {
     return request.post('/class/page', payload)
 }
 
+export function createWidget(widget: WidgetUnion) {
+    return request.post('/class/widget/' + widget.type, widget)
+}
+
 export interface Code {
     code: string,
     language: string,
 }
 
 export interface Submission {
-    widgetId: integer,
+    widgetId: number,
     content: string,
     attachments: File[],
     code: Code,
 }
 
-export function createSubmission()
+export function createSubmission() {}
+
+export function addWidgetAttachment(widgetId: number, fileId: string) {
+    const payload = {
+        widgetId: widgetId,
+        fileId: fileId,
+    }
+
+    return request.post('/class/widget/attachment', payload)
+}
+
+export function removeWidgetAttachment(fileId: string) {
+    return request.delete('/class/widget/attachment/' + fileId)
+}
+
+export function createAssignmentWidget(widget: AssignmentWidget) {
+    return request.post('/class/widget/assignment', widget)
+}
+
+export function editAssignmentWidget(widget: AssignmentWidget) {
+    return request.patch('/class/widget/assignment', widget)
+}
+
+export function createDocWidget(widget: DocWidget) {
+    return request.post('/class/widget/doc', widget)
+}
+
+export function editDocWidget(widget: DocWidget) {
+    return request.patch('/class/widget/doc', widget)
+}
+
+export function createNotePdfWidget(widget: NotePdfWidget) {
+    return request.post('/class/widget/notepdf', widget)
+}
+
+export function editNotePdfWidget(widget: NotePdfWidget) {
+    return request.patch('/class/widget/notepdf', widget)
+}

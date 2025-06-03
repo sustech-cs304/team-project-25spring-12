@@ -1,21 +1,16 @@
 <template>
   <div class="widget-layout">
     <!-- 左侧菜单 -->
-    <div class="widget-menu-wrapper" :class="{ collapsed }">
-      <!-- 折叠按钮 -->
-      <div class="menu-toggle" @click="toggleCollapse">
-        <el-icon>
-          <component :is="collapsed ? 'ArrowRightBold' : 'ArrowLeftBold'"/>
-        </el-icon>
-        <span v-if="showTitle" class="menu-title">课程内容</span>
+    <div class="widget-menu-wrapper">
+      <!-- 标题 -->
+      <div class="menu-toggle">
+        <span class="menu-title">课程内容</span>
       </div>
 
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
           :default-active="activeFolderId"
-          :collapse="collapsed"
-          :collapse-transition="true"
           mode="vertical"
           @select="handleMenuSelect"
       >
@@ -26,10 +21,10 @@
             class="hoverable-item"
             :style="getMenuItemStyle(folder)"
             @mouseenter="hoveredFolderId = folder.id"
-            @mouseleave="hoveredFolderId = null"
+            @mouseleave="hoveredFolderId = ''"
         >
           <el-icon><Folder/></el-icon>
-          <span v-if="!collapsed">{{ folder.name }}</span>
+          <span>{{ folder.name }}</span>
         </el-menu-item>
       </el-menu>
       <el-popover
@@ -72,21 +67,22 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ComputedRef, nextTick, onMounted, ref, watch} from 'vue'
+import {computed, ComputedRef, onMounted, ref} from 'vue'
 import {useRoute} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder, FolderPageItem} from '@/types/folder'
 import {createFolder, getFolders} from "@/api/course";
-import {useUserStore} from "@/store/user";
+import {getRoleByCourseId} from "@/composables/useUserData"
 import type {Page} from "@/types/page";
 
 const route = useRoute()
-const userStore = useUserStore()
 
 const folders = ref<Folder[]>([])
-const role = ref<string>(null)
+const role = ref<string>('')
 const courseId = ref<number>(0)
-const canEdit = computed(() => role.value == 'ta' || role.value == 'teacher')
+const canEdit = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
+
+const numberOrNull = (num: number | null) => num ?? 0;
 
 onMounted(async () => {
   courseId.value = Number(route.params.courseId)
@@ -94,8 +90,20 @@ onMounted(async () => {
   const response = await getFolders(courseId.value)
   folders.value = response.data as Folder[]
 
+  // 有一个 id 为 null 的文件夹，收录未分类的页面
+  folders.value = (response.data as Folder[]).map(folder => ({
+    ...folder,
+    id: numberOrNull(folder.id)
+  }))
+
+  const uncategorized = folders.value.find(f => f.id === 0);
+  if (uncategorized) {
+    uncategorized.name = "未分类";
+    uncategorized.index = 0;
+  }
+
   initActiveFolder()
-  role.value = await userStore.getRoleByCourseId(courseId.value)
+  role.value = await getRoleByCourseId(courseId.value)
 })
 
 const hoveredFolderId = ref<string>('')
@@ -117,24 +125,17 @@ const getMenuItemStyle = (folder: Folder) => {
     display: 'flex',
     alignItems: 'center',
     gap: '8px',
-    justifyContent: collapsed.value ? 'center' : 'flex-start',
+    justifyContent: 'flex-start',
     transition: 'all 0.2s',
     cursor: 'pointer',
   }
 }
 
-const collapsed = ref(false)
-const showTitle = ref(true)
 const foldersSorted = computed(() =>
     [...folders.value].sort((a, b) => a.index - b.index)
 )
 const activeFolderId = ref('')
 const activeFolder: ComputedRef<Folder | null> = computed(() => folders.value.find(f => f.id == activeFolderId.value))
-
-const toggleCollapse = async () => {
-  collapsed.value = !collapsed.value
-  await nextTick()
-}
 
 const initActiveFolder = () => {
   const id = route.query.folder as string
@@ -144,22 +145,11 @@ const initActiveFolder = () => {
   } else if (foldersSorted.value.length > 0) {
     activeFolderId.value = foldersSorted.value[0].id.toString()
   }
-  console.log(activeFolderId.value)
 }
 
 const handleMenuSelect = (folderId: string) => {
   activeFolderId.value = folderId
 }
-
-watch(collapsed, (val) => {
-  if (val) {
-    showTitle.value = false
-  } else {
-    setTimeout(() => {
-      showTitle.value = true
-    }, 300)
-  }
-})
 
 const dialogVisible = ref<boolean>(false)
 const newFolderTitle = ref<string>('')
@@ -175,7 +165,8 @@ const handleCreateFolder = async () => {
     name: newFolderTitle.value,
     index: folders.value.length,
   } as Folder, courseId.value)
-  folders.value.push(response.data as Folder)
+  const newFolder = response.data as Folder
+  folders.value.push(newFolder)
 }
 
 const handleCreatePage = (page: Page) => {
