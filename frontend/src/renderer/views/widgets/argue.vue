@@ -241,14 +241,15 @@
 
 
 <style scoped>
-  .overall_container {
+    .overall_container {
     display: flex;
     flex-direction: column;
-    padding: 0;
+    gap: 24px;
+    padding: 24px;
     background-color: transparent;
-    border: none;
-    gap: 20px;
-    padding: 20px;
+    border-radius: 12px;
+    max-width: 1200px;
+    margin: 0 auto;
   }
   .container {
     display: flex;

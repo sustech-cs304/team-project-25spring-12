@@ -39,6 +39,20 @@
             <el-table-column prop="name" label="姓名" sortable />
             <el-table-column prop="department" label="部门" sortable />
             <el-table-column prop="email" label="邮箱" sortable />
+            <el-table-column prop="is_active" label="是否激活" sortable>
+              <template #default="{ row }">
+                <el-tag :type="row.is_active ? 'success' : 'danger'">
+                  {{ row.is_active ? '是' : '否' }}
+                </el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column prop="is_admin" label="是否管理员" sortable>
+              <template #default="{ row }">
+                <el-tag :type="row.is_admin ? 'success' : 'danger'">
+                  {{ row.is_admin ? '是' : '否' }}
+                </el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditUserDialog(row)">编辑</el-button>
@@ -142,18 +156,27 @@
       width="30%"
       @close="resetUserForm"
     >
-      <el-form :model="userForm" :rules="userRules" ref="userFormRef">
+      <el-form :model="userForm" :rules="userRules" ref="userFormRef" label-width="80px">
         <el-form-item label="姓名" prop="name">
           <el-input v-model="userForm.name" />
         </el-form-item>
-        <el-form-item label="用户名" @="username">
-          <el-input v-model="username" />
+        <el-form-item label="用户名" prop="username">
+          <el-input v-model="userForm.username" :disabled="userDialogTitle === '编辑用户'" />
+        </el-form-item>
+        <el-form-item label="密码" prop="password">
+          <el-input v-model="userForm.password" type="password" show-password />
         </el-form-item>
         <el-form-item label="部门" prop="department">
           <el-input v-model="userForm.department" />
         </el-form-item>
         <el-form-item label="邮箱" prop="email">
           <el-input v-model="userForm.email" />
+        </el-form-item>
+        <el-form-item label="激活" prop="is_active">
+          <el-switch v-model="userForm.is_active" active-text="是" inactive-text="否" />
+        </el-form-item>
+        <el-form-item label="管理员" prop="is_admin">
+          <el-switch v-model="userForm.is_admin" active-text="是" inactive-text="否" />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -314,24 +337,35 @@ import service from '../../utils/request';
 
 // 用户管理相关
 const activeTab = ref('users');
-const userSearch = ref('');
+const usernameSearch = ref('');
+const departmentSearch = ref('');
+const emailSearch = ref('');
 const userDialogVisible = ref(false);
 const userDialogTitle = ref('添加用户');
 const userFormRef = ref(null);
 const userForm = ref({
   name: '',
   username: '',
+  password: '',
   department: '',
   email: '',
+  is_active: true,
+  is_admin: false,
 });
 const userRules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [
+    { required: true, message: '请输入密码', trigger: 'blur' },
+    { min: 6, message: '密码长度至少6位', trigger: 'blur' },
+  ],
   department: [{ required: true, message: '请输入部门', trigger: 'blur' }],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] },
   ],
+  is_active: [{ required: true, type: 'boolean', message: '请选择是否激活', trigger: 'change' }],
+  is_admin: [{ required: true, type: 'boolean', message: '请选择是否管理员', trigger: 'change' }],
 };
 const filteredUsers = ref([]);
 
@@ -366,29 +400,59 @@ const openAddUserDialog = () => {
 
 const openEditUserDialog = (user) => {
   userDialogTitle.value = '编辑用户';
-  userForm.value = { ...user };
+  userForm.value = {
+    ...user,
+    password: '', // 编辑时不回显密码
+  };
   userDialogVisible.value = true;
 };
 
 const resetUserForm = () => {
-  userForm.value = { name: '', username: '', department: '', email: '' };
+  userForm.value = {
+    name: '',
+    username: '',
+    password: '',
+    department: '',
+    email: '',
+    is_active: true,
+    is_admin: false,
+  };
   userFormRef.value?.resetFields();
 };
 
-const saveUser = () => {
-  userFormRef.value.validate((valid) => {
-    if (valid) {
-      const index = filteredUsers.value.findIndex((u) => u.username === userForm.value.username);
-      if (index !== -1) {
-        filteredUsers.value[index] = { ...userForm.value };
+const saveUser = async () => {
+  try {
+    await userFormRef.value.validate(async (valid) => {
+      if (!valid) return;
+      const userData = {
+        name: userForm.value.name,
+        username: userForm.value.username,
+        password: userForm.value.password,
+        department: userForm.value.department,
+        email: userForm.value.email,
+        is_active: userForm.value.is_active,
+        is_admin: userForm.value.is_admin,
+      };
+      if (userDialogTitle.value === '编辑用户') {
+        // 编辑时仅发送非空密码
+        if (!userData.password) delete userData.password;
+        await service.put(`/users/${userForm.value.username}`, userData);
+        const index = filteredUsers.value.findIndex((u) => u.username === userForm.value.username);
+        if (index !== -1) {
+          filteredUsers.value[index] = { ...userData };
+        }
         ElMessage.success('用户更新成功');
       } else {
-        filteredUsers.value.push({ ...userForm.value });
+        const response = await service.post('/users', userData);
+        filteredUsers.value.push(response.data);
         ElMessage.success('用户添加成功');
       }
       userDialogVisible.value = false;
-    }
-  });
+    });
+  } catch (error) {
+    console.error('保存用户失败:', error);
+    ElMessage.error('保存用户失败，请稍后重试');
+  }
 };
 
 const deleteUser = (username) => {

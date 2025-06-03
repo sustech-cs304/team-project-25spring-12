@@ -31,9 +31,9 @@
             </div>
             <div class="comment-actions">
             <el-button type="text" @click="replyTo(comment)">回复</el-button>
-            <el-button type="text" v-if="comment.likes !== undefined">
+            <!-- <el-button type="text" v-if="comment.likes !== undefined">
               <el-icon><Star/></el-icon> {{ comment.likes }}
-            </el-button>
+            </el-button> -->
             </div>
           </el-card>
         </div>
@@ -53,7 +53,7 @@
       },
     });
     // 本卡片的标题
-    const computedTitle = computed(() => props.data?.title || "讨论");
+    const computedTitle = computed(() => props.data?.title || "帖子");
     
     import { Star } from '@element-plus/icons-vue'
     import { ElMessage } from 'element-plus'
