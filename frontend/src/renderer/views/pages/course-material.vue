@@ -4,6 +4,15 @@
     <div class="widget-menu-wrapper">
       <!-- 标题 -->
       <div class="menu-toggle">
+        <el-button
+            class="back-button"
+            @click="goBackToCourse"
+        >
+          <el-icon>
+            <ArrowLeft/>
+          </el-icon>
+          <span>返回</span>
+        </el-button>
         <span class="menu-title">{{ title }}</span>
       </div>
 
@@ -76,13 +85,14 @@
 
 <script setup lang="ts">
 import {computed, onMounted, ref, resolveComponent} from 'vue'
-import {useRoute} from 'vue-router'
 import type {Page} from "@/types/page"
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
 import {createWidget, getPage} from "@/api/courseMaterial"
 import {getRoleByCourseId} from "@/composables/useUserData";
+import { useRoute, useRouter } from 'vue-router'
+import { ArrowLeft } from '@element-plus/icons-vue'
 
 const WidgetTypes = [
     { value: 'notepdf', label: "互动式课件" },
@@ -91,6 +101,11 @@ const WidgetTypes = [
 ];
 
 const route = useRoute()
+const router = useRouter()
+
+const goBackToCourse = () => {
+  router.push({ name: 'course', params: { courseId: courseId.value } })
+}
 
 const activeWidgetId = ref<string>('')
 const widgetRefs = new Map<string, any>()
@@ -211,6 +226,28 @@ const handleWidgetUpdate = (data: WidgetUnion) => {
 </script>
 
 <style scoped>
+.back-button {
+  width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 16px;
+  margin: 0;
+  height: 100%;
+  color: var(--el-color-primary);
+}
+
+.back-button span {
+  margin-left: 8px;
+}
+
+.menu-toggle {
+  height: 56px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}
+
 .widget-layout {
   display: flex;
   height: 100%;
@@ -232,21 +269,12 @@ const handleWidgetUpdate = (data: WidgetUnion) => {
   flex-shrink: 0;
 }
 
-.menu-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  cursor: pointer;
-  border-bottom: 1px solid #ebeef5;
-  transition: padding 0.3s ease-in-out;
-}
-
 .menu-title {
   font-weight: bold;
   font-size: 16px;
   transition: opacity 0.3s ease;
   white-space: nowrap;
+  margin-left: 15px;
 }
 
 .hoverable-item:hover {
