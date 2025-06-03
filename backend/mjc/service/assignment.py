@@ -36,6 +36,7 @@ def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> Submitt
                           id=file.file_id,
                           filename=file.file.filename,
                           visibility=Visibility.public) for file in entity.attachments if entity.attachments],
+        feedback=entity2feedback(entity.feedback) if entity.feedback else None
     )
     return submission
 
@@ -58,7 +59,7 @@ def entity2feedback(entity: SubmittedAssignmentFeedback) -> Feedback:
 def get_all_submissions(db: Session, assignment_widget_id: int) -> list[SubmittedAssignment] | None:
     entities = crud_assignment.get_all_assignments_submissions(db, assignment_widget_id)
     if entities:
-        submissions: list[SubmittedAssignment] = [entity2submission(db, entity) for entity in entities]
+        submissions: list[SubmittedAssignment] = [entity2submission(db, entity) for entity in entities if entity]
         return submissions
     else:
         submissions: list[SubmittedAssignment] = []
