@@ -10,6 +10,15 @@ import mjc.config as mjc_config
 import mjc.utils.judger_config as judger_config
 
 md = hashlib.md5()
+judge_result = {
+    -1: 'WRONG_ANSWER',
+    0: 'ACCEPT',
+    1: 'CPU_TIME_LIMIT_EXCEEDED',
+    2: 'REAL_TIME_LIMIT_EXCEEDED',
+    3: 'MEMORY_LIMIT_EXCEEDED',
+    4: 'RUNTIME_ERROR',
+    5: 'SYSTEM_ERROR'
+}
 
 
 def build_judge_request(src: str, lang_cfg: dict, test_case_id: str,
@@ -90,3 +99,7 @@ def extract_test_cases(path: str, test_case_id: int):
     with open('info', 'w', encoding='utf-8') as f:
         json.dump(info, f)
     return extract_path, info
+
+
+def translate_judge_result(result_id: int):
+    return judge_result[result_id]
