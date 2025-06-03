@@ -42,6 +42,7 @@ import { Document } from '@element-plus/icons-vue'
 import { useRouter } from 'vue-router'
 import type {Page} from "@/types/page";
 import {createPage} from "@/api/courseMaterial"
+import {Plus} from "@element-plus/icons-vue"
 
 const props = defineProps<{
   folder: Folder
@@ -94,6 +95,7 @@ const handleCreatePage = async () => {
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  min-height: 30px;
 }
 
 .page-item:hover {
