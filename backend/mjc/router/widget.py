@@ -1,5 +1,4 @@
 import uuid
-from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 
@@ -102,3 +101,8 @@ async def delete_widget(db: SessionDep, widget_id: int):
                dependencies=[Depends(widget_permission.verify_delete_note)])
 async def delete_note(db: SessionDep, note_id: int, current_user: UserInDB = Depends(user_service.get_current_user)):
     return widget_service.delete_note(db, note_id, current_user)
+
+
+@router.get(path="/class/widget/{widget_id}", response_model=AssignmentWidget | NotePdfWidget | DocWidget)
+async def get_widget(db: SessionDep, widget_id: int, current_user: UserInDB = Depends(user_service.get_current_user)):
+    return widget_service.get_widget(db, widget_id, current_user)
