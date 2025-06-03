@@ -42,8 +42,8 @@ async def verify_widget_delete(db: SessionDep, widget_id: int,
 async def verify_add_attach(db: SessionDep, attach: WidgetAttachmentCreate,
                             current_user: UserInDB = Depends(get_current_user)):
     verify_widget_exist(db, attach.widget_id)
-    page = crud_page.get_page(db, attach.page_id)
-    verify_user_in_class(db, page.class_id, current_user.username)
+    widget = crud_widget.get_widget(db, attach.widget_id)
+    verify_user_in_class(db, widget.page.class_id, current_user.username)
 
 
 async def verify_delete_attach(db: SessionDep, file_id: uuid.UUID):
