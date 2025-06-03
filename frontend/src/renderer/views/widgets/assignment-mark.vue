@@ -156,7 +156,6 @@ import {
   UploadRequestOptions
 } from "element-plus";
 import {useUploader} from "@/composables/useUploader";
-import {FileMeta} from "@/types/fileMeta";
 import {AIFeedbackCreate, postAIFeedback} from "@/api/feedback";
 
 const props = defineProps<{
@@ -245,7 +244,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   uploadContainer.value!.submit();
 };
 
-const handleRemove: UploadProps['onRemove'] = (file) => {
+const handleRemove: UploadProps['onRemove'] = () => {
   dialogForm.answerFileId = "";
 }
 
