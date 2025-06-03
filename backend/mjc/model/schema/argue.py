@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from mjc.model.schema.common import File
 from mjc.model.schema.widget import AssignmentWidget
 from mjc.model.schema.user import Profile
-from mjc.model.entity import ArguePostStatus
+from mjc.model.entity.argue import ArguePostStatus
 
 
 class ArguePostCommentBase(BaseModel):

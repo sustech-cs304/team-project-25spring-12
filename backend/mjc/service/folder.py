@@ -2,11 +2,12 @@ from fastapi import HTTPException, status
 from sqlmodel import Session
 
 from mjc.crud import folder as folder_crud, page as page_crud
-from mjc.crud.course import get_class, get_user_class_role
+from mjc.service.course import get_user_class_role
 from mjc.model.schema.common import Message
 from mjc.model.schema.folder import Folder, FolderUpdate
 from mjc.model.schema.user import UserInDB
-from mjc.model.entity import ClassRole, Folder as FolderEntity
+from mjc.model.entity.course import ClassRole
+from mjc.model.entity.folder import Folder as FolderEntity
 from mjc.model.schema.folder import FolderPageItem, FolderCreate
 
 
@@ -14,7 +15,7 @@ def entity2folder(entity: FolderEntity) -> Folder:
     return Folder(pages=[FolderPageItem.model_validate(page.model_dump()) for page in entity.pages],
                   **entity.model_dump())
 
-def get_folder(db: Session, folder_id: int) -> Folder:
+def get_folder(db: Session, folder_id: int) -> FolderEntity:
     return folder_crud.get_folder(db, folder_id)
 
 
@@ -60,6 +61,7 @@ def get_user_class_folders(db: Session, class_id: int, user: UserInDB) -> list[F
 
 
 def create_folder(db: Session, folder: FolderCreate) -> Folder:
+    print(folder)
     folder_entity = folder_crud.create_folder(db, folder)
     return entity2folder(folder_entity)
 

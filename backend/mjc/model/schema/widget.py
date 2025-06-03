@@ -18,6 +18,14 @@ class WidgetBase(BaseModel):
     visible: bool
 
 
+class WidgetCreate(BaseModel):
+    page_id: int
+
+
+class WidgetUpdate(BaseModel):
+    id: int
+
+
 class DocWidget(WidgetBase):
     id: int
     content: str | None = None
@@ -39,7 +47,7 @@ class AssignmentWidget(WidgetBase):
     id: int
     content: str | None = None
     attachments: list[File] | None = None
-    submit_types: list[str]
+    submit_type: str
     submitted_assignment: list["SubmittedAssignment"] | None = None
     status: str
     ddl: datetime
@@ -51,7 +59,7 @@ class AssignmentWidget(WidgetBase):
 class AssignmentWidgetCreate(WidgetBase):
     index: int
     content: str | None = None
-    submit_types: list[str]
+    submit_type: str
     ddl: datetime
     max_score: float
     page_id: int
@@ -61,7 +69,7 @@ class AssignmentWidgetCreate(WidgetBase):
 class AssignmentWidgetUpdate(WidgetBase):
     id: int
     content: str | None = None
-    submit_types: list[str]
+    submit_type: str
     ddl: datetime
     max_score: float
     visible: bool | None = True
@@ -111,3 +119,35 @@ class NotePdfWidgetUpdate(WidgetBase):
 class WidgetAttachmentCreate(BaseModel):
     widget_id: int
     file_id: uuid.UUID
+
+
+class TestCaseBase(BaseModel):
+    max_cpu_time: int | None = 1000
+    max_memory: int | None = 134217728
+
+
+class TestPoint(BaseModel):
+    stripped_output_md5: str
+    output_size: int
+    input_name: str
+    input_size: int
+    output_name: str
+
+
+class TestCaseInfo(BaseModel):
+    spj: bool | None = False
+    test_cases: dict[str, TestPoint]
+
+
+class TestCase(TestCaseBase):
+    id: int
+    info: TestCaseInfo | None = None
+
+
+class TestCaseCreate(TestCaseBase):
+    file_id: uuid.UUID
+    widget_id: int
+
+
+class TestCaseUpdate(TestCase):
+    file_id: uuid.UUID | None = None

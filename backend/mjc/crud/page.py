@@ -1,6 +1,7 @@
 from sqlmodel import Session, select
 
-from mjc.model.entity import Page, Widget
+from mjc.model.entity.widget import Widget
+from mjc.model.entity.page import Page
 from mjc.model.schema.page import PageCreate, PageUpdate
 
 

@@ -53,3 +53,29 @@ class SubmissionAttachment(BaseModel):
 class FeedbackAttachment(BaseModel):
     feedback_id: int
     file_id: uuid.UUID
+
+
+class DDL(BaseModel):
+    class_id: int
+    class_name: str
+    widget_id: int
+    widget_title: str
+    page_id: int
+    page_name: str
+    ddl: datetime
+    course_code: str
+
+
+class AIFeedbackCreate(BaseModel):
+    type: str | None = "text"
+    question: str | None = None
+    answer: str | None = None
+    student_answer: str | None = None
+    question_file_id: uuid.UUID | None = None
+    answer_file_id: uuid.UUID | None = None
+    student_answer_file_id: uuid.UUID | None = None
+
+
+class AIFeedback(BaseModel):
+    score: float | None = None
+    feedback: str

@@ -10,9 +10,10 @@ from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.argue import ArguePostCard, ArguePost, ArguePostComment, ArguePostFeedback, \
     ArguePostUpdate, ArguePostVoteCreate, ArguePostAttachmentCreate, ArguePostFeedbackCreate, \
     ArguePostFeedbackAttachmentCreate, ArguePostCreate
-from mjc.model.schema.assignment import SubmittedAssignment, Feedback
-from mjc.model.entity import ArguePostAttachment, ArguePostFeedbackAttachment, WidgetAttachment, \
-    SubmittedAssignmentAttachment, ArguePost as ArguePostEntity
+from mjc.model.schema.assignment import SubmittedAssignment
+from mjc.model.entity.widget import WidgetAttachment
+from mjc.model.entity.assignment import SubmittedAssignmentAttachment
+from mjc.model.entity.argue import ArguePostAttachment, ArguePostFeedbackAttachment, ArguePost as ArguePostEntity
 from mjc.crud.argue import count_argue_votes
 from mjc.model.schema.argue import ArguePostCommentCreate, ArguePostWatchCreate
 from mjc.service.assignment import entity2feedback
@@ -39,13 +40,13 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
                 attachments=attachments2files(argue.submitted_assignment.attachments),
                 code=argue.submitted_assignment.code,
                 submitted_time=argue.submitted_assignment.create_time,
-                feedback=entity2feedback(None, argue.submitted_assignment.feedback)
+                feedback=entity2feedback(argue.submitted_assignment.feedback)
             )
         ],
         index=argue.widget.index,
         visible=argue.widget.visible,
         type=argue.widget.type,
-        submit_types=argue.widget.assignment_widget.submit_types,
+        submit_type=argue.widget.assignment_widget.submit_type,
         status=' ',  # TODO: 批改状态
         ddl=argue.widget.assignment_widget.ddl,
         max_score=argue.widget.assignment_widget.max_score,
