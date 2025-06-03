@@ -55,7 +55,7 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
                                               id=file.file_id,
                                               visibility=file.file.visibility,
                                               filename=file.file.filename)
-                                         for file in entity.attachments if entity.attachments],
+                                         for file in entity.attachments if entity.attachments and not file.is_deleted],
                             create_time=entity.create_time,
                             id=entity.id)
         return feedback
@@ -141,7 +141,7 @@ def get_all_student_submissions(db: Session, widget_id: int) -> list[SubmittedAs
             submission.feedback = Feedback(score=entity.feedback.score,
                                            content=entity.feedback.content,
                                            attachments=[File(url=None, **file.model_dump()) \
-                                                        for file in entity.feedback.attachments if entity.feedback.attachments],
+                                                        for file in entity.feedback.attachments if entity.feedback.attachments and not file.is_deleted],
                                            create_time=entity.create_time,
                                            id=entity.feedback.id) if entity.feedback else None
             submissions.append(submission)
