@@ -10,7 +10,7 @@ from mjc.crud import assignment as crud_assignment, widget as crud_widget, commo
 from mjc.crud.user import get_profile
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, SubmittedAssignmentFeedback
 from mjc.model.entity.common import Visibility
-from mjc.model.entity.widget import Widget as WidgetEntity
+from mjc.model.entity.widget import Widget as WidgetEntity, SubmitType
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
     FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate, AIFeedback
 from mjc.model.schema.common import Message, File, Code
@@ -65,6 +65,10 @@ def get_all_submissions(db: Session, assignment_widget_id: int) -> list[Submitte
 def create_submission(db: Session, submission: SubmittedAssignmentCreate, current_user: UserInDB) -> SubmittedAssignment:
     entity = crud_assignment.create_submission(db, submission, current_user.username)
     if entity:
+        assignment = crud_widget.get_assignment_widget_by_widget_id(db, submission.widget_id)
+        if assignment.submit_type is SubmitType.code:
+            # TODO: submit to online judge
+            pass
         return entity2submission(db, entity)
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create submission failed")
 
