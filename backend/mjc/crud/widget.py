@@ -45,8 +45,6 @@ def update_widget(db: Session,
     widget_entity = get_widget(db, widget.id)
     widget_entity.title = widget.title
     widget_entity.content = widget.content
-    if type(widget) is NotePdfWidgetUpdate:
-        widget_entity.note_pdf_widget.pdf_file_id = widget.pdf_file_id
     widget_entity.editor_username = editor.username
     widget_entity.update_time = datetime.now()
     widget_entity.visible = widget.visible

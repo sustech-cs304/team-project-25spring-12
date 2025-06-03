@@ -192,7 +192,9 @@ def create_note_pdf_widget(db:Session, editor:UserInDB, note_pdf_widget_create: 
 
 def update_note_pdf_widget(db: Session, editor:UserInDB, note_pdf_widget_update: NotePdfWidgetUpdate) -> NotePdfWidget:
     if note_pdf_widget_update.type == WidgetType.note_pdf:
-        widget_entity = crud_widget.update_widget(db, note_pdf_widget_update,editor)
+        widget_entity = crud_widget.update_widget(db, note_pdf_widget_update, editor)
+        widget_entity.note_pdf_widget.pdf_file_id = note_pdf_widget_update.pdf_file
+        db.commit()
         if widget_entity:
             note_pdf_widget = entity2widget(widget_entity)
             return note_pdf_widget
