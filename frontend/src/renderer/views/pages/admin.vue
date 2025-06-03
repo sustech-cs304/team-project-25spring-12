@@ -77,14 +77,9 @@
             border
             @sort-change="handleCourseSortChange"
           >
-            <el-table-column prop="semester_name" label="学期" width="100" sortable />
             <el-table-column prop="course_code" label="课程代码" sortable />
             <el-table-column prop="name" label="课程名" sortable />
-            <el-table-column label="讲师">
-              <template #default="{ row }">
-                {{ row.lecturer }}
-              </template>
-            </el-table-column>
+            <el-table-column prop="lecturer" label="讲师" sortable />
             <el-table-column prop="location" label="地点" sortable />
             <el-table-column prop="time" label="时间" sortable />
             <el-table-column label="操作" width="200">
@@ -275,10 +270,24 @@
           <el-input v-model="semesterForm.name" />
         </el-form-item>
         <el-form-item label="开始时间" prop="start_time">
-          <el-input v-model="semesterForm.start_time" />
+          <el-date-picker
+            v-model="semesterForm.start_time"
+            type="date"
+            placeholder="选择开始日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
         </el-form-item>
         <el-form-item label="结束时间" prop="end_time">
-          <el-input v-model="semesterForm.end_time" />
+          <el-date-picker
+            v-model="semesterForm.end_time"
+            type="date"
+            placeholder="选择结束日期"
+            format="YYYY-MM-DD"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
@@ -417,10 +426,6 @@ const courseRules = {
   time: [{ required: false, message: '请输入课程时间', trigger: 'blur' }]
 }
 
-// const courses = ref([
-//   { id: 1, course_code: "MA-101", name: '数学基础', semester_id: 1, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Room 101', time: 'Mon 9:00-11:00' },
-//   { id: 2, course_code: "CS-101", name: '编程入门', semester_id: 2, lecturer: 'teacher1', assistants: ['student1'], students: ['student1'], location: 'Lab 305', time: 'Wed 14:00-16:00' },
-// ])
 const courses = ref([])
 
 const fetchCourses = async (semester_id) => {
@@ -428,18 +433,55 @@ const fetchCourses = async (semester_id) => {
     courses.value = [];
     return;
   }
-
   try {
     const response = await service.get(`/admin/semester/${semester_id}`);
-    console.log('resp:', response);
-    courses.value = response.data;
-    console.log('Loaded courses:', courses.value);
-    ElMessage.success('已成功加载学期内课程信息');
+    const semesterCourses = response.data;
+    const enrichedCourses = await Promise.all(
+      semesterCourses.map(async (course) => {
+        try {
+          console.log('course:', course);
+          const userResponse = await service.get(`/class/${course.id}/user`);
+          const users = userResponse.data;
+          const teacher = users.find((user) => user.role === 'teacher')?.username;
+          const assistants = users.filter((user) => user.role === 'assistant').map((user) => user.username);
+          const students = users.filter((user) => user.role === 'student').map((user) => user.username);
+          return {
+            id: course.id,
+            course_code: course.courseCode,
+            name: course.name,
+            semester: course.semester,
+            lecturer: course.lecturer,
+            teacher,
+            assistants,
+            students,
+            location: course.location,
+            time: course.time,
+          };
+        } catch (error) {
+          console.error(`获取课程 ${course.id} 的用户数据失败:`, error);
+          return {
+            id: course.id,
+            course_code: course.courseCode,
+            name: course.name,
+            semester: course.semester,
+            lecturer: course.lecturer,
+            teacher: '',
+            assistants: [],
+            students: [],
+            location: course.location,
+            time: course.time,
+          };
+        }
+      })
+    );
+    courses.value = enrichedCourses;
+    console.log('Enriched Courses:', courses.value); // 调试 enrichedCourses
     
+    ElMessage.success(`已加载学期内课程信息`);
   } catch (error) {
-    courses.value = [];
     console.error('获取课程数据失败:', error);
     ElMessage.error('加载学期详细信息失败，请稍后重试');
+    courses.value = [];
   }
 };
 
@@ -449,10 +491,7 @@ const filteredCourses = computed(() => {
         ? course.course_code.includes(courseSearch.value.toLowerCase())
         : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
       return matchesSearch
-    }).map(course => ({
-      ...course,
-      semester_name: semesters.value.find(sem => sem.name === course.semester)?.name || '未知学期'
-    }))
+    })
 })
 
 const filteredUsersForCourse = ref(users.value)
@@ -676,8 +715,8 @@ const invertedSemesters = computed(() => {
 
 const semesterRules = {
   name: [{ required: true, message: '请输入学期名称', trigger: 'blur' }],
-  start_time: [{ required: true, message: '请输入开始时间', trigger: 'blur' }],
-  end_time: [{ required: true, message: '请输入结束时间', trigger: 'blur' }]
+  start_time: [{ required: true, message: '请输入开始时间', trigger: 'change' }],
+  end_time: [{ required: true, message: '请输入结束时间', trigger: 'change' }]
 }
 
 const filteredSemesters = computed(() => {
