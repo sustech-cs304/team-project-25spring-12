@@ -41,5 +41,7 @@ async def get_profile(db: SessionDep, username: str):
 async def get_users(db: SessionDep,
                     username: str | None = None,
                     department: str | None = None,
-                    email: str | None = None) -> list[mjc.model.schema.user.Profile]:
-    return user_service.get_profile_fuzz(db, username, department, email)
+                    email: str | None = None,
+                    limit: int | None = 10,
+                    offset: int | None = 0) -> list[mjc.model.schema.user.Profile]:
+    return user_service.get_profile_fuzz(db, username, department, email, limit, offset)
