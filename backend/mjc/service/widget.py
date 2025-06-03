@@ -2,9 +2,11 @@ import uuid
 import json
 
 from fastapi import HTTPException, status
+from sqlalchemy import false
 from sqlmodel import Session
 
 from mjc.crud import widget as crud_widget, assignment as crud_assignment
+from mjc.model.entity.course import ClassRole
 from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, DocWidgetCreate, \
     DocWidgetUpdate, Note, NoteCreate, NoteUpdate, \
@@ -16,6 +18,7 @@ from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as 
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, \
     SubmittedAssignmentFeedback as FeedbackEntity
 from mjc.service.assignment import entity2submission, get_student_submissions
+from mjc.service.course import  get_user_class_role
 
 
 def entity2doc(entity: WidgetEntity) -> DocWidget:
@@ -241,4 +244,22 @@ def get_class_assignments(db: Session,
     for entity in entities:
         widgets.append(get_student_submissions(db, entity, current_user.username))
     return widgets
-        
+
+
+def get_widget(db: Session,
+               widget_id: int,
+               current_user: UserInDB) -> AssignmentWidget | DocWidget | NotePdfWidget | None:
+    entity = crud_widget.get_widget(db, widget_id)
+    if entity is None or entity.is_deleted:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
+
+    role = get_user_class_role(db, current_user.username, entity.page.class_id)
+    if not current_user.is_admin and role == ClassRole.STUDENT and entity.visible == False:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not allowed to view this widget")
+    if entity.type == WidgetType.assignment:
+        return entity2assignment(entity)
+    elif entity.type == WidgetType.doc:
+        return entity2doc(entity)
+    elif entity.type == WidgetType.note_pdf:
+        return entity2notepdf(entity)
+

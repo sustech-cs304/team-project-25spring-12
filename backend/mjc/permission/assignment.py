@@ -33,7 +33,7 @@ async def verify_widget_get(db: SessionDep, widget_id: int,
     widget = crud_widget.get_widget(db, widget_id)
     if widget is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
-    verify_user_in_class(db, widget.class_id, current_user)
+    verify_user_in_class(db, widget.page.class_id, current_user)
 
 
 async def verify_submission_create(db: SessionDep, submission: SubmittedAssignmentCreate,
@@ -78,7 +78,7 @@ async def verify_feedback_attach_add(db: SessionDep, attach: FeedbackAttachment,
     feedback = crud_assignment.get_feedback(db, attach.feedback_id)
     if feedback is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Feedback not found")
-    submission = verify_submission_exists(db, feedback.submission_id)
+    submission = verify_submission_exists(db, feedback.submitted_assignment_id)
     verify_class_admin(db, submission.assignment_widget.widget.page.class_id, current_user)
 
 
