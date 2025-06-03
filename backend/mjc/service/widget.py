@@ -54,6 +54,15 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
 
 
 def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
+    attach: list[File] = []
+    if entity.attachments:
+        for attachment in entity.attachments:
+            if not attachment.is_deleted:
+                file: File = File(id=attachment.file_id,
+                                  filename=attachment.file.filename,
+                                  visibility=attachment.file.visibility,
+                                  url=None)
+                attach.append(file)
     assignment_widget = AssignmentWidget(
         title=entity.title,
         index=entity.index,
@@ -71,7 +80,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         score=None,
         max_score=entity.assignment_widget.max_score,
         feedback=None,
-        attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments]
+        attachments=attach
     )
     return assignment_widget
 

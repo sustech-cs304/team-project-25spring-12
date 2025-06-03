@@ -15,13 +15,15 @@ async def verify_admin(current_user: UserInDB = Depends(get_current_user)):
 def verify_class_admin(db: Session, class_id: int, current_user: UserInDB):
     if  current_user.is_admin:
         return
-    role = verify_user_in_class(db, class_id, current_user.username)
+    role = verify_user_in_class(db, class_id, current_user)
     if role is None or ClassRole.STUDENT:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have no permission")
 
 
-def verify_user_in_class(db: Session, class_id: int, username: str):
-    role = course_service.get_user_class_role(db, username, class_id)
+def verify_user_in_class(db: Session, class_id: int, current_user: UserInDB):
+    if  current_user.is_admin:
+        return
+    role = course_service.get_user_class_role(db, current_user.username, class_id)
     if role is None:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
     return role
