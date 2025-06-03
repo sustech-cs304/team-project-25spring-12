@@ -101,11 +101,17 @@ const handleUpload = async (options: any) => {
   const {file, onSuccess, onError} = options;
 
   try {
-    const result = await upload(file);
-    emit("upload", result as FileMeta);
-    onSuccess(result);
+    const response = await upload(file);
+    if (response.status === 200) {
+      ElMessage.success("上传成功");
+      emit("upload", response.data as FileMeta);
+      onSuccess(response.data);
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+      onError(response)
+    }
   } catch (err) {
-    ElMessage.error("上传失败，请稍后重试");
+    ElMessage.error("上传失败，未知错误");
     onError(err);
   }
 };

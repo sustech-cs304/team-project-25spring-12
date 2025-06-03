@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {AssignmentWidget, DocWidget, Note, WidgetUnion} from "../types/widgets";
+import {AssignmentWidget, DocWidget, Note, NotePdfWidget, WidgetUnion} from "../types/widgets";
 import {Page} from "../types/page";
 
 export function getPage(id: number) {
@@ -52,6 +52,19 @@ export interface Submission {
 
 export function createSubmission() {}
 
+export function addWidgetAttachment(widgetId: number, fileId: string) {
+    const payload = {
+        widgetId: widgetId,
+        fileId: fileId,
+    }
+
+    return request.post('/class/widget/attachment', payload)
+}
+
+export function removeWidgetAttachment(fileId: string) {
+    return request.delete('/class/widget/attachment/' + fileId)
+}
+
 export function createAssignmentWidget(widget: AssignmentWidget) {
     return request.post('/class/widget/assignment', widget)
 }
@@ -66,4 +79,12 @@ export function createDocWidget(widget: DocWidget) {
 
 export function editDocWidget(widget: DocWidget) {
     return request.patch('/class/widget/doc', widget)
+}
+
+export function createNotePdfWidget(widget: NotePdfWidget) {
+    return request.post('/class/widget/notepdf', widget)
+}
+
+export function editNotePdfWidget(widget: NotePdfWidget) {
+    return request.patch('/class/widget/notepdf', widget)
 }

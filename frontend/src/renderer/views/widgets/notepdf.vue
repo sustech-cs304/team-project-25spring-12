@@ -1,8 +1,8 @@
 <template>
-  <widget-card :title="computedTitle" type="notepdf" :callback="authenticated ? handleUploadFile : undefined">
+  <widget-card :title="computedTitle" type="notepdf" :button-visible="props.editable" @click="handleClick">
     <div class="card-content">
       <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
-      <el-button type="primary" :icon="Download" @click="handleDownloadFile">下载原课件</el-button>
+      <el-button type="primary" :icon="Download" @click="handleDownload">下载原课件</el-button>
     </div>
 
     <el-scrollbar class="pdf-scroll-container">
@@ -37,7 +37,6 @@
     <!-- 添加笔记弹窗 -->
     <el-popover
         v-model:visible="contextMenu.visible"
-        trigger="manual"
         placement="bottom-start"
         teleported
         popper-class="custom-popover"
@@ -58,10 +57,16 @@
       </div>
     </el-popover>
     <template #button>
-      <el-icon>
-        <Upload/>
-      </el-icon>
-      <span>上传</span>
+      <el-upload
+          ref="uploadRef"
+          :show-file-list="false"
+          :http-request="handleUpload"
+      >
+        <el-icon>
+          <Upload/>
+        </el-icon>
+        <span>上传</span>
+      </el-upload>
     </template>
   </widget-card>
 </template>
@@ -74,19 +79,26 @@ import {Download} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import type {Note, NotePdfWidget} from '@/types/widgets';
 import {Upload} from "@element-plus/icons-vue";
-import {createNote} from "@/api/courseMaterial";
+import {createNote, editNotePdfWidget} from "@/api/courseMaterial";
 import {useDownloader} from "@/composables/useDownloader";
+import {useUploader} from "@/composables/useUploader";
+import {ElMessage} from "element-plus";
+import {FileMeta} from "@/types/fileMeta";
+import {WidgetUnion} from "@/types/widgets";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
+const {getFile, download} = useDownloader()
+const {upload} = useUploader()
+
 const props = defineProps<{
   data: NotePdfWidget;
+  editable: boolean;
 }>();
 
 const computedTitle = computed(() => props.data.title || "互动式课件");
 
 // refs
-const authenticated = ref<boolean>(true); // TODO: 鉴权
 const pages = ref<number[]>([]);
 const canvasRefs = ref<(HTMLCanvasElement | undefined)[]>([]);
 const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
@@ -153,7 +165,9 @@ const loadMorePages = async () => {
 
 const loadPDF = async () => {
   try {
-    const loadingTask = pdfjsLib.getDocument(props.data.pdfFile.url);
+    const blob = await getFile(props.data.pdfFile);
+    const arrayBuffer = await blob.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
     pdfInstance.value = await loadingTask.promise;
 
     totalPages = pdfInstance.value.numPages;
@@ -228,9 +242,39 @@ const observeBottom = () => {
   observer.observe(bottomObserver.value);
 };
 
-const {download} = useDownloader()
+const emit = defineEmits<{
+  (e: "update", data: WidgetUnion): void;
+}>();
 
-const handleDownloadFile = async () => {
+const handleUpload = async (options: any) => {
+  const {file, onSuccess, onError} = options;
+
+  try {
+    const response = await upload(file);
+    if (response.status === 200) {
+      const uuid = (response.data as FileMeta).id;
+      const newData = JSON.parse(JSON.stringify(props.data));
+      newData.pdfFile = uuid;
+      const response2 = await editNotePdfWidget(newData);
+      if (response2.status === 200) {
+        ElMessage.success("上传成功");
+        emit("update", newData);
+        onSuccess(newData);
+      } else {
+        ElMessage.error("上传失败，请稍后再试");
+        onError(response2);
+      }
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+      onError(response);
+    }
+  } catch (err) {
+    ElMessage.error("上传失败，未知错误");
+    onError(err);
+  }
+};
+
+const handleDownload = async () => {
   try {
     await download(props.data.pdfFile);
   } catch (error) {
@@ -238,8 +282,8 @@ const handleDownloadFile = async () => {
   }
 };
 
-const handleUploadFile = () => {
-  // TODO: 上传新文件
+const handleClick = () => {
+  upload()
 }
 
 onMounted(() => {

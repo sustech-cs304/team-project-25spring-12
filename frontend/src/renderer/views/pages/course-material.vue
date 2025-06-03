@@ -17,7 +17,7 @@
         <el-menu-item
             v-for="widget in widgetsSortedByIndex"
             :key="widget.id"
-            :index="widget.id"
+            :index="String(widget.id)"
             :style="getMenuItemStyle(widget)"
             class="hoverable-item"
         >
@@ -31,7 +31,7 @@
           :visible="showCreateWidgetPopover"
           placement="top"
           :width="180"
-          v-if="canEdit"
+          v-if="editable"
       >
         <p>
           <el-select v-model="newWidgetType" placeholder="请选择类型">
@@ -65,7 +65,7 @@
             v-if="activeWidget"
             :key="activeWidget.id"
             :data="activeWidget"
-            :can-edit="canEdit"
+            :editable="editable"
             :ref="el => setWidgetRef(activeWidget.id, el)"
             @update="handleWidgetUpdate"
         />
@@ -101,7 +101,7 @@ const title = ref('')
 const pageId = ref<number>(-1)
 const courseId = ref<number>(-1)
 const role = ref<string>('')
-const canEdit = computed(() => role.value === 'teaching assistant' || role.value === 'teacher')
+const editable = computed(() => role.value === 'teaching assistant' || role.value === 'teacher')
 
 onMounted(async () => {
   pageId.value = Number(route.params.pageId)
@@ -205,7 +205,7 @@ const handleCreateWidget = async () => {
 const handleWidgetUpdate = (data: WidgetUnion) => {
   const index = widgets.value.findIndex(w => w.id === data.id);
   if (index !== -1) {
-    widgets.value[index] = data;
+    widgets.value.splice(index, 1, data);
   }
 }
 </script>

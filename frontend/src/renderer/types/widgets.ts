@@ -15,7 +15,7 @@ export interface BaseWidget {
 
 export interface NotePdfWidget extends BaseWidget {
     type: 'notepdf';
-    pdfFile: FileMeta;
+    pdfFile: string;
     notes: Note[];
 }
 

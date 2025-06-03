@@ -3,13 +3,18 @@ import {saveFile} from "../utils/saveFile";
 import {FileMeta} from "../types/fileMeta";
 
 export function useDownloader() {
-    const download = async (file: FileMeta)=> {
+    const getFile = async (file: FileMeta) => {
         const response = await downloadFile(file.id);
-        const blob = response.data;  // 获取到的文件信息
+        return response.data;  // 获取到的文件信息
+    }
+
+    const download = async (file: FileMeta)=> {
+        const blob = await getFile(file);
         await saveFile(blob, file.filename);  // 保存到本地
     };
 
     return {
+        getFile,
         download,
     };
 }

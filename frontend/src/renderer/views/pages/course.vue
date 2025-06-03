@@ -96,6 +96,12 @@ onMounted(async () => {
     id: numberOrNull(folder.id)
   }))
 
+  const uncategorized = folders.value.find(f => f.id === 0);
+  if (uncategorized) {
+    uncategorized.name = "未分类";
+    uncategorized.index = 0;
+  }
+
   initActiveFolder()
   role.value = await getRoleByCourseId(courseId.value)
 })
@@ -159,7 +165,8 @@ const handleCreateFolder = async () => {
     name: newFolderTitle.value,
     index: folders.value.length,
   } as Folder, courseId.value)
-  folders.value.push(response.data as Folder)
+  const newFolder = response.data as Folder
+  folders.value.push(newFolder)
 }
 
 const handleCreatePage = (page: Page) => {

@@ -1,7 +1,7 @@
 <template>
-  <widget-card :title="computedTitle" type="assignment" :callback="callback">
+  <widget-card :title="computedTitle" type="assignment" :button-visible="editable" @click="handleClick">
     <div v-if="isEditingHomework">
-      <!--   作业设置   -->
+      <!--   编辑作业信息   -->
       <div>
         <el-text class="section-title">作业设置</el-text>
         <div class="homework-form">
@@ -47,17 +47,16 @@
         <el-text class="section-title">作业信息</el-text>
         <md-and-file-editor
             ref="homeworkContentEditor"
-            :fileList="props.data.attachments"
-            :content="props.data.content"
+            :fileList="form.attachments"
+            :content="form.content"
+            @upload="handleHomeworkContentEditorUpdate"
+            @remove="handleHomeworkContentEditorRemove"
         />
       </div>
     </div>
 
     <div class="container" v-else>
       <!--   作业状态   -->
-      <div v-if="!props.data.visible">
-        不可见
-      </div>
       <div>
         <el-text class="section-title">作业状态</el-text>
         <div class="assignment-status">
@@ -194,11 +193,17 @@ import {computed, ref} from "vue";
 import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check} from "@element-plus/icons-vue";
 import type {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
 import {FileMeta} from "@/types/fileMeta";
-import {editAssignmentWidget} from "@/api/courseMaterial";
+import {addWidgetAttachment, editAssignmentWidget, editDocWidget, removeWidgetAttachment} from "@/api/courseMaterial";
+import {ElMessage} from "element-plus";
+import {DocWidget, WidgetUnion} from "@/types/widgets";
+
+/*
+* 数据和常量
+* */
 
 const props = defineProps<{
   data: AssignmentWidget;
-  canEdit: boolean;
+  editable: boolean;
 }>();
 
 const AssignmentType = [
@@ -206,17 +211,9 @@ const AssignmentType = [
   {label: "评测代码", value: "code"},
 ]
 
-const isEditingHomework = ref(false);
-const callback = computed(() => props.canEdit ? toggleEditingSituation : null)
-
-const form = ref<AssignmentWidget>(null);
-
-const rules = {
-  title: [{required: true, message: '请输入作业标题', trigger: 'blur'}],
-  type: [{required: true, message: '请选择作业类型', trigger: 'change'}],
-  ddl: [{required: true, message: '请选择作业截止时间', trigger: 'change'}],
-  maxScore: [{required: true, message: '请输入分数上限', trigger: 'blur'}],
-};
+/*
+* 外观
+* */
 
 /*
 * 代码编辑器的所有常量和方法：
@@ -263,7 +260,7 @@ const scoreColor = computed(() => {
   return `rgb(${red}, ${green}, 0)`;
 });
 const statusText = computed(() => {
-  if (props.data.status === "pending") return "未提交，截止时间：" + props.data.ddl;
+  if (props.data.status === "pending") return "未提交，截止时间：" + String(props.data.ddl).replace(/T/g, ' ');
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
@@ -281,6 +278,76 @@ const editSubmittedAssignment = (record: SubmittedRecord) => {
   isEditing.value = true;
 }
 
+/*
+* 编辑作业信息
+* */
+
+const isEditingHomework = ref(false);
+const form = ref<AssignmentWidget>(null);
+const rules = {
+  title: [{required: true, message: '请输入作业标题', trigger: 'blur'}],
+  type: [{required: true, message: '请选择作业类型', trigger: 'change'}],
+  ddl: [{required: true, message: '请选择作业截止时间', trigger: 'change'}],
+  maxScore: [{required: true, message: '请输入分数上限', trigger: 'blur'}],
+};
+
+const emit = defineEmits<{
+  (e: "update", data: WidgetUnion): void;
+}>();
+
+const handleHomeworkContentEditorUpdate = async (file: FileMeta) => {
+  const index = form.value.attachments.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    form.value.attachments.push(file);
+  }
+}
+
+const handleHomeworkContentEditorRemove = async (file: FileMeta) => {
+  const index = form.value.attachments.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    form.value.attachments.splice(index, 1);
+  }
+}
+
+const handleClick = async () => {
+  if (isEditingHomework.value) {  // 点保存：上传至后端
+    form.value.content = homeworkContentEditor.value?.getContent()
+    let message = "";
+
+    const oldAttachments = props.data.attachments || [];
+    const newAttachments = form.value.attachments || [];
+
+    const addedFiles = newAttachments.filter(f => !oldAttachments.some(o => o.id === f.id));
+    const removedFiles = oldAttachments.filter(f => !newAttachments.some(n => n.id === f.id));
+
+    const editResponse = await editAssignmentWidget(form.value as DocWidget);
+    if (editResponse.status !== 200) {
+      message += "保存文本失败\n";
+    }
+
+    for (const file of addedFiles) {
+      const res = await addWidgetAttachment(props.data.id, file.id);
+      if (res.status !== 200) message += `附件添加失败：${file.name}\n`;
+    }
+
+    for (const file of removedFiles) {
+      const res = await removeWidgetAttachment(file.id);
+      if (res.status !== 200) message += `附件删除失败：${file.name}\n`;
+    }
+
+    if (message !== "") {
+      ElMessage.error(message);
+    } else {
+      ElMessage.success("保存成功");
+      emit("update", form.value);
+    }
+
+  } else {  // 点编辑：将现有信息填入表单
+    form.value = JSON.parse(JSON.stringify(props.data))
+  }
+  isEditingHomework.value = !isEditingHomework.value;
+}
+
 // 提交作业
 const uploadFile = (file: FileMeta) => {
 
@@ -296,8 +363,8 @@ const submit = () => {
   if (contentEditor.value) {
     const content = contentEditor.value.getContent();
     console.log(content);
-    const fileList = contentEditor.value.getFileList();
-    console.log(fileList);
+    // const fileList = contentEditor.value.getFileList();
+    // console.log(fileList);
   }
 }
 
@@ -311,17 +378,6 @@ const postArgue = () => {
   }
 }
 
-// 教师编辑当前作业信息
-const toggleEditingSituation = async () => {
-  if (isEditingHomework.value) {  // 点保存：上传至后端
-    form.value.content = homeworkContentEditor.value?.getContent()
-    console.log(form.value)
-    await editAssignmentWidget(form.value as AssignmentWidget)
-  } else {  // 点编辑：将现有信息填入表单
-    form.value = JSON.parse(JSON.stringify(props.data))
-  }
-  isEditingHomework.value = !isEditingHomework.value;
-}
 
 defineExpose({
   init: () => {
