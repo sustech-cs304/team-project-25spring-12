@@ -1,7 +1,7 @@
 default_env = ["LANG=en_US.UTF-8", "LANGUAGE=en_US:en", "LC_ALL=en_US.UTF-8"]
 
 configs = {
-    "c_lang": {
+    "c": {
         "compile": {
             "src_name": "main.c",
             "exe_name": "main",
@@ -16,7 +16,7 @@ configs = {
             "env": default_env
         }
     },
-    "cpp_lang": {
+    "cpp": {
         "compile": {
             "src_name": "main.cpp",
             "exe_name": "main",
@@ -31,7 +31,7 @@ configs = {
             "env": default_env
         }
     },
-    "java_lang": {
+    "java": {
         "name": "java",
         "compile": {
             "src_name": "Main.java",
@@ -48,7 +48,7 @@ configs = {
             "memory_limit_check_only": 1
         }
     },
-    "py3_lang": {
+    "py3": {
         "compile": {
             "src_name": "solution.py",
             "exe_name": "__pycache__/solution.cpython-36.pyc",
