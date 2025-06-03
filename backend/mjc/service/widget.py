@@ -268,4 +268,5 @@ def get_widget(db: Session,
         return entity2doc(entity)
     elif entity.type == WidgetType.note_pdf:
         return entity2notepdf(entity)
+    return None
 
