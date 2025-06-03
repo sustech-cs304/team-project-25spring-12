@@ -54,6 +54,7 @@ class AssignmentWidget(WidgetBase):
     score: float | None = None
     max_score: float
     feedback: Feedback | None = None
+    test_case: "TestCase" | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
