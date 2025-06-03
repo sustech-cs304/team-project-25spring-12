@@ -129,7 +129,7 @@ def get_student_submissions(db: Session,
             assigment_widget.submitted_assignment =[entity2submission(db,submission) for submission in submissions]
         feedback = widget_service.get_feedback(db, assignment_widget_id, username)
         if feedback:
-            assigment_widget.status = 'marked'
+            assigment_widget.status = 'returned'
             assigment_widget.score = feedback.score
             assigment_widget.feedback = feedback
         return assigment_widget
