@@ -6,12 +6,8 @@ export function getPage(id: number) {
     return request.get('/class/page/' + id)
 }
 
-export interface NoteCreate extends Note {
-    widgetId: number
-}
-
 export function createNote(note: Note, widgetId: number) {
-    const payload: NoteCreate = {
+    const payload = {
         ...note,
         widgetId,
     }
@@ -19,16 +15,11 @@ export function createNote(note: Note, widgetId: number) {
     return request.post('/class/widget/notepdf/note', payload)
 }
 
-interface pageCreate extends Page {
-    classId: number,
-    folderId: number,
-}
-
 export function createPage(page: Page, classId: number, folderId: number) {
-    const payload: pageCreate = {
+    const payload = {
         ...page,
         classId,
-        folderId,
+        folderId: folderId === 0 ? null : folderId,
     }
 
     return request.post('/class/page', payload)

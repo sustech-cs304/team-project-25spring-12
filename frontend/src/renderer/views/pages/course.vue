@@ -26,7 +26,7 @@
         <el-menu-item
             v-for="folder in foldersSorted"
             :key="folder.id"
-            :index="folder.id.toString()"
+            :index="String(folder.id)"
             class="hoverable-item"
             :style="getMenuItemStyle(folder)"
             @mouseenter="hoveredFolderId = folder.id"
@@ -40,7 +40,7 @@
           :visible="dialogVisible"
           placement="top"
           :width="180"
-          v-if="canEdit"
+          v-if="editable"
       >
         <p>
           <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
@@ -66,7 +66,7 @@
         <folder-widget
             :folder="activeFolder"
             v-if="activeFolder"
-            :can-edit="canEdit"
+            :editable="editable"
             :course-id="courseId"
             @create-page="handleCreatePage"
         />
@@ -97,7 +97,7 @@ const folders = ref<Folder[]>([])
 const title = ref<string>('')
 const role = ref<string>('')
 const courseId = ref<number>(0)
-const canEdit = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
+const editable = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
 
 const numberOrNull = (num: number | null) => num ?? 0;
 
@@ -129,8 +129,8 @@ onMounted(async () => {
 const hoveredFolderId = ref<string>('')
 
 const getMenuItemStyle = (folder: Folder) => {
-  const isActive = folder.id.toString() == activeFolderId.value
-  const isHovered = folder.id.toString() == hoveredFolderId.value
+  const isActive = String(folder.id) === activeFolderId.value
+  const isHovered = String(folder.id) === hoveredFolderId.value
 
   const baseColor = '#f9f9f9'
   const hoverColor = '#e6f0ff'

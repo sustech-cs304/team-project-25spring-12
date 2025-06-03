@@ -1,5 +1,10 @@
 <template>
-  <widget-card :title="folder.name" type="folder" style="height: 100%" :callback="callback">
+  <widget-card
+      :title="folder.name"
+      type="folder"
+      :button-visible="editable"
+      @click="handleClick"
+  >
     <el-scrollbar>
       <div class="page-list">
         <div
@@ -30,7 +35,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue'
+import {ref} from 'vue'
 import type { Folder, FolderPageItem } from '@/types/folder'
 import WidgetCard from '@/views/widgets/utils/widget-card.vue'
 import { Document } from '@element-plus/icons-vue'
@@ -41,7 +46,7 @@ import {createPage} from "@/api/courseMaterial"
 const props = defineProps<{
   folder: Folder
   courseId: number
-  canEdit: boolean
+  editable: boolean
 }>()
 
 const emit = defineEmits<{
@@ -52,13 +57,12 @@ const router = useRouter()
 
 const dialogVisible = ref(false)
 const newPageTitle = ref('')
-const callback = computed(() => props.canEdit ? showCreatePageDialog : null)
 
 const handlePageClick = (page: FolderPageItem) => {
   router.push('/course/' + props.courseId + '/page/' + page.id)
 }
 
-const showCreatePageDialog = () => {
+const handleClick = () => {
   dialogVisible.value = true
   newPageTitle.value = ''
 }
