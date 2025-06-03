@@ -44,15 +44,15 @@
     <div class="widget-content">
       <el-scrollbar>
         <assignment-mark
-            v-if="activeSubmission !== undefined"
+            :assignment-widget="assignmentWidget"
             :submission="activeSubmission"
             :feedback="activeFeedback"
-            :max-score="maxScore"
             :blob-list="blobs"
             :patch="patch"
             @update-file="handleUpdateFile"
             @save="handleSave"
             @submit="handleSubmit"
+            v-if="assignmentWidget !== undefined && activeSubmission !== undefined"
         />
       </el-scrollbar>
     </div>
@@ -65,9 +65,10 @@ import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 import {useRoute} from "vue-router";
 import {useUserStore} from "@/store/user";
-import {getAllSubmissions} from "@/api/feedback";
+import {getAllAssignments, getAllSubmissions} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
+import {AssignmentWidget} from "@/types/widgets";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -81,13 +82,11 @@ const feedbacks = ref<Record<number, FeedbackForm>>({});
 const blobs = ref<Record<string, Blob>>({});
 const patch = ref<Record<string, Uint8Array>>({});
 
-// TODO: set max score
-const maxScore = ref(100);
-
 const activeSubmissionId = ref<number | null>(null);
 const hoveredSubmissionId = ref<string | null>(null);
 const activeSubmission = computed(() => submissions.value.find(s => s.id === activeSubmissionId.value));
 const activeFeedback = computed(() => feedbacks.value[Number(activeSubmissionId.value)]);
+const assignmentWidget = ref<AssignmentWidget>();
 
 const collapsed = ref(false);
 const showTitle = ref(true);
@@ -138,10 +137,12 @@ const initActiveSubmission = () => {
   const matched = submissions.value.find((s) => s.id.toString() === id);
   if (matched) {
     activeSubmissionId.value = matched.id;
-  } else {
+  } else if (submissionsSorted.value.length > 0) {
     activeSubmissionId.value = submissionsSorted.value[0].id;
   }
-  updateBlobList(activeSubmissionId.value);
+  if (activeSubmissionId.value !== null) {
+    updateBlobList(activeSubmissionId.value);
+  }
 };
 
 const handleMenuSelect = (submissionId: string) => {
@@ -194,9 +195,14 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 };
 
 onMounted(async () => {
-  const widgetId = route.params.widgetId as string;
-  const response = await getAllSubmissions(widgetId);
-  submissions.value = response.data as SubmissionForMark[];
+  const courseId = Number(route.params.courseId);
+  const widgetId = Number(route.params.widgetId);
+  const response = await getAllAssignments(courseId);
+  const assignments = response.data as AssignmentWidget[];
+  assignmentWidget.value = assignments.find(a => a.id === widgetId);
+  console.log(assignmentWidget.value);
+  const submissionsResponse = await getAllSubmissions(widgetId);
+  submissions.value = submissionsResponse.data as SubmissionForMark[];
   submissions.value.forEach(submission => {
     if (submission.feedback) {
       feedbacks.value[submission.id] = {

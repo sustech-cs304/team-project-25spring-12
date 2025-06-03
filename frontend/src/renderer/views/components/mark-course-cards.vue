@@ -63,13 +63,13 @@ import {computed, onMounted, ref} from 'vue'
 import {Avatar, Place, Timer, User} from '@element-plus/icons-vue'
 import type {Course} from "@/types/course";
 import {useUserStore} from "@/store/user";
-import {getCourses} from "@/api/course";
 import {useRouter} from "vue-router";
+import {ensureCoursesLoaded} from "@/composables/useUserData";
 
 const roleDisplayMap: Record<Course['role'], string> = {
   student: 'Student',
   teacher: 'Teacher',
-  ta: 'Teaching Assistant'
+  "teaching assistant": 'Teaching Assistant'
 }
 
 const router = useRouter()
@@ -78,15 +78,9 @@ const courses = ref<Course[]>([])
 const activeSemester = ref('')
 
 onMounted(async () => {
-  try {
-    const response = await getCourses()
-    const data: Course[] = response.data as Course[]
-    userStore.setCourses(data)
-    courses.value = data.filter(course => ["teacher", "ta"].includes(course.role))
-    activeSemester.value = sortedSemesters.value[0] || ''
-  } catch (err) {
-    console.error('获取课程失败', err)
-  }
+  await ensureCoursesLoaded()
+  courses.value = userStore.courses!.filter(course => ["teacher", "teaching assistant"].includes(course.role))
+  activeSemester.value = sortedSemesters.value[0] || ''
 })
 
 const getSemesterValue = (semester: string): number => {
@@ -112,7 +106,7 @@ const coursesBySemester = computed(() => {
   return map
 })
 
-const enterCourse = (id: string) => {
+const enterCourse = (id: number) => {
   router.push('/mark/' + id)
 }
 </script>

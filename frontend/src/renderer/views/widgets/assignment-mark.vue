@@ -16,7 +16,7 @@
         <el-row class="status-row">
           <el-col :span="12" class="status-text">得分</el-col>
           <el-col :span="12" class="score-display">
-            <el-input-number v-model="score" style="width: 72px" placeholder="分数" :controls="false" />
+            <el-input-number v-model="score" style="width: 72px" placeholder="分数" :controls="false"/>
             <span> / {{ displayTotalScore }}</span>
           </el-col>
         </el-row>
@@ -27,43 +27,140 @@
           <el-col :span="24" class="feedback-text">评语</el-col>
           <el-col :span="24" class="feedback-input">
             <el-input
-              type="textarea"
-              v-model="content"
-              placeholder="请输入评语"
-              :rows="3"
+                type="textarea"
+                v-model="content"
+                placeholder="请输入评语"
+                :rows="3"
             />
           </el-col>
         </el-row>
       </div>
     </div>
-    <div class="mark-submit">
-      <el-tooltip
-          :content="errorMessage"
-          :disabled="errorMessage === null"
-      >
+    <el-row class="mark-submit" :gutter="15">
+      <el-col :span="12">
         <el-button
-            type="primary"
-            :icon="Check"
-            @click="handleSubmit"
-            :disabled="errorMessage !== null"
+            :icon="MagicStick"
+            @click="handleOpenDialog"
             style="width: 120px; margin-left: auto"
         >
-          提交
+          AI 辅助评分
         </el-button>
-      </el-tooltip>
-    </div>
+      </el-col>
+      <el-col :span="12" style="text-align: right">
+        <el-tooltip
+            :content="errorMessage"
+            :disabled="errorMessage === null"
+        >
+          <el-button
+              type="primary"
+              :icon="Check"
+              @click="handleSubmit"
+              :disabled="errorMessage !== null"
+              style="width: 120px; margin-left: auto"
+          >
+            提交
+          </el-button>
+        </el-tooltip>
+      </el-col>
+    </el-row>
   </widget-card>
+
+  <el-dialog
+      v-model="dialogVisible"
+      title="AI 辅助评分"
+  >
+    <el-form ref="formEl" :model="dialogForm" :rules="rules" label-width="auto">
+      <el-form-item prop="type" label="类型">
+        <el-radio-group v-model="dialogForm.type">
+          <el-radio value="text">文本</el-radio>
+          <el-radio value="pdf">PDF</el-radio>
+        </el-radio-group>
+      </el-form-item>
+      <el-form-item prop="question" label="问题" v-if="dialogForm.type === 'text'">
+        <el-input
+            type="textarea"
+            v-model="dialogForm.question"
+            placeholder="请输入问题"
+            :rows="3"
+        />
+      </el-form-item>
+      <el-form-item prop="questionFileId" label="问题" v-else>
+        <el-select v-model="dialogForm.questionFileId" placeholder="选择题目附件">
+          <el-option
+              v-for="item in questionPDFs"
+              :key="item.id"
+              :label="item.filename"
+              :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+      <el-form-item prop="answer" label="参考答案" v-if="dialogForm.type === 'text'">
+        <el-input
+            type="textarea"
+            v-model="dialogForm.answer"
+            placeholder="请输入参考答案"
+            :rows="3"
+        />
+      </el-form-item>
+      <el-form-item prop="answerFileId" label="参考答案" v-else>
+        <el-upload
+            ref="uploadContainer"
+            :http-request="handleUpload"
+            :limit="1"
+            :on-exceed="handleExceed"
+            :on-remove="handleRemove"
+        >
+          <el-button :icon="Upload">上传答案 PDF</el-button>
+        </el-upload>
+      </el-form-item>
+      <el-form-item prop="studentAnswer" label="学生回答" v-if="dialogForm.type === 'text'">
+        <el-input
+            type="textarea"
+            v-model="dialogForm.studentAnswer"
+            placeholder="请输入学生回答"
+            :rows="3"
+        />
+      </el-form-item>
+      <el-form-item prop="studentAnswerFileId" label="学生回答" v-else>
+        <el-select v-model="dialogForm.studentAnswerFileId" placeholder="选择回答附件">
+          <el-option
+              v-for="item in studentAnswerPDFs"
+              :key="item.id"
+              :label="item.filename"
+              :value="item.id"
+          />
+        </el-select>
+      </el-form-item>
+    </el-form>
+    <template #footer>
+      <el-button @click="dialogVisible = false">取消</el-button>
+      <el-button type="primary" @click="handleAISubmit">确认</el-button>
+    </template>
+  </el-dialog>
 </template>
 
 <script setup lang="ts">
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFileMark from "./utils/md-and-file-mark.vue";
-import {computed, ref, watch} from "vue";
-import {Check} from "@element-plus/icons-vue";
+import {computed, reactive, ref, watch} from "vue";
+import {Check, MagicStick, Upload} from "@element-plus/icons-vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
+import {AssignmentWidget} from "@/types/widgets";
+import {
+  ElMessage,
+  FormInstance, FormRules,
+  genFileId,
+  UploadInstance,
+  UploadProps,
+  UploadRawFile,
+  UploadRequestOptions
+} from "element-plus";
+import {useUploader} from "@/composables/useUploader";
+import {FileMeta} from "@/types/fileMeta";
+import {AIFeedbackCreate, postAIFeedback} from "@/api/feedback";
 
 const props = defineProps<{
-  maxScore: number;
+  assignmentWidget: AssignmentWidget;
   submission: SubmissionForMark;
   feedback: FeedbackForm;
   blobList: Record<string, Blob>;
@@ -76,21 +173,51 @@ const emit = defineEmits<{
   (e: "submit", submissionId: number, score: number, content: string): void;
 }>();
 
-const displayTotalScore = computed(() => props.maxScore);
+const {upload} = useUploader();
 
-const score = ref();
+const displayTotalScore = computed(() => props.assignmentWidget.maxScore);
+const questionPDFs = computed(() => props.assignmentWidget.attachments.filter(a => a.filename.endsWith(".pdf")));
+const studentAnswerPDFs = computed(() => (props.submission.attachments?.filter(a => a.filename.endsWith(".pdf")) || []));
+
+const score = ref<number>();
 const content = ref("");
-const submissionContainer = ref();
+const submissionContainer = ref<InstanceType<typeof MdAndFileMark>>();
+const dialogVisible = ref(false);
+const formEl = ref<FormInstance>();
+const dialogForm = reactive<AIFeedbackCreate>({
+  type: "text",
+  question: "",
+  answer: "",
+  studentAnswer: "",
+  questionFileId: "",
+  answerFileId: "",
+  studentAnswerFileId: "",
+});
+const uploadContainer = ref<UploadInstance>();
+
+const notEmpty = (rule: any, value: any, callback: any) => {
+  if (dialogForm.type === "text" || !!value) {
+    callback();
+  } else {
+    callback(new Error("请选择文件"));
+  }
+}
+const rules = reactive<FormRules<typeof dialogForm>>({
+  questionFileId: [{ validator: notEmpty }],
+  answerFileId: [{ validator: notEmpty }],
+  studentAnswerFileId: [{ validator: notEmpty }],
+});
 
 const errorMessage = computed(() => {
   if (score.value === undefined || score.value === null) return "请输入分数";
-  if (score.value < 0 || score.value > props.maxScore) return "分数超出范围";
+  if (score.value < 0 || score.value > props.assignmentWidget.maxScore) return "分数超出范围";
+  if (!isDirty() && !isPatchDirty() && !submissionContainer.value?.isDirty()) return "当前内容已提交";
   return null;
 });
 
 const handleGetFile = (fileId: string) => {
   if (fileId in props.patch)
-      return new Blob([props.patch[fileId]]);
+    return new Blob([props.patch[fileId]]);
   return props.blobList[fileId];
 };
 
@@ -99,23 +226,80 @@ const handleUpdateFile = (fileId: string, dataPromise: Promise<Uint8Array>) => {
 };
 
 const handleSubmit = () => {
-  submissionContainer.value.save();
-  emit("submit", props.submission.id, score.value, content.value);
+  submissionContainer.value?.save();
+  if (score.value !== undefined) {
+    emit("submit", props.submission.id, score.value, content.value);
+  }
+};
+
+const handleOpenDialog = () => {
+  dialogForm.studentAnswer = props.submission.content || "";
+  dialogVisible.value = true;
+}
+
+const handleExceed: UploadProps['onExceed'] = (files) => {
+  uploadContainer.value!.clearFiles();
+  const file = files[0] as UploadRawFile;
+  file.uid = genFileId();
+  uploadContainer.value!.handleStart(file);
+  uploadContainer.value!.submit();
+};
+
+const handleRemove: UploadProps['onRemove'] = (file) => {
+  dialogForm.answerFileId = "";
+}
+
+const handleUpload = async (options: UploadRequestOptions) => {
+  const {file, onSuccess, onError} = options;
+  try {
+    const result = await upload(file);
+    dialogForm.answerFileId = result.id;
+    onSuccess(result);
+  } catch (err: any) {
+    ElMessage.error("上传失败，请稍后重试");
+    onError(err);
+  }
+};
+
+const handleAISubmit = () => {
+  if (!formEl.value) {
+    return;
+  }
+  formEl.value.validate(async (valid, fields) => {
+    if (valid) {
+      try {
+        const response = await postAIFeedback(dialogForm);
+        score.value = response.data.score;
+        content.value = response.data.feedback;
+        dialogVisible.value = false;
+      } catch (e) {
+        ElMessage.error("提交失败，请稍后重试");
+      }
+    }
+  });
 };
 
 const isDirty = () => {
   return score.value !== props.feedback.score || content.value !== (props.feedback.content || "");
 };
 
+const isPatchDirty = () => {
+  const files = props.submission.feedback?.attachments || props.submission.attachments;
+  return files?.some(file => file.id in props.patch) ?? false;
+};
+
 watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedback], [oldSubmission, oldFeedback]) => {
   if (oldSubmission) {
-    if (submissionContainer.value.isDirty()) {
+    if (submissionContainer.value?.isDirty()) {
       submissionContainer.value.save();
     }
-    emit("save", oldSubmission.id, score.value, content.value);
+    if (score.value !== undefined) {
+      emit("save", oldSubmission.id, score.value, content.value);
+    }
   }
   score.value = newFeedback.score;
   content.value = newFeedback.content || "";
+  dialogForm.question = props.assignmentWidget.content;
 }, {immediate: true});
 </script>
 
@@ -131,12 +315,11 @@ watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedba
 
 .mark-submit {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
   padding: 0;
   margin-top: 10px;
   background-color: transparent;
   border: none;
-  gap: 15px;
 }
 
 .assignment-status, .assignment-feedback {

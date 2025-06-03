@@ -11,7 +11,7 @@ const routes: RouteRecordRaw[] = [
         children: [
             {
                 path: '',
-                redirect: 'homepage',
+                redirect: { name: 'homepage' },
             },
             {
                 path: 'homepage',
