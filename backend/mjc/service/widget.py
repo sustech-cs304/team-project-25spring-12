@@ -51,7 +51,11 @@ def get_feedback(db: Session, widget_id: int, username: str) -> Feedback | None:
     if entity:
         feedback = Feedback(score=entity.score,
                             content=entity.content,
-                            attachments=[File(url=None, **file.model_dump()) for file in entity.attachments if entity.attachments],
+                            attachments=[File(url=None,
+                                              id=file.file_id,
+                                              visibility=file.file.visibility,
+                                              filename=file.file.filename)
+                                         for file in entity.attachments if entity.attachments],
                             create_time=entity.create_time,
                             id=entity.id)
         return feedback
