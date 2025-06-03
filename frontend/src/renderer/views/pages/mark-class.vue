@@ -11,7 +11,7 @@ import MarkAssignmentList from "@/views/widgets/mark-assignment-list.vue";
 import {AssignmentWidget} from "@/types/widgets";
 import {computed, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
-import {getAllAssignments, getWidget} from "@/api/feedback";
+import {getAllAssignments} from "@/api/feedback";
 import {getCourse} from "@/api/course";
 import {Course} from "@/types/course";
 
@@ -28,7 +28,8 @@ onMounted(async () => {
   const course = courseResponse.data as Course;
   courseName.value = course.name;
   const assignmentsResponse = await getAllAssignments(courseId.value);
-  widgets.value = assignmentsResponse.data as AssignmentWidget[];
+  const assignmentWidgets = assignmentsResponse.data as AssignmentWidget[];
+  widgets.value = assignmentWidgets.filter(widget => widget.submitType === "file");
 });
 </script>
 
