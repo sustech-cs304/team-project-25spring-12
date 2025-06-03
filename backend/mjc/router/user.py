@@ -2,6 +2,7 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
+from requests.sessions import Session
 
 import mjc.model.schema.user
 from mjc.model.schema.user import UserInDB
@@ -33,3 +34,12 @@ async def get_profile_me(db: SessionDep,
             dependencies=[Depends(user_service.get_current_user)])
 async def get_profile(db: SessionDep, username: str):
     return user_service.get_profile(db, username)
+
+
+@router.get("/user", response_model=list[mjc.model.schema.user.Profile],
+            dependencies=[Depends(user_service.get_current_user)])
+async def get_users(db: SessionDep,
+                    username: str | None = None,
+                    department: str | None = None,
+                    email: str | None = None) -> list[mjc.model.schema.user.Profile]:
+    return user_service.get_profile_fuzz(db, username, department, email)

@@ -69,6 +69,14 @@ def get_profile(db: Session, username: str) -> Profile | None:
     return None
 
 
+def get_profile_fuzz(db: Session, username: str | None, department: str | None, email: str | None,
+                     limit: int = 10, offset: int = 0) -> list[Profile] | None:
+    profiles = crud.get_profile_fuzz(db, username, department, email, limit, offset)
+    if profiles:
+        return [Profile.model_validate(profile.model_dump()) for profile in profiles]
+    return None
+
+
 @cache(expire=2)
 async def get_current_user(db: Session = Depends(database.get_session),
                            token: str = Depends(security.oauth2_scheme)) \
