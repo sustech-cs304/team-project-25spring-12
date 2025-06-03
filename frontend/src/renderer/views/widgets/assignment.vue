@@ -260,7 +260,11 @@ const scoreColor = computed(() => {
   return `rgb(${red}, ${green}, 0)`;
 });
 const statusText = computed(() => {
-  if (props.data.status === "pending") return "未提交，截止时间：" + String(props.data.ddl).replace(/T/g, ' ');
+  if (props.data.status === "pending") return "未提交，截止时间：" +
+          new Intl.DateTimeFormat(undefined, {
+            dateStyle: 'medium',
+            timeStyle: 'short'
+          }).format(new Date(props.data.ddl));
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
