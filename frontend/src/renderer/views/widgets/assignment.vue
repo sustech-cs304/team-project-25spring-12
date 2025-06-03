@@ -67,7 +67,7 @@
                 <component :is="statusIcon"/>
               </el-icon>
               <el-text>
-                {{ statusText }}
+                {{ statusText + "，提交截止时间：" + timestampToString(props.data.ddl)}}
               </el-text>
             </el-col>
 
@@ -86,9 +86,49 @@
         <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
       </div>
 
+      <!--   批改建议   -->
+      <div v-if="props.data.feedback">
+        <el-text class="section-title">批改建议</el-text>
+        <div class="container">
+          <md-and-file :file-list="props.data.feedback?.attachments" :content="props.data.feedback?.content"/>
+          <el-button
+              type="primary"
+              :icon="ChatRound"
+              @click="postArgue"
+              style="width: 140px; margin-right: auto"
+          >
+            我要 Argue ！
+          </el-button>
+        </div>
+      </div>
+
       <!--   提交记录   -->
-      <div v-if="props.data.status === 'submitted'">
+      <div>
         <el-text tag="h4" class="section-title">提交记录</el-text>
+        <el-row
+            class="submit-record-item"
+            justify="space-between"
+        >
+          <el-col :span="1">
+            <el-icon :size="20">
+              <component :is="EditPen"/>
+            </el-icon>
+          </el-col>
+          <el-col :span="8">
+            <el-text truncated>开始新的提交</el-text>
+          </el-col>
+          <el-col :span="8"/>
+          <el-col :span="6" class="edit-button">
+            <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                @click="beginNewSubmission"
+            >
+              开始
+            </el-button>
+          </el-col>
+        </el-row>
         <el-row
             v-for="record in props.data.submittedAssignment"
             :key="record.submittedTime"
@@ -100,8 +140,11 @@
               <component :is="Memo"/>
             </el-icon>
           </el-col>
-          <el-col :span="16">
-            <el-text truncated>提交时间：{{ record.submittedTime }}</el-text>
+          <el-col :span="8">
+            <el-text truncated>提交时间：{{ timestampToString(record.submittedTime) }}</el-text>
+          </el-col>
+          <el-col :span="8">
+            <el-text truncated>批改状态：{{ record.feedback ? '得分：' + record.feedback.score : '未批改' }}</el-text>
           </el-col>
           <el-col :span="6" class="edit-button">
             <el-button
@@ -110,14 +153,22 @@
                 :icon="Edit"
                 @click="editSubmittedAssignment(record)"
             >
-              编辑
+              查看
             </el-button>
           </el-col>
         </el-row>
       </div>
 
+      <!--    本次提交批改建议    -->
+      <div v-if="currentFeedback !== null">
+        <el-text class="section-title">本次提交批改建议</el-text>
+        <div class="container">
+          <md-and-file :file-list="currentFeedback.attachments" :content="currentFeedback.content"/>
+        </div>
+      </div>
+
       <!--   提交作业区   -->
-      <div v-if="props.data.status === 'pending' || isEditing">
+      <div v-if="isEditing">
         <el-text class="section-title">提交作业</el-text>
         <div class="container">
           <!--   提交代码   -->
@@ -133,11 +184,13 @@
             </div>
           </div>
           <!--   提交文本或文件   -->
-          <div class="homework-editor" v-else>
+          <div class="homework-editor" v-if="props.data.submitType === 'file'">
             <md-and-file-editor
                 :content="content"
                 :fileList="fileList"
                 ref="contentEditor"
+                @upload="handleSubmissionAttachmentUpload"
+                @remove="handleSubmissionAttachmentRemove"
             />
           </div>
           <el-button
@@ -150,23 +203,8 @@
           </el-button>
         </div>
       </div>
-
-      <!--   批改建议   -->
-      <div v-if="props.data.status === 'returned'">
-        <el-text class="section-title">批改建议</el-text>
-        <div class="container">
-          <md-and-file :file-list="props.data.returnedFiles" :content="props.data.feedback"/>
-          <el-button
-              type="primary"
-              :icon="ChatRound"
-              @click="postArgue"
-              style="width: 140px; margin-right: auto"
-          >
-            我要 Argue ！
-          </el-button>
-        </div>
-      </div>
     </div>
+
     <template #button>
       <template v-if="isEditingHomework">
         <el-icon>
@@ -190,10 +228,10 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
-import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check} from "@element-plus/icons-vue";
-import type {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
+import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check, EditPen} from "@element-plus/icons-vue";
+import type {AssignmentWidget, Feedback, SubmittedRecord} from "@/types/widgets";
 import {FileMeta} from "@/types/fileMeta";
-import {addWidgetAttachment, editAssignmentWidget, editDocWidget, removeWidgetAttachment} from "@/api/courseMaterial";
+import {addWidgetAttachment, removeWidgetAttachment, createSubmission, createSubmissionAttachment, editAssignmentWidget, Submission} from "@/api/courseMaterial";
 import {ElMessage} from "element-plus";
 import {DocWidget, WidgetUnion} from "@/types/widgets";
 
@@ -223,13 +261,11 @@ const AssignmentType = [
 * updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
 * */
 const languages = [
-  {label: "C++", value: "cpp"},
-  {label: "C", value: "c"},
-  {label: "Java", value: "java"},
-  {label: "Python", value: "python"},
+  {label: "C++", value: "cpp", backend: "cpp"},
+  {label: "C", value: "c", backend: "c"},
+  {label: "Java", value: "java", backend: "java"},
+  {label: "Python", value: "python", backend: "py3"},
 ];
-const selectedLanguage = ref("cpp");
-const code = ref('');
 const updateMode = () => {
   // Nothing
 };
@@ -259,26 +295,52 @@ const scoreColor = computed(() => {
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
 });
+const timestampToString = (timestamp: string) => {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(timestamp));
+};
 const statusText = computed(() => {
-  if (props.data.status === "pending") return "未提交，截止时间：" +
-          new Intl.DateTimeFormat(undefined, {
-            dateStyle: 'medium',
-            timeStyle: 'short'
-          }).format(new Date(props.data.ddl));
+  if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 
 // 编辑提交记录
-const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-const content = ref("");
-const fileList = ref([]);
+const isEditing = ref(false);
+
+const currentFeedback = ref<Feedback | null>(null);
+const selectedLanguage = ref<string>("cpp");
+const code = ref<string>('');
+const content = ref<string>("");
+const fileList = ref<FileMeta[]>([]);
+
+const beginNewSubmission = () => {
+  code.value = '';
+  selectedLanguage.value = 'cpp';
+  content.value = '';
+  contentEditor.value?.updateContent(content.value);
+  fileList.value = [];
+  currentFeedback.value = null;
+  isEditing.value = true;
+}
+
 const editSubmittedAssignment = (record: SubmittedRecord) => {
-  content.value = JSON.parse(JSON.stringify(record.content));
-  code.value = JSON.parse(JSON.stringify(record.code.content));
-  selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
-  fileList.value = JSON.parse(JSON.stringify(record.attachments));
+  if (props.data.submitType === 'code') {
+    code.value = JSON.parse(JSON.stringify(record.code?.code ?? ''));
+    selectedLanguage.value = JSON.parse(JSON.stringify(record.code?.language ?? 'cpp'));
+    selectedLanguage.value = languages.find(l => l.backend === selectedLanguage.value)?.value;
+  } else if (props.data.submitType === 'file') {
+    content.value = JSON.parse(JSON.stringify(record.content ?? ''));
+    contentEditor.value?.updateContent(content.value);
+    fileList.value = JSON.parse(JSON.stringify(record.attachments ?? []));
+  } else {
+    ElMessage.error("加载提交记录失败：未知作业类型")
+    console.log(props.data.submitType)
+  }
+  currentFeedback.value = record.feedback;
   isEditing.value = true;
 }
 
@@ -352,23 +414,64 @@ const handleClick = async () => {
   isEditingHomework.value = !isEditingHomework.value;
 }
 
-// 提交作业
-const uploadFile = (file: FileMeta) => {
+/*
+ * 提交作业
+ */
 
+const handleSubmissionAttachmentUpload = async (file: FileMeta) => {
+  const index = fileList.value.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    fileList.value.push(file);
+  }
 }
 
-const submit = () => {
-
-  // TODO
-  if (codeEditor.value) {
-    const code = codeEditor.value.getCode();
-    console.log(code);
+const handleSubmissionAttachmentRemove = async (file: FileMeta) => {
+  const index = fileList.value.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    fileList.value.splice(index, 1);
   }
-  if (contentEditor.value) {
-    const content = contentEditor.value.getContent();
-    console.log(content);
-    // const fileList = contentEditor.value.getFileList();
-    // console.log(fileList);
+}
+
+const submit = async () => {
+  let submission: Submission = {
+    widgetId: props.data.id
+  };
+  let submissionAttachments: FileMeta[] = [];
+  if (props.data.submitType === 'code') {
+    if (codeEditor.value) {
+      submission.code = {
+        code: codeEditor.value.getCode(),
+        language: languages.find(l => l.value === selectedLanguage.value)?.backend,
+      }
+    } else {
+      ElMessage.error("提交失败：未找到代码编辑框")
+    }
+  } else if (props.data.submitType === 'file') {
+    if (contentEditor.value) {
+      submission.content = contentEditor.value.getContent();
+      submissionAttachments = fileList.value;
+    } else {
+      ElMessage.error("提交失败：未找到文本编辑框")
+    }
+  } else {
+    ElMessage.error("提交失败：未知作业类型")
+  }
+  const response = await createSubmission(submission)
+  if (response.status === 200) {
+    let failed = false;
+    for (const attachment of submissionAttachments) {
+      const response2 = await createSubmissionAttachment(response.data.id, attachment.id);
+      if (response2.status !== 200) {
+        ElMessage.error("提交失败：附件 " + attachment.filename + " 上传失败");
+        failed = true;
+        break;
+      }
+    }
+    if (!failed) {
+      ElMessage.success("提交成功！");
+    }
+  } else {
+    ElMessage.error("提交失败：未能创建提交，请稍后再试");
   }
 }
 

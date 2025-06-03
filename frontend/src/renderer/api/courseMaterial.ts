@@ -37,11 +37,21 @@ export interface Code {
 export interface Submission {
     widgetId: number,
     content: string,
-    attachments: File[],
     code: Code,
 }
 
-export function createSubmission() {}
+export function createSubmission(submission: Submission) {
+    return request.post('/class/widget/assignment/submit', submission)
+}
+
+export function createSubmissionAttachment(submissionId: number, fileId: number) {
+    const payload = {
+        submissionId,
+        fileId
+    }
+
+    return request.post('/class/widget/assignment/submit/attach', payload)
+}
 
 export function addWidgetAttachment(widgetId: number, fileId: string) {
     const payload = {

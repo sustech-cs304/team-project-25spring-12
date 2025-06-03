@@ -122,6 +122,7 @@ onMounted(async () => {
   pageId.value = Number(route.params.pageId)
   const response = await getPage(pageId.value)
   const data = response.data as Page
+  console.log(data)
   title.value = data.name
   widgets.value = data.widgets
 

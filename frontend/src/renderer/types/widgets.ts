@@ -1,4 +1,5 @@
 import {FileMeta} from "./fileMeta";
+import {Code} from "../api/courseMaterial";
 
 export type WidgetType = 'notepdf' | 'doc' | 'assignment';
 
@@ -25,6 +26,15 @@ export interface DocWidget extends BaseWidget {
     attachments?: FileMeta[];
 }
 
+export interface Feedback {
+    id: number;
+    attachments: FileMeta[];
+    content: string;
+    createTime: string;
+    marker: string;
+    score: number;
+}
+
 export interface AssignmentWidget extends BaseWidget {
     type: 'assignment';
     content: string;
@@ -35,7 +45,7 @@ export interface AssignmentWidget extends BaseWidget {
     ddl: string;
     score: number;
     maxScore: number;
-    feedback?: string;
+    feedback?: Feedback;
     argueId?: number;
 }
 
@@ -45,10 +55,13 @@ export type WidgetUnion = NotePdfWidget | DocWidget | AssignmentWidget;
 * Util interfaces:
 * */
 export interface SubmittedRecord {
-    content: string;
+    id: number,
+    content?: string;
     attachments?: FileMeta[];
-    code?: { content: string; language: string };
+    code?: Code;
     submittedTime: string;
+    feedback?: Feedback;
+    student?: any;
 }
 
 export interface Note {
