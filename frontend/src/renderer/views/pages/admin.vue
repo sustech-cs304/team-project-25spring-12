@@ -7,8 +7,22 @@
           <div class="action-bar">
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
             <el-input
-              v-model="userSearch"
-              placeholder="搜索姓名"
+              v-model="usernameSearch"
+              placeholder="搜索用户名"
+              style="width: 200px; margin-right: 10px"
+              clearable
+              @input="filterUsers"
+            />
+            <el-input
+              v-model="departmentSearch"
+              placeholder="搜索部门"
+              style="width: 200px; margin-right: 10px"
+              clearable
+              @input="filterUsers"
+            />
+            <el-input
+              v-model="emailSearch"
+              placeholder="搜索邮箱"
               style="width: 200px"
               clearable
               @input="filterUsers"
@@ -18,6 +32,7 @@
             :data="filteredUsers"
             style="width: 100%"
             border
+            empty-text="请使用搜索框"
             @sort-change="handleUserSortChange"
           >
             <el-table-column prop="username" label="用户名" sortable />
@@ -131,8 +146,8 @@
         <el-form-item label="姓名" prop="name">
           <el-input v-model="userForm.name" />
         </el-form-item>
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="userForm.username" />
+        <el-form-item label="用户名" @="username">
+          <el-input v-model="username" />
         </el-form-item>
         <el-form-item label="部门" prop="department">
           <el-input v-model="userForm.department" />
@@ -178,7 +193,7 @@
             filterable
             clearable
             style="width: 100%"
-            :filter-method="filterUsers"
+            :filter-method="filterUsersForCourse"
           >
             <el-option
               v-for="user in filteredUsersForCourse"
@@ -201,7 +216,7 @@
             clearable
             multiple
             style="width: 100%"
-            :filter-method="filterUsers"
+            :filter-method="filterUsersForCourse"
           >
             <el-option
               v-for="user in filteredUsersForCourse"
@@ -224,7 +239,7 @@
             clearable
             multiple
             style="width: 100%"
-            :filter-method="filterUsers"
+            :filter-method="filterUsersForCourse"
           >
             <el-option
               v-for="user in filteredUsersForCourse"
@@ -318,51 +333,69 @@ const userRules = {
     { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] },
   ],
 };
-const users = ref([
-  { name: 'Admin User', username: 'admin', department: 'Administration', email: 'admin@example.com' },
-  { name: 'Teacher One', username: 'teacher1', department: 'Mathematics', email: 'teacher1@example.com' },
-  { name: 'Teacher Two', username: 'teacher2', department: 'Computer Science', email: 'teacher2@example.com' },
-  { name: 'Student One', username: 'student1', department: 'Physics', email: 'student1@example.com' },
-]);
-const filteredUsers = computed(() => {
-  return users.value.filter(user =>
-    user.name.toLowerCase().includes(userSearch.value.toLowerCase())
-  );
-});
+const filteredUsers = ref([]);
+
+const filterUsers = async () => {
+  try {
+    if (!usernameSearch.value.trim() &&
+        !departmentSearch.value.trim() &&
+        !emailSearch.value.trim()) {
+      filteredUsers.value = [];
+      return;
+    }
+    const params = {};
+    if (usernameSearch.value.trim())
+      params.username = usernameSearch.value.trim();
+    if (departmentSearch.value.trim())
+      params.department = departmentSearch.value.trim();
+    if (emailSearch.value.trim())
+      params.email = emailSearch.value.trim();
+    const response = await service.get('/user', { params });
+    filteredUsers.value = response.data;
+  } catch (error) {
+    console.error('搜索用户失败:', error);
+    ElMessage.error('搜索用户失败，请稍后重试');
+    filteredUsers.value = [];
+  }
+};
 
 const openAddUserDialog = () => {
   userDialogTitle.value = '添加用户';
   userDialogVisible.value = true;
 };
+
 const openEditUserDialog = (user) => {
   userDialogTitle.value = '编辑用户';
   userForm.value = { ...user };
   userDialogVisible.value = true;
 };
+
 const resetUserForm = () => {
   userForm.value = { name: '', username: '', department: '', email: '' };
   userFormRef.value?.resetFields();
 };
+
 const saveUser = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
-      const index = users.value.findIndex((u) => u.username === userForm.value.username);
+      const index = filteredUsers.value.findIndex((u) => u.username === userForm.value.username);
       if (index !== -1) {
-        users.value[index] = { ...userForm.value };
+        filteredUsers.value[index] = { ...userForm.value };
         ElMessage.success('用户更新成功');
       } else {
-        users.value.push({ ...userForm.value });
+        filteredUsers.value.push({ ...userForm.value });
         ElMessage.success('用户添加成功');
       }
       userDialogVisible.value = false;
     }
   });
 };
+
 const deleteUser = (username) => {
   service
     .delete(`/users/${username}`)
     .then(() => {
-      users.value = users.value.filter((user) => user.username !== username);
+      filteredUsers.value = filteredUsers.value.filter((user) => user.username !== username);
       ElMessage.success('用户删除成功');
     })
     .catch(() => {
@@ -405,13 +438,13 @@ const fetchCourses = async (semester_id) => {
     return;
   }
   try {
-    const response = await service.get(`/admin/semester/${semester_id}`);
+    const response = await service.get('/admin/semester/${semester_id}');
     const semesterCourses = response.data;
     const enrichedCourses = await Promise.all(
       semesterCourses.map(async (course) => {
         try {
           console.log('course:', course);
-          const userResponse = await service.get(`/class/${course.id}/user`);
+          const userResponse = await service.get('/class/${course.id}/user');
           const users = userResponse.data;
           const teacher = users.find((user) => user.role === 'teacher')?.username;
           const assistants = users
@@ -433,7 +466,7 @@ const fetchCourses = async (semester_id) => {
             time: course.time,
           };
         } catch (error) {
-          console.error(`获取课程 ${course.id} 的用户数据失败:`, error);
+          console.error('获取课程 ${course.id} 的用户数据失败:', error);
           return {
             id: course.id,
             course_code: course.courseCode,
@@ -450,8 +483,8 @@ const fetchCourses = async (semester_id) => {
       })
     );
     courses.value = enrichedCourses;
-    console.log('Enriched Courses:', courses.value); // 调试 enrichedCourses
-    ElMessage.success(`已加载学期内课程信息`);
+    console.log('Enriched Courses:', courses.value);
+    ElMessage.success('已加载学期内课程信息');
   } catch (error) {
     console.error('获取课程数据失败:', error);
     ElMessage.error('加载学期详细信息失败，请稍后重试');
@@ -469,13 +502,25 @@ const filteredCourses = computed(() => {
   });
 });
 
-const filteredUsersForCourse = ref(users.value);
+const filteredUsersForCourse = ref([]);
 
-const filterUsers = (query) => {
-  const lowerQuery = query.toLowerCase();
-  filteredUsersForCourse.value = users.value.filter((user) =>
-    user.name.toLowerCase().includes(lowerQuery)
-  );
+const filterUsersForCourse = async (query) => {
+  try {
+    if (!query.trim()) {
+      filteredUsersForCourse.value = [];
+      return;
+    }
+    const response = await service.get('/admin/user', {
+      params: {
+        name: query.trim(),
+      },
+    });
+    filteredUsersForCourse.value = response.data;
+  } catch (error) {
+    console.error('搜索用户失败:', error);
+    ElMessage.error('搜索用户失败，请稍后重试');
+    filteredUsersForCourse.value = [];
+  }
 };
 
 const openAddCourseDialog = () => {
@@ -502,7 +547,7 @@ const resetCourseForm = () => {
     time: '',
   };
   courseFormRef.value?.resetFields();
-  filteredUsersForCourse.value = users.value;
+  filteredUsersForCourse.value = [];
 };
 
 const saveCourse = async () => {

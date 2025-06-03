@@ -15,13 +15,6 @@
                 {{ channel }}
               </div>
             </div>
-            <div
-              class="channel"
-              :class="{ active: activeChannel === '创建' }"
-              @click="setActiveChannel('创建')"
-            >
-              创建
-            </div>
           </div>
         </div>
       </div>
@@ -124,7 +117,8 @@ const getNext = async () => {
 };
 
 // 左侧 channel 列表
-const leftChannels = ['广场', '我的'];
+// const leftChannels = ['广场', '我的'];
+const leftChannels = ['广场'];
 // 当前激活的 channel
 const activeChannel = ref('广场');
 
