@@ -1,4 +1,5 @@
 import uuid
+import json
 
 from fastapi import HTTPException, status
 from sqlmodel import Session
@@ -10,7 +11,8 @@ from mjc.model.schema.widget import AssignmentWidget, NotePdfWidget, DocWidget, 
     AssignmentWidgetCreate, AssignmentWidgetUpdate, NotePdfWidgetCreate, NotePdfWidgetUpdate, WidgetAttachmentCreate
 from mjc.model.schema.assignment import Feedback, SubmittedAssignment
 from mjc.model.schema.common import File, Message
-from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as NoteEntity
+from mjc.model.schema.widget import TestCase as TestCaseSchema, TestCaseInfo
+from mjc.model.entity.widget import Widget as WidgetEntity, WidgetType, Note as NoteEntity, TestCase
 from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignmentEntity, \
     SubmittedAssignmentFeedback as FeedbackEntity
 from mjc.service.assignment import entity2submission, get_student_submissions
@@ -73,7 +75,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         visible=entity.visible,
         id=entity.id,
         content=entity.content if entity.content else None,
-        submit_type=entity.assignment_widget.submit_types[0],
+        submit_type=entity.assignment_widget.submit_type,
         submitted_assignment=None,
         status='pending',
         ddl=entity.assignment_widget.ddl,
