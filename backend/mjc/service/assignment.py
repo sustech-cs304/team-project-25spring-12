@@ -35,7 +35,7 @@ def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> Submitt
         attachments=[File(url=None,
                           id=file.file_id,
                           filename=file.file.filename,
-                          visibility=Visibility.public) for file in entity.attachments if entity.attachments],
+                          visibility=Visibility.public) for file in entity.attachments if entity.attachments and not file.is_deleted],
         feedback=entity2feedback(entity.feedback) if entity.feedback else None
     )
     return submission
