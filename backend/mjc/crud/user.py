@@ -24,7 +24,7 @@ def get_profile_fuzz(db: Session, username: str | None, department: str | None, 
     if department:
         stmt = stmt.where(Profile.department.like(f'%{department}%'))
     if email:
-        stmt = stmt.where(Profile.department.like(f'%{email}%'))
+        stmt = stmt.where(Profile.email.like(f'%{email}%'))
     stmt = stmt.offset(offset).limit(limit)
     return db.exec(stmt).all()
 
