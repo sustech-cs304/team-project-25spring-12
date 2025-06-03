@@ -44,7 +44,15 @@ def ocr4pdf(db: Session, file_id: uuid.UUID) -> str:
 
     result = ''
     client = AipOcr(config.OCR_APP_ID, config.OCR_API_KEY, config.OCR_SECRET_KEY)
+
+    # 第一页
     res_pdf = client.basicGeneralPdf(pdf_file)
     for word in res_pdf['words_result']:
         result += word['words']
+    # 剩余页
+    for page_num in range(1, int(res_pdf['pdf_file_size']) + 1):
+        res_pdf = client.basicGeneralPdf(pdf_file, {"pdf_file_num": page_num})
+        for word in res_pdf['words_result']:
+            result += word['words']
+
     return result
