@@ -6,15 +6,9 @@
         <div class="user-management">
           <div class="action-bar">
             <el-button type="primary" @click="openAddUserDialog">添加用户</el-button>
-            <el-select v-model="userSearchType" style="width: 120px; margin-right: 10px">
-              <el-option label="按姓名" value="name" />
-              <el-option label="按用户名" value="username" />
-              <el-option label="按部门" value="department" />
-              <el-option label="按邮箱" value="email" />
-            </el-select>
             <el-input
               v-model="userSearch"
-              :placeholder="getUserSearchPlaceholder"
+              placeholder="搜索姓名"
               style="width: 200px"
               clearable
               @input="filterUsers"
@@ -47,11 +41,11 @@
             <el-button type="primary" @click="openAddCourseDialog">添加课程</el-button>
             <el-select
               v-model="semesterFilter"
-              style="width: 150px;
-              margin-right: 10px"
+              style="width: 150px; margin-right: 10px"
               placeholder="选择学期"
               clearable
-              @change="fetchCourses">
+              @change="fetchCourses"
+            >
               <el-option
                 v-for="semester in invertedSemesters"
                 :key="semester.id"
@@ -299,110 +293,89 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import service from '../../utils/request'
+import { ref, computed, onMounted } from 'vue';
+import { ElMessage } from 'element-plus';
+import service from '../../utils/request';
 
 // 用户管理相关
-const activeTab = ref('users')
-const userSearch = ref('')
-const userSearchType = ref('name')
-const userDialogVisible = ref(false)
-const userDialogTitle = ref('添加用户')
-const userFormRef = ref(null)
+const activeTab = ref('users');
+const userSearch = ref('');
+const userDialogVisible = ref(false);
+const userDialogTitle = ref('添加用户');
+const userFormRef = ref(null);
 const userForm = ref({
   name: '',
   username: '',
   department: '',
-  email: ''
-})
+  email: '',
+});
 const userRules = {
   name: [{ required: true, message: '请输入姓名', trigger: 'blur' }],
   username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
   department: [{ required: true, message: '请输入部门', trigger: 'blur' }],
   email: [
     { required: true, message: '请输入邮箱', trigger: 'blur' },
-    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] }
-  ]
-}
+    { type: 'email', message: '请输入有效的邮箱地址', trigger: ['blur', 'change'] },
+  ],
+};
 const users = ref([
   { name: 'Admin User', username: 'admin', department: 'Administration', email: 'admin@example.com' },
   { name: 'Teacher One', username: 'teacher1', department: 'Mathematics', email: 'teacher1@example.com' },
   { name: 'Teacher Two', username: 'teacher2', department: 'Computer Science', email: 'teacher2@example.com' },
-  { name: 'Student One', username: 'student1', department: 'Physics', email: 'student1@example.com' }
-])
+  { name: 'Student One', username: 'student1', department: 'Physics', email: 'student1@example.com' },
+]);
 const filteredUsers = computed(() => {
-  return users.value.filter(user => {
-    if (userSearchType.value === 'name') {
-      return user.name.toLowerCase().includes(userSearch.value.toLowerCase())
-    } else if (userSearchType.value === 'username') {
-      return user.username.toLowerCase().includes(userSearch.value.toLowerCase())
-    } else if (userSearchType.value === 'department') {
-      return user.department.toLowerCase().includes(userSearch.value.toLowerCase())
-    } else {
-      return user.email.toLowerCase().includes(userSearch.value.toLowerCase())
-    }
-  })
-})
-
-const getUserSearchPlaceholder = computed(() => {
-  switch (userSearchType.value) {
-    case 'username':
-      return '搜索用户名'
-    case 'department':
-      return '搜索部门'
-    case 'email':
-      return '搜索邮箱'
-    default:
-      return '搜索姓名'
-  }
-})
+  return users.value.filter(user =>
+    user.name.toLowerCase().includes(userSearch.value.toLowerCase())
+  );
+});
 
 const openAddUserDialog = () => {
-  userDialogTitle.value = '添加用户'
-  userDialogVisible.value = true
-}
+  userDialogTitle.value = '添加用户';
+  userDialogVisible.value = true;
+};
 const openEditUserDialog = (user) => {
-  userDialogTitle.value = '编辑用户'
-  userForm.value = { ...user }
-  userDialogVisible.value = true
-}
+  userDialogTitle.value = '编辑用户';
+  userForm.value = { ...user };
+  userDialogVisible.value = true;
+};
 const resetUserForm = () => {
-  userForm.value = { name: '', username: '', department: '', email: '' }
-  userFormRef.value?.resetFields()
-}
+  userForm.value = { name: '', username: '', department: '', email: '' };
+  userFormRef.value?.resetFields();
+};
 const saveUser = () => {
   userFormRef.value.validate((valid) => {
     if (valid) {
-      const index = users.value.findIndex(u => u.username === userForm.value.username)
+      const index = users.value.findIndex((u) => u.username === userForm.value.username);
       if (index !== -1) {
-        users.value[index] = { ...userForm.value }
-        ElMessage.success('用户更新成功')
+        users.value[index] = { ...userForm.value };
+        ElMessage.success('用户更新成功');
       } else {
-        users.value.push({ ...userForm.value })
-        ElMessage.success('用户添加成功')
+        users.value.push({ ...userForm.value });
+        ElMessage.success('用户添加成功');
       }
-      userDialogVisible.value = false
+      userDialogVisible.value = false;
     }
-  })
-}
+  });
+};
 const deleteUser = (username) => {
-  service.delete(`/users/${username}`) // 嘻嘻后端现在没有这个接口
+  service
+    .delete(`/users/${username}`)
     .then(() => {
-      users.value = users.value.filter(user => user.username !== username)
-      ElMessage.success('用户删除成功')
+      users.value = users.value.filter((user) => user.username !== username);
+      ElMessage.success('用户删除成功');
     })
     .catch(() => {
-      ElMessage.error('删除用户失败，请稍后重试')
-    })
-}
+      ElMessage.error('删除用户失败，请稍后重试');
+    });
+};
 
 // 课程管理相关
-const courseSearch = ref('')
-const courseSearchType = ref('name')
-const courseDialogVisible = ref(false)
-const courseDialogTitle = ref('添加课程')
-const courseFormRef = ref(null)
+const courseSearch = ref('');
+const courseSearchType = ref('name');
+const courseDialogVisible = ref(false);
+const courseDialogTitle = ref('添加课程');
+const courseFormRef = ref(null);
 const courseForm = ref({
   id: null,
   semester_id: '',
@@ -412,9 +385,8 @@ const courseForm = ref({
   assistants: [],
   students: [],
   location: '',
-  time: ''
-})
-
+  time: '',
+});
 const courseRules = {
   semester_id: [{ required: true, message: '请选择学期', trigger: 'change' }],
   course_code: [{ required: true, message: '请输入课程代码', trigger: 'blur' }],
@@ -423,10 +395,9 @@ const courseRules = {
   assistants: [{ required: false, type: 'array', trigger: 'change' }],
   students: [{ required: false, type: 'array', trigger: 'change' }],
   location: [{ required: false, message: '请输入课程地点', trigger: 'blur' }],
-  time: [{ required: false, message: '请输入课程时间', trigger: 'blur' }]
-}
-
-const courses = ref([])
+  time: [{ required: false, message: '请输入课程时间', trigger: 'blur' }],
+};
+const courses = ref([]);
 
 const fetchCourses = async (semester_id) => {
   if (!semester_id) {
@@ -443,8 +414,12 @@ const fetchCourses = async (semester_id) => {
           const userResponse = await service.get(`/class/${course.id}/user`);
           const users = userResponse.data;
           const teacher = users.find((user) => user.role === 'teacher')?.username;
-          const assistants = users.filter((user) => user.role === 'assistant').map((user) => user.username);
-          const students = users.filter((user) => user.role === 'student').map((user) => user.username);
+          const assistants = users
+            .filter((user) => user.role === 'assistant')
+            .map((user) => user.username);
+          const students = users
+            .filter((user) => user.role === 'student')
+            .map((user) => user.username);
           return {
             id: course.id,
             course_code: course.courseCode,
@@ -476,7 +451,6 @@ const fetchCourses = async (semester_id) => {
     );
     courses.value = enrichedCourses;
     console.log('Enriched Courses:', courses.value); // 调试 enrichedCourses
-    
     ElMessage.success(`已加载学期内课程信息`);
   } catch (error) {
     console.error('获取课程数据失败:', error);
@@ -486,36 +460,34 @@ const fetchCourses = async (semester_id) => {
 };
 
 const filteredCourses = computed(() => {
-  return courses.value.filter(course => {
-      const matchesSearch = courseSearchType.value === 'course_code'
-        ? course.course_code.includes(courseSearch.value.toLowerCase())
-        : course.name.toLowerCase().includes(courseSearch.value.toLowerCase())
-      return matchesSearch
-    })
-})
+  return courses.value.filter((course) => {
+    const matchesSearch =
+      courseSearchType.value === 'course_code'
+        ? course.course_code.toLowerCase().includes(courseSearch.value.toLowerCase())
+        : course.name.toLowerCase().includes(courseSearch.value.toLowerCase());
+    return matchesSearch;
+  });
+});
 
-const filteredUsersForCourse = ref(users.value)
+const filteredUsersForCourse = ref(users.value);
 
 const filterUsers = (query) => {
-  const lowerQuery = query.toLowerCase()
-  filteredUsersForCourse.value = users.value.filter(user => 
-    user.name.toLowerCase().includes(lowerQuery) || 
-    user.username.toLowerCase().includes(lowerQuery) || 
-    user.email.toLowerCase().includes(lowerQuery) ||
-    user.department.toLowerCase().includes(lowerQuery)
-  )
-}
+  const lowerQuery = query.toLowerCase();
+  filteredUsersForCourse.value = users.value.filter((user) =>
+    user.name.toLowerCase().includes(lowerQuery)
+  );
+};
 
 const openAddCourseDialog = () => {
-  courseDialogTitle.value = '添加课程'
-  courseDialogVisible.value = true
-}
+  courseDialogTitle.value = '添加课程';
+  courseDialogVisible.value = true;
+};
 
 const openEditCourseDialog = (course) => {
-  courseDialogTitle.value = '编辑课程'
-  courseForm.value = { ...course }
-  courseDialogVisible.value = true
-}
+  courseDialogTitle.value = '编辑课程';
+  courseForm.value = { ...course };
+  courseDialogVisible.value = true;
+};
 
 const resetCourseForm = () => {
   courseForm.value = {
@@ -527,17 +499,16 @@ const resetCourseForm = () => {
     assistants: [],
     students: [],
     location: '',
-    time: ''
-  }
-  courseFormRef.value?.resetFields()
-  filteredUsersForCourse.value = users.value
-}
+    time: '',
+  };
+  courseFormRef.value?.resetFields();
+  filteredUsersForCourse.value = users.value;
+};
 
 const saveCourse = async () => {
   try {
     await courseFormRef.value.validate(async (valid) => {
       if (!valid) return;
-
       const courseData = {
         semester_id: courseForm.value.semester_id,
         course_code: courseForm.value.course_code,
@@ -545,40 +516,26 @@ const saveCourse = async () => {
         location: courseForm.value.location,
         time: courseForm.value.time,
       };
-
       let courseId = courseForm.value.id;
-
-      // 如果是编辑现有课程
       if (courseId) {
-        // 更新课程基本信息
         await service.patch(`/class/${courseId}`, courseData);
-
-        // 获取当前课程的用户数据
         const userResponse = await service.get(`/class/${courseId}/user`);
         const existingUsers = userResponse.data;
-
-        // 按角色分组现有用户
         const existingUsersByRole = {
           teacher: existingUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
           assistant: existingUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
           student: existingUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
-
-        // 新分配的用户
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
           ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
           ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
         ];
-
-        // 按角色分组新用户
         const newUsersByRole = {
           teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username).filter(Boolean),
           assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
           student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
-
-        // 添加新用户
         for (const role of ['teacher', 'assistant', 'student']) {
           const usersToAdd = newUsersByRole[role].filter(
             (username) => !existingUsersByRole[role].includes(username)
@@ -591,8 +548,6 @@ const saveCourse = async () => {
             });
           }
         }
-
-        // 删除被移除的用户
         for (const role of ['teacher', 'assistant', 'student']) {
           const usersToRemove = existingUsersByRole[role].filter(
             (username) => !newUsersByRole[role].includes(username)
@@ -601,8 +556,6 @@ const saveCourse = async () => {
             await service.delete(`/class/${courseId}/user/${username}`);
           }
         }
-
-        // 更新本地 courses 数组
         const index = courses.value.findIndex((c) => c.id === courseId);
         if (index !== -1) {
           courses.value[index] = {
@@ -613,26 +566,20 @@ const saveCourse = async () => {
             students: courseForm.value.students,
           };
         }
-
         ElMessage.success('课程更新成功');
       } else {
-        // 创建新课程
         const response = await service.post('/class', courseData);
         courseId = response.data.id;
-
-        // 添加新用户
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
           ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
           ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
-        ].filter((u) => u.username); // 过滤掉空用户名
-
+        ].filter((u) => u.username);
         const usersByRole = {
           teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
           assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
           student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
-
         for (const role of ['teacher', 'assistant', 'student']) {
           if (usersByRole[role].length > 0) {
             await service.post(`/class/user`, {
@@ -642,8 +589,6 @@ const saveCourse = async () => {
             });
           }
         }
-
-        // 更新本地 courses 数组
         courses.value.push({
           ...courseData,
           id: courseId,
@@ -651,10 +596,8 @@ const saveCourse = async () => {
           assistants: courseForm.value.assistants,
           students: courseForm.value.students,
         });
-
         ElMessage.success('课程添加成功');
       }
-
       courseDialogVisible.value = false;
     });
   } catch (error) {
@@ -664,96 +607,122 @@ const saveCourse = async () => {
 };
 
 const deleteCourse = (id) => {
-  service.delete(`/class/${id}`)
+  service
+    .delete(`/class/${id}`)
     .then(() => {
-      courses.value = courses.value.filter(course => course.id !== id)
-      ElMessage.success('课程删除成功')
+      courses.value = courses.value.filter((course) => course.id !== id);
+      ElMessage.success('课程删除成功');
     })
     .catch(() => {
-      ElMessage.error('删除课程失败，请稍后重试')
-    })
-}
+      ElMessage.error('删除课程失败，请稍后重试');
+    });
+};
 
-const filterCourses = () => {}
+const filterCourses = () => {};
 
 // 学期管理相关
-const semesterSearch = ref('')
-const semesterDialogVisible = ref(false)
-const semesterDialogTitle = ref('添加学期')
-const semesterFormRef = ref(null)
+const semesterSearch = ref('');
+const semesterDialogVisible = ref(false);
+const semesterDialogTitle = ref('添加学期');
+const semesterFormRef = ref(null);
 const semesterForm = ref({
   id: null,
   name: '',
   start_time: '',
-  end_time: ''
-})
+  end_time: '',
+});
 const semesters = ref([
   { id: 1, name: '2023 春季', start_time: '2023-02-01', end_time: '2023-06-30' },
   { id: 2, name: '2023 秋季', start_time: '2023-09-01', end_time: '2024-01-31' },
   { id: 3, name: '2024 春季', start_time: '2024-02-01', end_time: '2024-06-30' },
   { id: 4, name: '2024 秋季', start_time: '2024-09-01', end_time: '2025-01-31' },
   { id: 5, name: '2025 春季', start_time: '2025-02-01', end_time: '2025-06-30' },
-])
+]);
 
 const fetchSemesters = async () => {
   try {
-    const response = await service.get('/class/semester')
-    semesters.value = response.data
+    const response = await service.get('/class/semester');
+    semesters.value = response.data;
     console.log('Loaded semesters:', semesters.value);
-    ElMessage.success('学期数据加载成功')
+    ElMessage.success('学期数据加载成功');
   } catch (error) {
-    ElMessage.error('加载学期数据失败，请稍后重试')
-    console.error('Error fetching semesters:', error)
+    ElMessage.error('加载学期数据失败，请稍后重试');
+    console.error('Error fetching semesters:', error);
   }
-}
+};
 
-const semesterFilter = ref('')
+const semesterFilter = ref('');
 
 const invertedSemesters = computed(() => {
-  return [...semesters.value].sort((a, b) => b.id - a.id)
-})
+  return [...semesters.value].sort((a, b) => b.id - a.id);
+});
 
 const semesterRules = {
   name: [{ required: true, message: '请输入学期名称', trigger: 'blur' }],
-  start_time: [{ required: true, message: '请输入开始时间', trigger: 'change' }],
-  end_time: [{ required: true, message: '请输入结束时间', trigger: 'change' }]
-}
+  start_time: [
+    { required: true, message: '请选择开始日期', trigger: 'change' },
+    {
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请选择开始日期'));
+        } else if (semesterForm.value.end_time && value > semesterForm.value.end_time) {
+          callback(new Error('开始日期不能晚于结束日期'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change',
+    },
+  ],
+  end_time: [
+    { required: true, message: '请选择结束日期', trigger: 'change' },
+    {
+      validator: (rule, value, callback) => {
+        if (!value) {
+          callback(new Error('请选择结束日期'));
+        } else if (semesterForm.value.start_time && value < semesterForm.value.start_time) {
+          callback(new Error('结束日期不能早于开始日期'));
+        } else {
+          callback();
+        }
+      },
+      trigger: 'change',
+    },
+  ],
+};
 
 const filteredSemesters = computed(() => {
-  return semesters.value.filter(semester =>
+  return semesters.value.filter((semester) =>
     semester.name.toLowerCase().includes(semesterSearch.value.toLowerCase())
-  )
-})
+  );
+});
 
 const openAddSemesterDialog = () => {
-  semesterDialogTitle.value = '添加学期'
-  semesterDialogVisible.value = true
-}
+  semesterDialogTitle.value = '添加学期';
+  semesterDialogVisible.value = true;
+};
 
 const openEditSemesterDialog = (semester) => {
-  semesterDialogTitle.value = '编辑学期'
-  semesterForm.value = { ...semester }
-  semesterDialogVisible.value = true
-}
+  semesterDialogTitle.value = '编辑学期';
+  semesterForm.value = { ...semester };
+  semesterDialogVisible.value = true;
+};
 
 const resetSemesterForm = () => {
-  semesterForm.value = { id: null, name: '', start_time: '', end_time: '' }
-  semesterFormRef.value?.resetFields()
-}
+  semesterForm.value = { id: null, name: '', start_time: '', end_time: '' };
+  semesterFormRef.value?.resetFields();
+};
 
 const saveSemester = async () => {
   try {
     await semesterFormRef.value.validate(async (valid) => {
       if (!valid) return;
-
       const semesterData = {
         name: semesterForm.value.name,
         start_time: semesterForm.value.start_time,
         end_time: semesterForm.value.end_time,
       };
-
       if (semesterForm.value.id) {
-        // 更新现有学期
         await service.patch(`/class/semester/${semesterForm.value.id}`, semesterData);
         const index = semesters.value.findIndex((s) => s.id === semesterForm.value.id);
         if (index !== -1) {
@@ -761,19 +730,16 @@ const saveSemester = async () => {
         }
         ElMessage.success('学期更新成功');
       } else {
-        // 创建新学期
         const response = await service.post('/class/semester', semesterData);
-        console.log("New Semester Res: ", response);
+        console.log('New Semester Res: ', response);
         const newSemester = {
-          id: response.data.id, // 假设后端返回新学期的 id
+          id: response.data.id,
           ...semesterData,
         };
-        console.log("New Semester: ", newSemester);
-        
+        console.log('New Semester: ', newSemester);
         semesters.value.push(newSemester);
         ElMessage.success('学期添加成功');
       }
-
       semesterDialogVisible.value = false;
     });
   } catch (error) {
@@ -783,24 +749,25 @@ const saveSemester = async () => {
 };
 
 const deleteSemester = (id) => {
-  const isUsed = courses.value.some(course => course.semester === id)
+  const isUsed = courses.value.some((course) => course.semester === id);
   if (isUsed) {
-    ElMessage.error('无法删除正在被课程使用的学期')
-    return
+    ElMessage.error('无法删除正在被课程使用的学期');
+    return;
   }
-  service.delete(`/class/semester/${id}`)
+  service
+    .delete(`/class/semester/${id}`)
     .then(() => {
-      semesters.value = semesters.value.filter(semester => semester.id !== id)
-      ElMessage.success('学期删除成功')
+      semesters.value = semesters.value.filter((semester) => semester.id !== id);
+      ElMessage.success('学期删除成功');
     })
     .catch(() => {
-      ElMessage.error('删除学期失败，请稍后重试')
-    })
-}
+      ElMessage.error('删除学期失败，请稍后重试');
+    });
+};
 
-const filterSemesters = () => {}
+const filterSemesters = () => {};
 
-onMounted(fetchSemesters)
+onMounted(fetchSemesters);
 </script>
 
 <style scoped>
