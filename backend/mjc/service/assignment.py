@@ -3,7 +3,7 @@ import os
 import uuid
 import requests
 
-from fastapi import HTTPException, status
+from fastapi import HTTPException, status, BackgroundTasks
 from sqlmodel import Session
 
 from mjc.crud import assignment as crud_assignment, widget as crud_widget, common as crud_common
@@ -18,7 +18,10 @@ from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.widget import AssignmentWidget, TestCaseCreate, TestCaseUpdate, TestCase, TestCaseInfo, TestPoint
 from mjc.service import widget as widget_service, common as common_service
 from mjc import config
+from mjc.utils.database import get_session_sync
 import mjc.utils.onlinejudge as oj
+import mjc.utils.judger_config as judger_config
+
 
 
 def entity2submission(db: Session, entity: SubmittedAssignmentEntity) -> SubmittedAssignment:
@@ -62,14 +65,22 @@ def get_all_submissions(db: Session, assignment_widget_id: int) -> list[Submitte
         return submissions
 
 
-def create_submission(db: Session, submission: SubmittedAssignmentCreate, current_user: UserInDB) -> SubmittedAssignment:
+def create_submission(db: Session, submission: SubmittedAssignmentCreate, current_user: UserInDB,
+                      background_tasks: BackgroundTasks) -> SubmittedAssignment:
     entity = crud_assignment.create_submission(db, submission, current_user.username)
     if entity:
         assignment = crud_widget.get_assignment_widget_by_widget_id(db, submission.widget_id)
-        if assignment.submit_type is SubmitType.code:
-            # TODO: submit to online judge
-            pass
-        return entity2submission(db, entity)
+        submission_schema = entity2submission(db, entity)
+        if assignment.submit_type is SubmitType.code and assignment.test_case:
+            if submission_schema.code.language not in judger_config.configs.keys():
+                raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Language not found")
+            background_tasks.add_task(judge, submission_schema,
+                                      assignment.test_case.id,
+                                      assignment.max_score,
+                                      assignment.test_case.max_cpu_time,
+                                      assignment.test_case.max_memory,
+                                      current_user)
+        return submission_schema
     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Create submission failed")
 
 
@@ -187,6 +198,46 @@ def get_ai_feedback(db: Session, request: AIFeedbackCreate) -> AIFeedback | None
             return AIFeedback(score=feedback['score'],feedback=feedback['feedback'] )
         return None
     return None
+
+
+def judge(submission: SubmittedAssignment,
+          test_case_id: int, max_score: float, max_cpu_time: int, max_memory: int,
+          current_user: UserInDB):
+    result = oj.judge(src=submission.code.code, language=submission.code.language, test_case_id=str(test_case_id),
+                      max_cpu_time=max_cpu_time, max_memory=max_memory)
+    if result:
+        # NOT CE
+        if type(result) is list:
+            result = sorted(result, key=lambda x: x['test_case'])
+            correct, total = 0, len(result)
+            content = ''
+            for test_point in result:
+                correct += 1 if test_point['result'] == 0 else 0
+                content += f'Test case {test_point["test_case"]}, {oj.translate_judge_result(test_point["result"])}\n'
+            score = correct / total * max_score
+            feedback = FeedbackCreate(
+                score=score,
+                content=content,
+                submission_id=submission.id
+            )
+        elif type(result) is dict and result.get('err'):
+            content = result['err']
+            feedback = FeedbackCreate(
+                score=0,
+                content=content,
+                submission_id=submission.id
+            )
+        # UKE
+        else:
+            content = 'Judge Server Unknown Error'
+            feedback = FeedbackCreate(
+                score=0,
+                content=content,
+                submission_id=submission.id
+            )
+        db = get_session_sync()
+        crud_assignment.create_feedback(db, feedback, "admin")
+        db.close()
 
 
 def create_test_case(db: Session, test_case: TestCaseCreate) -> TestCase:
