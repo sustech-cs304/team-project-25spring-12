@@ -106,15 +106,16 @@ const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
 const bottomObserver = ref<HTMLElement | null>(null);
 const pdfContainer = ref<HTMLElement | null>(null);
 
-const notes = ref<Note[]>(props.data.notes);
+const notes = ref<Note[]>(JSON.parse(JSON.stringify(props.data.notes)));
 const contextMenuRef = ref<HTMLElement | null>(null);
 const activeNote = ref<Note | null>(null);
-const contextMenu = ref({
-  visible: false,
-  x: 0,
-  y: 0,
-  page: 1,
-});
+interface ContextMenu {
+  visible: boolean,
+  x: number,
+  y: number,
+  page: number
+}
+const contextMenu = ref<ContextMenu>({visible: false, x: 0, y: 0, page: 0});
 const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref('');
 let totalPages = 0;
@@ -209,19 +210,19 @@ const openContextMenu = (event, page) => {
   });
 };
 
-const addNote = () => {
+const addNote = async () => {
   const text = newNoteText.value.trim();
   if (!text) return;
 
   const newNote: Note = {
-    page: contextMenu.value.page,
-    x: contextMenu.value.x,
-    y: contextMenu.value.y,
+    ...contextMenu.value,
     text,
-  } as Note;
+  };
 
   notes.value.push(newNote);
-  createNote(newNote, props.data.id);
+  // 上传后端
+  const response = await createNote(newNote, props.data.id);
+  // emit 至父组件：父组件完全不需要 note 信息，这里选择不做额外处理
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
