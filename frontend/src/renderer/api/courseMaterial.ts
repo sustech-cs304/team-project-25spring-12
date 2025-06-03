@@ -82,9 +82,19 @@ export function editDocWidget(widget: DocWidget) {
 }
 
 export function createNotePdfWidget(widget: NotePdfWidget) {
-    return request.post('/class/widget/notepdf', widget)
+    const uuid = widget.pdfFile.id, payload = {
+        ...widget,
+        pdfFile: uuid
+    }
+
+    return request.post('/class/widget/notepdf', payload)
 }
 
 export function editNotePdfWidget(widget: NotePdfWidget) {
-    return request.patch('/class/widget/notepdf', widget)
+    const uuid = widget.pdfFile.id, payload = {
+        ...widget,
+        pdfFile: uuid
+    }
+
+    return request.patch('/class/widget/notepdf', payload)
 }

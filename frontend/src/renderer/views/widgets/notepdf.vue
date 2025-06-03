@@ -57,18 +57,19 @@
       </div>
     </el-popover>
     <template #button>
-      <el-upload
-          ref="uploadRef"
-          :show-file-list="false"
-          :http-request="handleUpload"
-      >
-        <el-icon>
-          <Upload/>
-        </el-icon>
-        <span>上传</span>
-      </el-upload>
+      <el-icon>
+        <Upload/>
+      </el-icon>
+      <span>上传</span>
     </template>
   </widget-card>
+  <el-upload
+      ref="uploadRef"
+      style="display: none"
+      :show-file-list="false"
+      :http-request="handleUpload"
+      :auto-upload="true"
+  />
 </template>
 
 <script setup lang="ts">
@@ -246,19 +247,27 @@ const emit = defineEmits<{
   (e: "update", data: WidgetUnion): void;
 }>();
 
+const uploadRef = ref()
+
 const handleUpload = async (options: any) => {
   const {file, onSuccess, onError} = options;
 
   try {
     const response = await upload(file);
     if (response.status === 200) {
-      const uuid = (response.data as FileMeta).id;
+      const newPdfFile = response.data as FileMeta;
       const newData = JSON.parse(JSON.stringify(props.data));
-      newData.pdfFile = uuid;
+      newData.pdfFile = newPdfFile;
       const response2 = await editNotePdfWidget(newData);
       if (response2.status === 200) {
         ElMessage.success("上传成功");
         emit("update", newData);
+        await nextTick();
+        // 重新加载 pdf
+        pages.value = [];
+        pdfInstance.value = null;
+        canvasRefs.value = [];
+        await loadPDF();
         onSuccess(newData);
       } else {
         ElMessage.error("上传失败，请稍后再试");
@@ -278,12 +287,14 @@ const handleDownload = async () => {
   try {
     await download(props.data.pdfFile);
   } catch (error) {
-    console.error('下载失败：', error);
+    ElMessage.error("下载失败！");
+    console.error(error);
   }
 };
 
 const handleClick = () => {
-  upload()
+  const input = uploadRef.value?.$el?.querySelector('input[type=file]')
+  if (input) input.click()
 }
 
 onMounted(() => {
