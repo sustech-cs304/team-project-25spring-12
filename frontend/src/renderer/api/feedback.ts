@@ -50,8 +50,10 @@ export interface AIFeedbackCreate {
     questionFileId?: string;
     answerFileId?: string;
     studentAnswerFileId?: string;
+    maxScore: number;
+    prompt: string;
 }
 
 export function postAIFeedback(payload: AIFeedbackCreate) {
-    return request.post("/class/widget/assignment/feedback/AI", payload);
+    return request.post("/class/widget/assignment/feedback/AI", payload, {timeout: 60000});
 }
