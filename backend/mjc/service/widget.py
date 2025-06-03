@@ -116,7 +116,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
             filename=entity.note_pdf_widget.pdf_file.filename,
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
-        ),
+        ) if entity.note_pdf_widget else None,
         notes=[entity2note(note) for note in entity.note_pdf_widget.notes],
     )
     return note_pdf_widget
