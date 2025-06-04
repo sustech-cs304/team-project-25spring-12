@@ -14,6 +14,30 @@
           </div>
         </el-tooltip>
 
+        <el-tooltip v-if="isTeacher" effect="dark" content="批改" placement="bottom">
+          <div class="btn-icon" @click="goToMark">
+            <el-icon>
+              <Checked/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip v-if="isStudent" effect="dark" content="分数中心（学生）" placement="bottom">
+          <div class="btn-icon" @click="goToGradeStudent">
+            <el-icon>
+              <Notebook/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+
+        <el-tooltip v-if="isTeacher" effect="dark" content="分数中心（教师）" placement="bottom">
+          <div class="btn-icon" @click="goToGradeTeacher">
+            <el-icon>
+              <PieChart/>
+            </el-icon>
+          </div>
+        </el-tooltip>
+
         <el-tooltip effect="dark" content="反馈" placement="bottom">
           <div class="btn-icon" @click="goToArguePost">
             <el-icon>
@@ -78,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import {useRouter} from 'vue-router';
 import {
   HomeFilled,
@@ -101,6 +125,19 @@ const goToHome = () => {
   router.push('/homepage')
 };
 
+const goToMark = () => {
+  router.push('/mark')
+};
+
+const goToGradeStudent = () => {
+  router.push('/grade/student')
+}
+
+const goToGradeTeacher = () => {
+  router.push('/grade/teacher')
+};
+
+
 const goToArguePost = () => {
   // TODO: 跳转到反馈页面
   // router.push('/feedback');
@@ -121,6 +158,9 @@ const setFullScreen = () => {
     document.body.requestFullscreen();
   }
 };
+
+const isStudent = computed(() => !!userStore.courses?.find(course => "student" === course.role));
+const isTeacher = computed(() => !!userStore.courses?.find(course => ["teacher", "teaching assistant"].includes(course.role)));
 </script>
 
 <style scoped>

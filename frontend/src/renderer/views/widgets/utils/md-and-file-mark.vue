@@ -1,52 +1,64 @@
 <template>
   <div class="content">
     <!-- Markdown 预览 -->
-    <div class="container" v-if="selectedFileUrl === ''">
-      <md-preview v-bind="getEditorProps(props.data.content)"/>
+    <div class="container" v-if="!selectedFile">
+      <md-preview v-bind="getEditorProps(props.mdContent)"/>
     </div>
-    <template
-        v-for="file in props.data.attachments"
-        :key="file.url"
-    >
-      <div class="container" v-if="selectedFileUrl === file.url">
-        <pdf-viewer :pdf-file="file" :is-marking="true" v-if="fileType(file.filename) === 'pdf'"/>
-        <pre style="white-space: pre-wrap" v-else-if="fileType(file.filename) === 'plain'">{{ textContents[file.url] || "加载失败" }}</pre>
-        <md-preview v-bind="getEditorProps(textContents[file.url] || '加载失败')" v-else-if="fileType(file.filename) === 'markdown'"/>
-        <ImageZoom :src="file.url" :alt="file.filename" v-else-if="fileType(file.filename) === 'image'"/>
-        <audio controls style="width: 100%" v-else-if="fileType(file.filename) === 'audio'">
-          <source :src="file.url"/>
-          当前浏览器不支持音频播放
-        </audio>
-        <video controls style="width: 100%" v-else-if="fileType(file.filename) === 'video'">
-          <source :src="file.url"/>
-          当前浏览器不支持视频播放
-        </video>
-        <span v-else>暂不支持当前类型文件预览</span>
-      </div>
-    </template>
+    <div class="container" v-else>
+      <div v-if="loading" v-loading="loading" class="loading-overlay"></div>
+      <pdf-viewer ref="pdfViewer" :data="content" is-marking v-else-if="selectedFileType === FileType.PDF"/>
+      <pre style="white-space: pre-wrap" v-else-if="selectedFileType === FileType.PLAIN">{{ textContent }}</pre>
+      <md-preview v-bind="getEditorProps(textContent)" v-else-if="selectedFileType === FileType.MARKDOWN"/>
+      <ImageZoom :src="content" :alt="selectedFile.filename" v-else-if="selectedFileType === FileType.IMAGE"/>
+      <audio controls style="width: 100%" v-else-if="selectedFileType === FileType.AUDIO">
+        <source :src="content"/>
+        当前浏览器不支持音频播放
+      </audio>
+      <video controls style="width: 100%" v-else-if="selectedFileType === FileType.VIDEO">
+        <source :src="content"/>
+        当前浏览器不支持视频播放
+      </video>
+      <span v-else>暂不支持当前类型文件预览</span>
+    </div>
 
     <!-- 下载文件列表 -->
     <view-file-list
-        :fileList="props.data.attachments"
-        @update:selected-file-url="(data) => { selectedFileUrl = data; }"
-        title="附件"/>
+        :file-list="props.fileList"
+        :selected-file-id="selectedFileId"
+        @update:selected-file-id="updateSelectFileId"
+        v-if="props.fileList"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-import {onMounted, ref} from "vue";
+import {computed, onUnmounted, ref, watch} from "vue";
 import "md-editor-v3/lib/preview.css";
 import {MdPreview} from "md-editor-v3";
 import ViewFileList from "./view-file-list.vue";
 import PdfViewer from "./pdf-viewer.vue";
 import ImageZoom from "@/views/widgets/utils/image-zoom.vue";
+import {FileMeta} from "@/types/fileMeta";
 
-const props = defineProps({
-  data: {
-    type: Object,
-    required: true,
-  },
-});
+const props = defineProps<{
+  mdContent: string;
+  fileList?: FileMeta[];
+  getFile: (fileId: string) => Promise<Blob>;
+}>();
+
+const emit = defineEmits<{
+  (e: "update-file", fileId: string, dataPromise: Promise<Uint8Array>): void;
+}>();
+
+enum FileType {
+  PDF,
+  PLAIN,
+  MARKDOWN,
+  IMAGE,
+  VIDEO,
+  AUDIO,
+  UNKNOWN,
+}
 
 const getEditorProps = (content: string) => {
   return {
@@ -57,36 +69,80 @@ const getEditorProps = (content: string) => {
   };
 };
 
-const textContents = ref({});
+const selectedFileId = ref<string | null>(null);
+const selectedFile = computed(() => props.fileList?.find((f) => f.id === selectedFileId.value));
+const selectedFileType = computed(() => selectedFile.value ? fileType(selectedFile.value.filename) : FileType.UNKNOWN);
+const content = ref();
+const textContent = computed(() => typeof(content.value) === "string" ? content.value : "加载失败");
+const pdfViewer = ref();
 
-const selectedFileUrl = ref("");
+const loading = ref(false);
+
+const isDirty = () => {
+  return FileType.PDF === selectedFileType.value && pdfViewer.value?.isDirty();
+};
+
+const handleSave = () => {
+  if (selectedFileId.value && FileType.PDF === selectedFileType.value) {
+    const dataPromise = pdfViewer.value.getDocument();
+    if (dataPromise) {
+      emit("update-file", selectedFileId.value, dataPromise);
+    }
+  }
+};
+
+const handleFree = () => {
+  if (selectedFileId.value && [FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
+    URL.revokeObjectURL(content.value);
+  }
+};
+
+const updateSelectFileId = async (fileId: string | null) => {
+  if (isDirty()) {
+    handleSave();
+  }
+  handleFree();
+  content.value = null;
+  selectedFileId.value = fileId;
+  if (fileId !== null && selectedFileType.value !== FileType.UNKNOWN) {
+    try {
+      loading.value = true;
+      const blob = await props.getFile(fileId);
+      if (FileType.PDF === selectedFileType.value) {
+        content.value = blob;
+      } else if ([FileType.PLAIN, FileType.MARKDOWN].includes(selectedFileType.value)) {
+        content.value = await blob.text();
+      } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
+        content.value = URL.createObjectURL(blob);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.value = false;
+    }
+  }
+};
 
 const fileType = (filename: string) => {
   const ext = filename.split(".").pop()?.toLowerCase() || "";
-  if ("pdf" === ext) return "pdf";
-  if ("txt" === ext) return "plain";
-  if ("md" === ext) return "markdown";
-  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext)) return "image";
-  if (["mp4", "avi", "mkv", "mov"].includes(ext)) return "video";
-  if (["mp3", "wav", "flac", "aac"].includes(ext)) return "audio";
-  return "unknown";
+  if ("pdf" === ext) return FileType.PDF;
+  if ("txt" === ext) return FileType.PLAIN;
+  if ("md" === ext) return FileType.MARKDOWN;
+  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext)) return FileType.IMAGE;
+  if (["mp4", "avi", "mkv", "mov"].includes(ext)) return FileType.VIDEO;
+  if (["mp3", "wav", "flac", "aac"].includes(ext)) return FileType.AUDIO;
+  return FileType.UNKNOWN;
 };
 
-onMounted(() => {
-  for (let file of props.data.attachments) {
-    if (["plain", "markdown"].includes(fileType(file.filename))) {
-      fetch(file.url).then((response) => {
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file from ${file.url}: ${response.statusText}`);
-        }
-        return response.text();
-      }).then((text) => {
-        textContents.value[file.url] = text;
-      }).catch((error) => {
-        console.error(error);
-      });
-    }
-  }
+watch(() => props.fileList, () => {
+  updateSelectFileId(null);
+});
+
+onUnmounted(handleFree);
+
+defineExpose({
+  isDirty,
+  save: handleSave,
 });
 </script>
 
@@ -99,10 +155,22 @@ onMounted(() => {
 }
 
 .container {
+  position: relative;
   flex: 1;
   padding: 15px;
   background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>

@@ -59,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-import {onBeforeUnmount, onMounted, onUnmounted, ref} from "vue";
+import {onBeforeUnmount, onMounted, ref, watch} from "vue";
 import * as pdfjsLib from "pdfjs-dist";
 import * as pdfjsViewer from "pdfjs-dist/web/pdf_viewer.mjs";
 import pdfWorker from "pdfjs-dist/build/pdf.worker?url";
@@ -67,17 +67,10 @@ import "pdfjs-dist/web/pdf_viewer.css";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
-const props = defineProps({
-  pdfFile: {
-    type: Object,
-    required: true,
-  },
-  isMarking: {
-    type: Boolean,
-    required: false,
-    default: false,
-  },
-});
+const props = defineProps<{
+  data: Blob;
+  isMarking?: boolean;
+}>();
 
 const highlightColors = {
   "yellow": "#FFFF98",
@@ -105,28 +98,29 @@ const resizeObserver = new ResizeObserver((entries) => {
   }
 });
 
+const setupViewer = () => {
+  const container = scrollbar.value.wrapRef;
+  container.classList.add("viewer-container");
+  const viewer = container.childNodes[0];
+  viewer.classList.add("pdfViewer");
+  pdfViewer = new pdfjsViewer.PDFViewer({
+    container,
+    viewer,
+    eventBus,
+    annotationEditorHighlightColors: Object.entries(highlightColors).map(([name, color]) => `${name}=${color}`).join(','),
+  });
+  eventBus.on("pagesinit", function () {
+    pdfViewer.currentScaleValue = "page-width";
+    changeEditorMode(pdfjsLib.AnnotationEditorType.NONE);
+  });
+  resizeObserver.observe(container);
+}
+
 const loadPDF = async () => {
-  try {
-    const container = scrollbar.value.wrapRef;
-    container.classList.add("viewer-container");
-    const viewer = container.childNodes[0];
-    viewer.classList.add("pdfViewer");
-    pdfViewer = new pdfjsViewer.PDFViewer({
-      container,
-      viewer,
-      eventBus,
-      annotationEditorHighlightColors: Object.entries(highlightColors).map(([name, color]) => `${name}=${color}`).join(','),
-    });
-    eventBus.on("pagesinit", function () {
-      pdfViewer.currentScaleValue = "page-width";
-    });
-    const loadingTask = pdfjsLib.getDocument(props.pdfFile.url);
-    const pdfDocument = await loadingTask.promise;
-    pdfViewer.setDocument(pdfDocument);
-    resizeObserver.observe(container);
-  } catch (e) {
-    console.error(`Error rendering pdf:`, e);
-  }
+  const arrayBuffer = await props.data.arrayBuffer();
+  const loadingTask = pdfjsLib.getDocument(arrayBuffer);
+  const pdfDocument = await loadingTask.promise;
+  pdfViewer.setDocument(pdfDocument);
 };
 
 const editorTypes = [
@@ -182,27 +176,31 @@ const changeTextSize = (value: number) => {
   });
 };
 
-const submit = async (pdfFile: Object, pdfDocument: pdfjsLib.PDFDocumentProxy | undefined) => {
-  if (pdfDocument === undefined) {
-    console.error("pdfDocument not found");
-    return;
-  }
-  const data = await pdfDocument.saveDocument();
-  // TODO: 上传文件
-};
-
-onMounted(async () => {
-  await loadPDF();
+onMounted(() => {
+  setupViewer();
+  loadPDF();
 });
+
+watch(() => props.data, loadPDF);
 
 onBeforeUnmount(() => {
-  if (props.isMarking) {
-    submit(props.pdfFile, pdfViewer.pdfDocument);
-  }
+  resizeObserver.disconnect();
 });
 
-onUnmounted(() => {
-  resizeObserver.disconnect();
+defineExpose({
+  isDirty: () => {
+    if (pdfViewer._pages) {
+      pdfViewer._pages.forEach((page) => {
+        if (page.annotationEditorLayer) {
+          page.annotationEditorLayer.annotationEditorLayer.commitOrRemove();
+        }
+      });
+    }
+    return !!pdfViewer.pdfDocument?.annotationStorage.size;
+  },
+  getDocument: () => {
+    return pdfViewer.pdfDocument?.saveDocument();
+  },
 });
 </script>
 
