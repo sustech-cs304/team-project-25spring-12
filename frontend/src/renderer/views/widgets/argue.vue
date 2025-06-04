@@ -251,6 +251,7 @@ import {FileMeta} from "../../types/fileMeta";
 import request from "../../utils/request";
 import {Feedback} from "../../types/widgets";
 import {useUserStore} from "../../store/user";
+import { aW } from "@fullcalendar/core/internal-common";
 
 const props = defineProps({
   data: {
@@ -495,11 +496,18 @@ const submitComment = async () => {
   const comment = {
     content: newComment.value,
     author: userStore.username,
-    replyTo: "",
   };
+
+  const params = {
+    arguePostId: props.data.argueId,
+    content: newComment.value,
+    replyTo: null,
+  }
   
   try {
+    console.log("comment", params);
     
+    const response = await request.post('/argue/comment', params)
     comments.value.unshift(comment);
     ElMessage.success("评论发表成功")
   } catch (error) {
