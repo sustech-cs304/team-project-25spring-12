@@ -81,16 +81,6 @@
           <el-col :span="16">
             <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
           </el-col>
-          <el-col :span="6" class="edit-button">
-            <el-button
-                type="primary"
-                link
-                :icon="Edit"
-                @click="editSubmittedArguement(props.data.submittedArguement)"
-            >
-              编辑
-            </el-button>
-          </el-col>
         </el-row>
         <div class="container">
           <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
@@ -134,7 +124,9 @@
               placeholder="请输入您的评论..."
               resize="none"
             ></el-input>
-            <el-button type="primary" @click="submitComment" :disabled="!newComment.trim()">发布评论</el-button>
+            <div class="input-actions">
+              <el-button type="primary" @click="submitComment" :disabled="!newComment.trim()">发布评论</el-button>
+            </div>
           </div>
 
           <!-- 评论列表 -->
@@ -166,7 +158,6 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import {computed, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
-import ElComment from './utils/comment.vue';
 
 const props = defineProps({
   data: {
@@ -239,19 +230,6 @@ const tableVote: VoteResult[] = [
   },
 ]
 
-
-
-// 编辑提交记录
-const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-const content = ref("");
-const fileList = ref([]);
-const editSubmittedArguement = (record: any) => {
-  content.value = JSON.parse(JSON.stringify(record.content));
-  fileList.value = JSON.parse(JSON.stringify(record.attachments));
-  // updateMode();
-  isEditing.value = true;
-}
-
 const submitArgue = () => {
   const content = contentEditor.value?.getContent();
 }
@@ -298,7 +276,7 @@ const submitComment = () => {
 
 // 处理回复
 const handleReply = (author) => {
-  newComment.value = `@${author} ${newComment.value}`.trim();
+  newComment.value = `@${author} `;
 };
 </script>
 
@@ -474,6 +452,11 @@ const handleReply = (author) => {
   margin-bottom: 10px;
 }
 
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
 .comment-list {
   display: flex;
   flex-direction: column;
@@ -507,6 +490,8 @@ const handleReply = (author) => {
 }
 
 .comment-actions {
+  display: flex;
+  justify-content: flex-end;
   margin-bottom: 10px;
 }
 </style>
