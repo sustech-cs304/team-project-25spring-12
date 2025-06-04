@@ -63,7 +63,7 @@ def entity2assignment(db: Session, entity: WidgetEntity) -> Assignment:
         widget_id=entity.assignment_widget.widget_id,
         title=entity.title,
         submit_type=entity.assignment_widget.submit_type,
-        content=entity.content if entity.content else None,
+        content=entity.content if entity.content is not None else None,
         test_code_id=entity.assignment_widget.test_case_id if entity.assignment_widget.test_case_id else None,
         max_score=entity.assignment_widget.max_score if entity.assignment_widget.max_score else None,
         create_time=entity.create_time if entity.create_time else None,

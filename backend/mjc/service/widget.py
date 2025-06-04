@@ -40,7 +40,7 @@ def entity2doc(entity: WidgetEntity) -> DocWidget:
         editor=Profile.model_validate(entity.editor.model_dump()),
         visible=entity.visible,
         id=entity.id,
-        content=entity.content if entity.content else None,
+        content=entity.content if entity.content is not None else None,
         attachments=attach
     )
     return doc_widget
