@@ -13,7 +13,7 @@ from mjc.model.entity.assignment import SubmittedAssignment as SubmittedAssignme
 from mjc.model.entity.common import Visibility
 from mjc.model.entity.widget import Widget as WidgetEntity, SubmitType
 from mjc.model.schema.assignment import SubmittedAssignment, SubmittedAssignmentCreate, SubmissionAttachment, \
-    FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate, AIFeedback
+    FeedbackCreate, Feedback, FeedbackUpdate, FeedbackAttachment, AIFeedbackCreate, AIFeedback, Assignment
 from mjc.model.schema.common import Message, File, Code
 from mjc.model.schema.user import UserInDB, Profile
 from mjc.model.schema.widget import AssignmentWidget, TestCaseCreate, TestCaseUpdate, TestCase, TestCaseInfo, TestPoint
@@ -56,6 +56,21 @@ def entity2feedback(entity: SubmittedAssignmentFeedback) -> Feedback:
     )
     return feedback
 
+
+def entity2assignment(db: Session, entity: WidgetEntity) -> Assignment:
+    assignment: Assignment = Assignment(
+        id=entity.assignment_widget.id,
+        widget_id=entity.assignment_widget.widget_id,
+        title=entity.title,
+        submit_type=entity.assignment_widget.submit_type,
+        content=entity.content if entity.content else None,
+        test_code_id=entity.assignment_widget.test_case_id if entity.assignment_widget.test_case_id else None,
+        max_score=entity.assignment_widget.max_score if entity.assignment_widget.max_score else None,
+        create_time=entity.create_time if entity.create_time else None,
+        update_time=entity.update_time if entity.update_time else None,
+        submissions=[]
+    )
+    return assignment
 
 def get_all_submissions(db: Session, assignment_widget_id: int) -> list[SubmittedAssignment] | None:
     entities = crud_assignment.get_all_assignments_submissions(db, assignment_widget_id)
@@ -312,3 +327,17 @@ def get_widget_test_case(db: Session, widget_id: int) -> TestCase:
         max_cpu_time=test_case.max_cpu_time,
         info=TestCaseInfo.model_validate(json.loads(test_case.info)) if test_case.info else None
     )
+
+
+def get_students_grades(db: Session ,cls_id: int) -> list[Assignment]:
+    entities: list[WidgetEntity] = crud_widget.get_assignment_widgets_by_class_id(db, cls_id)
+    assignments: list[Assignment] = []
+    for entity in entities:
+        if entity.visible is True:
+            submissions: list[SubmittedAssignment] =[]
+            for submission in entity.assignment_widget.submitted_assignments:
+                submissions.append(entity2submission(db, submission))
+            assignment: Assignment = entity2assignment(db, entity)
+            assignment.submissions = submissions
+            assignments.append(assignment)
+    return assignments
