@@ -40,7 +40,7 @@ class ArguePost(SQLModel, table=True):
     editor: "Profile" = Relationship()
     attachments: list["ArguePostAttachment"] = Relationship(back_populates="argue_post")
     comments: list["ArguePostComment"] = Relationship(back_populates="argue_post")
-    submitted_assignment: "SubmittedAssignment" = Relationship()
+    submitted_assignment: "SubmittedAssignment" = Relationship(back_populates="argue_post")
 
 
 class ArguePostAttachment(SQLModel, table=True):

@@ -152,6 +152,8 @@ def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
 def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
     submission = crud_assignment.get_submitted_assignment(db, argue.submitted_assignment_id)
     if submission:
+        if submission.argue_post:
+            raise HTTPException(status_code=400, detail="Argue already submitted")
         if submission.username != user.username:
             raise HTTPException(status_code=403, detail="Not allowed")
         argue_post = crud_argue.create_argue(db, argue, user)
@@ -203,6 +205,8 @@ def delete_argue_watch(db: Session, argue_id: int, user: UserInDB) -> Message:
     watch = crud_argue.delete_argue_watch(db, argue_id, user)
     if watch is None:
         raise HTTPException(status_code=400, detail="Watch does not exist")
+    if watch.watcher.username != user.username and not user.is_admin:
+        raise HTTPException(status_code=403, detail="You are not the owner of watch, not allowed")
     return Message(msg='Success')
 
 

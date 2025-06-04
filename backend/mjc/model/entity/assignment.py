@@ -8,6 +8,7 @@ if TYPE_CHECKING:
     from mjc.model.entity.user import Profile
     from mjc.model.entity.widget import AssignmentWidget
     from mjc.model.entity.common import LocalResourceFile
+    from mjc.model.entity.argue import ArguePost
 
 
 class SubmittedAssignmentAttachment(SQLModel, table=True):
@@ -64,3 +65,4 @@ class SubmittedAssignment(SQLModel, table=True):
     assignment_widget: "AssignmentWidget" = Relationship(back_populates="submitted_assignments")
     attachments: list["SubmittedAssignmentAttachment"] = Relationship(back_populates="submitted_assignment")
     profile: "Profile" = Relationship()
+    argue_post: "ArguePost" = Relationship(back_populates="submitted_assignment")
