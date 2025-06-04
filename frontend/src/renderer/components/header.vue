@@ -37,16 +37,6 @@
           </div>
         </el-tooltip>
 
-        <!-- 消息通知 -->
-        <el-tooltip effect="dark" content="消息" placement="bottom">
-          <div class="btn-icon" @click="goToMessages">
-            <el-icon>
-              <Bell/>
-            </el-icon>
-            <span v-if="unreadCount > 0" class="btn-bell-badge"></span>
-          </div>
-        </el-tooltip>
-
         <!-- 用户信息 -->
         <el-avatar class="user-avatar" :size="30" :src="userAvatar"/>
         <el-dropdown class="user-name" trigger="click" @command="handleCommand">
@@ -99,7 +89,6 @@ const router = useRouter()
 
 const username = ref(userStore.username);
 const userAvatar = ref('../assets/img/img.jpg');
-const unreadCount = ref(1); // TODO: 从API获取未读消息数
 
 const goToHome = () => {
   router.push('/homepage')
@@ -108,10 +97,6 @@ const goToHome = () => {
 const goToArguePost = () => {
   // TODO: 跳转到反馈页面
   // router.push('/feedback');
-};
-
-const goToMessages = () => {
-  router.push('/messages');
 };
 
 const handleCommand = (command: string) => {
@@ -196,16 +181,6 @@ const setFullScreen = () => {
 .btn-icon:hover {
   background-color: var(--hover-bg-color);
   transform: scale(1.05);
-}
-
-.btn-bell-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background-color: #f56c6c;
 }
 
 .user-avatar {

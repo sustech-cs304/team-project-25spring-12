@@ -11,7 +11,7 @@
         :editable="true"
         @upload="handleUploadFile"
         @remove="handleRemoveFile"
-        :fileList="files"
+        :fileList="props.fileList"
         ref="fileUploader"
     />
   </div>
@@ -37,7 +37,6 @@ const props = defineProps({
 });
 
 const content = ref<string>(props.content);
-const files = ref<FileMeta[]>([...props.fileList]);
 const fileUploader = ref<InstanceType<typeof DownloadUploadFileList>>();
 
 const emit = defineEmits<{
@@ -55,7 +54,7 @@ const handleRemoveFile = (file: FileMeta) => {
 
 defineExpose({
   getContent: (): string => content.value,
-  getFileList: (): FileMeta[] => fileUploader.value?.getFileList() ?? [],
+  updateContent: (data: string): void => {content.value = data},
 });
 </script>
 

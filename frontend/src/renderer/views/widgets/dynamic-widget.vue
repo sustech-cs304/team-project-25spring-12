@@ -1,7 +1,7 @@
 <template>
   <component
       :is="Component"
-      v-bind="{ data, canEdit }"
+      v-bind="{ data, editable }"
       ref="innerWidgetRef"
       @update="handleUpdate"
   />
@@ -17,7 +17,7 @@ import Assignment from '@/views/widgets/assignment.vue'
 
 const props = defineProps<{
   data: WidgetUnion;
-  canEdit: boolean;
+  editable: boolean;
 }>()
 
 const emit = defineEmits<{

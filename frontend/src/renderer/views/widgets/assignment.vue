@@ -1,7 +1,7 @@
 <template>
-  <widget-card :title="computedTitle" type="assignment" :callback="callback">
-    <div v-if="isEditingHomework">
-      <!--   作业设置   -->
+  <widget-card :title="computedTitle" type="assignment" :button-visible="editable" @click="handleClick">
+    <div class="container" v-if="isEditingHomework">
+      <!--   编辑作业信息   -->
       <div>
         <el-text class="section-title">作业设置</el-text>
         <div class="homework-form">
@@ -45,19 +45,78 @@
       <!--   作业信息   -->
       <div>
         <el-text class="section-title">作业信息</el-text>
+        <el-text> 注意：这里提交的是作业的附加文件，不是测试用例哦！</el-text>
         <md-and-file-editor
             ref="homeworkContentEditor"
-            :fileList="props.data.attachments"
-            :content="props.data.content"
+            :fileList="form.attachments"
+            :content="form.content"
+            @upload="handleHomeworkContentEditorUpdate"
+            @remove="handleHomeworkContentEditorRemove"
         />
+      </div>
+      <!--   测试设置   -->
+      <div v-if="props.data.submitType === 'code'">
+        <el-text class="section-title">测试用例</el-text>
+        <el-form :model="testcaseForm" label-width="100px">
+          <el-form-item label="时间限制">
+            <el-input-number
+                v-model="testcaseForm.maxCpuTime"
+                :min="1"
+                :max="10000"
+                :step="1000"
+                controls-position="right"
+            >
+              <template #suffix>ms</template>
+            </el-input-number>
+          </el-form-item>
+
+          <el-form-item label="空间限制">
+            <el-input-number
+                v-model="testcaseForm.maxMemory"
+                :min="1"
+                :max="2048"
+                :step="128"
+                controls-position="right"
+            >
+              <template #suffix>MB</template>
+            </el-input-number>
+          </el-form-item>
+
+          <el-form-item label="测试数据">
+            <el-upload
+                :show-file-list="false"
+                :http-request="handleUploadTestcaseZipFile"
+            >
+              <el-button type="primary">上传文件</el-button>
+            </el-upload>
+            <el-text style="margin-left: 10px" v-show="testcaseZipFileName.length !== 0">
+              已上传文件名：{{testcaseZipFileName}}
+            </el-text>
+          </el-form-item>
+        </el-form>
+
+        <el-button @click="handleUploadTestcase">
+          上传测试用例
+        </el-button>
+      </div>
+
+      <div v-if="props.data.submitType === 'code'">
+        <el-text class="section-title">测试点信息</el-text>
+        <el-table :data="formattedTestcaseInfo" border style="width: 100%" v-if="formattedTestcaseInfo.length !== 0">
+          <el-table-column prop="key" label="测试点编号" width="120" />
+          <el-table-column prop="inputName" label="输入文件名" />
+          <el-table-column prop="inputSizeFormatted" label="输入文件大小" />
+          <el-table-column prop="outputName" label="输出文件名" />
+          <el-table-column prop="outputSizeFormatted" label="输出文件大小" />
+        </el-table>
+        <el-text v-else>
+          当前还没上传过测试点！
+        </el-text>
       </div>
     </div>
 
     <div class="container" v-else>
       <!--   作业状态   -->
-      <div v-if="!props.data.visible">
-        不可见
-      </div>
       <div>
         <el-text class="section-title">作业状态</el-text>
         <div class="assignment-status">
@@ -68,7 +127,7 @@
                 <component :is="statusIcon"/>
               </el-icon>
               <el-text>
-                {{ statusText }}
+                {{ statusText + "，提交截止时间：" + timestampToString(props.data.ddl)}}
               </el-text>
             </el-col>
 
@@ -84,12 +143,62 @@
       <!--   作业信息   -->
       <div>
         <el-text class="section-title">作业信息</el-text>
+        <el-descriptions :column="2" size="small" border v-if="props.data.submitType === 'code'">
+          <el-descriptions-item label="时间限制">
+            {{ props.data.testCase.maxCpuTime }} ms
+          </el-descriptions-item>
+          <el-descriptions-item label="空间限制">
+            {{ formatSize(props.data.testCase.maxMemory) }}
+          </el-descriptions-item>
+        </el-descriptions>
+      </div>
+      <div>
         <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
       </div>
 
+      <!--   批改建议   -->
+      <div v-if="props.data.feedback">
+        <el-text class="section-title">批改建议</el-text>
+        <div class="container">
+          <md-and-file :file-list="props.data.feedback?.attachments" :content="props.data.feedback?.content"/>
+          <el-button
+              type="primary"
+              :icon="ChatRound"
+              @click="postArgue"
+              style="width: 140px; margin-right: auto"
+          >
+            我要 Argue ！
+          </el-button>
+        </div>
+      </div>
+
       <!--   提交记录   -->
-      <div v-if="props.data.status === 'submitted'">
+      <div>
         <el-text tag="h4" class="section-title">提交记录</el-text>
+        <el-row
+            class="submit-record-item"
+            justify="space-between"
+        >
+          <el-col :span="1">
+            <el-icon :size="20">
+              <component :is="EditPen"/>
+            </el-icon>
+          </el-col>
+          <el-col :span="8">
+            <el-text truncated>开始新的提交</el-text>
+          </el-col>
+          <el-col :span="8"/>
+          <el-col :span="6" class="edit-button">
+            <el-button
+                type="primary"
+                link
+                :icon="Edit"
+                @click="beginNewSubmission"
+            >
+              开始
+            </el-button>
+          </el-col>
+        </el-row>
         <el-row
             v-for="record in props.data.submittedAssignment"
             :key="record.submittedTime"
@@ -101,8 +210,11 @@
               <component :is="Memo"/>
             </el-icon>
           </el-col>
-          <el-col :span="16">
-            <el-text truncated>提交时间：{{ record.submittedTime }}</el-text>
+          <el-col :span="8">
+            <el-text truncated>提交时间：{{ timestampToString(record.submittedTime) }}</el-text>
+          </el-col>
+          <el-col :span="8">
+            <el-text truncated>批改状态：{{ record.feedback ? '得分：' + record.feedback.score : '未批改' }}</el-text>
           </el-col>
           <el-col :span="6" class="edit-button">
             <el-button
@@ -111,14 +223,22 @@
                 :icon="Edit"
                 @click="editSubmittedAssignment(record)"
             >
-              编辑
+              查看
             </el-button>
           </el-col>
         </el-row>
       </div>
 
+      <!--    本次提交批改建议    -->
+      <div v-if="currentFeedback !== null">
+        <el-text class="section-title">本次提交批改建议</el-text>
+        <div class="container">
+          <md-and-file :file-list="currentFeedback.attachments" :content="currentFeedback.content"/>
+        </div>
+      </div>
+
       <!--   提交作业区   -->
-      <div v-if="props.data.status === 'pending' || isEditing">
+      <div v-if="isEditing">
         <el-text class="section-title">提交作业</el-text>
         <div class="container">
           <!--   提交代码   -->
@@ -134,11 +254,13 @@
             </div>
           </div>
           <!--   提交文本或文件   -->
-          <div class="homework-editor" v-else>
+          <div class="homework-editor" v-if="props.data.submitType === 'file'">
             <md-and-file-editor
                 :content="content"
                 :fileList="fileList"
                 ref="contentEditor"
+                @upload="handleSubmissionAttachmentUpload"
+                @remove="handleSubmissionAttachmentRemove"
             />
           </div>
           <el-button
@@ -151,23 +273,8 @@
           </el-button>
         </div>
       </div>
-
-      <!--   批改建议   -->
-      <div v-if="props.data.status === 'returned'">
-        <el-text class="section-title">批改建议</el-text>
-        <div class="container">
-          <md-and-file :file-list="props.data.returnedFiles" :content="props.data.feedback"/>
-          <el-button
-              type="primary"
-              :icon="ChatRound"
-              @click="postArgue"
-              style="width: 140px; margin-right: auto"
-          >
-            我要 Argue ！
-          </el-button>
-        </div>
-      </div>
     </div>
+
     <template #button>
       <template v-if="isEditingHomework">
         <el-icon>
@@ -191,14 +298,29 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
 import {computed, ref} from "vue";
-import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check} from "@element-plus/icons-vue";
-import type {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
+import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check, EditPen} from "@element-plus/icons-vue";
+import type {AssignmentWidget, Feedback, SubmittedRecord, Testcase} from "@/types/widgets";
 import {FileMeta} from "@/types/fileMeta";
-import {editAssignmentWidget} from "@/api/courseMaterial";
+import {
+  addWidgetAttachment,
+  removeWidgetAttachment,
+  createSubmission,
+  createSubmissionAttachment,
+  editAssignmentWidget,
+  Submission,
+  getTestcase, createTestcase, editTestcase
+} from "@/api/courseMaterial";
+import {ElMessage} from "element-plus";
+import {DocWidget, WidgetUnion} from "@/types/widgets";
+import {useUploader} from "@/composables/useUploader";
+
+/*
+* 数据和常量
+* */
 
 const props = defineProps<{
   data: AssignmentWidget;
-  canEdit: boolean;
+  editable: boolean;
 }>();
 
 const AssignmentType = [
@@ -206,17 +328,9 @@ const AssignmentType = [
   {label: "评测代码", value: "code"},
 ]
 
-const isEditingHomework = ref(false);
-const callback = computed(() => props.canEdit ? toggleEditingSituation : null)
-
-const form = ref<AssignmentWidget>(null);
-
-const rules = {
-  title: [{required: true, message: '请输入作业标题', trigger: 'blur'}],
-  type: [{required: true, message: '请选择作业类型', trigger: 'change'}],
-  ddl: [{required: true, message: '请选择作业截止时间', trigger: 'change'}],
-  maxScore: [{required: true, message: '请输入分数上限', trigger: 'blur'}],
-};
+/*
+* 外观
+* */
 
 /*
 * 代码编辑器的所有常量和方法：
@@ -226,13 +340,11 @@ const rules = {
 * updateMode：当已选语言改变时触发，但目前使用了ref所以不需要执行任何东西（不需要通知monaco）
 * */
 const languages = [
-  {label: "C++", value: "cpp"},
-  {label: "C", value: "c"},
-  {label: "Java", value: "java"},
-  {label: "Python", value: "python"},
+  {label: "C++", value: "cpp", backend: "cpp"},
+  {label: "C", value: "c", backend: "c"},
+  {label: "Java", value: "java", backend: "java"},
+  {label: "Python", value: "python", backend: "py3"},
 ];
-const selectedLanguage = ref("cpp");
-const code = ref('');
 const updateMode = () => {
   // Nothing
 };
@@ -262,42 +374,259 @@ const scoreColor = computed(() => {
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
 });
+const timestampToString = (timestamp: string) => {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(timestamp));
+};
 const statusText = computed(() => {
-  if (props.data.status === "pending") return "未提交，截止时间：" + props.data.ddl;
+  if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
   if (props.data.status === "returned") return "已公布分数";
 });
 const displayScore = computed(() => (props.data.status === "returned" ? props.data.score : "--"));
 
-// 编辑提交记录
-const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-const content = ref("");
-const fileList = ref([]);
-const editSubmittedAssignment = (record: SubmittedRecord) => {
-  content.value = JSON.parse(JSON.stringify(record.content));
-  code.value = JSON.parse(JSON.stringify(record.code.content));
-  selectedLanguage.value = JSON.parse(JSON.stringify(record.code.language));
-  fileList.value = JSON.parse(JSON.stringify(record.attachments));
+/*
+* 编辑作业信息
+* */
+
+const isEditingHomework = ref(false);
+const form = ref<AssignmentWidget>({});
+const rules = {
+  title: [{required: true, message: '请输入作业标题', trigger: 'blur'}],
+  type: [{required: true, message: '请选择作业类型', trigger: 'change'}],
+  ddl: [{required: true, message: '请选择作业截止时间', trigger: 'change'}],
+  maxScore: [{required: true, message: '请输入分数上限', trigger: 'blur'}],
+};
+
+const emit = defineEmits<{
+  (e: "update", data: WidgetUnion): void;
+}>();
+
+const handleHomeworkContentEditorUpdate = async (file: FileMeta) => {
+  const index = form.value.attachments.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    form.value.attachments.push(file);
+  }
+}
+
+const handleHomeworkContentEditorRemove = async (file: FileMeta) => {
+  const index = form.value.attachments.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    form.value.attachments.splice(index, 1);
+  }
+}
+
+const testcaseForm = ref<Testcase>({})
+const testcaseInfo = ref(null)
+const testcaseZipFileName = ref('')
+
+function formatSize(bytes: number): string {
+  if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB'
+  if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB'
+  return bytes + ' B'
+}
+
+const formattedTestcaseInfo = computed(() =>
+    Object.entries(testcaseInfo.value)
+        .sort(([a], [b]) => parseInt(a) - parseInt(b))
+        .map(([key, value]) => ({
+          key,
+          inputName: value.inputName,
+          inputSizeFormatted: formatSize(value.inputSize),
+          outputName: value.outputName,
+          outputSizeFormatted: formatSize(value.outputSize)
+        }))
+)
+
+const handleClick = async () => {
+  if (isEditingHomework.value) {  // 点保存：上传至后端
+    form.value.content = homeworkContentEditor.value?.getContent()
+    let message = "";
+
+    const oldAttachments = props.data.attachments || [];
+    const newAttachments = form.value.attachments || [];
+
+    const addedFiles = newAttachments.filter(f => !oldAttachments.some(o => o.id === f.id));
+    const removedFiles = oldAttachments.filter(f => !newAttachments.some(n => n.id === f.id));
+
+    const editResponse = await editAssignmentWidget(form.value as DocWidget);
+    if (editResponse.status !== 200) {
+      message += "保存文本失败\n";
+    }
+
+    for (const file of addedFiles) {
+      const res = await addWidgetAttachment(props.data.id, file.id);
+      if (res.status !== 200) message += `附件添加失败：${file.name}\n`;
+    }
+
+    for (const file of removedFiles) {
+      const res = await removeWidgetAttachment(file.id);
+      if (res.status !== 200) message += `附件删除失败：${file.name}\n`;
+    }
+
+    if (message !== "") {
+      ElMessage.error(message);
+    } else {
+      ElMessage.success("保存成功");
+      emit("update", form.value);
+    }
+
+  } else {  // 点编辑：将现有信息填入表单
+    // 题目信息
+    form.value = JSON.parse(JSON.stringify(props.data));
+    // 测试信息
+    if (props.data.testCase?.id) {
+      testcaseForm.value = props.data.testCase;
+      testcaseForm.value.maxMemory /= 1048576;
+      const response = await getTestcase(props.data.id);
+      if (response.status === 200) {
+        testcaseInfo.value = response.data.info.testCases;
+      } else {
+        console.log(response)
+      }
+    } else {
+      testcaseForm.value = {
+        id: 0,
+        widgetId: props.data.id,
+        maxCpuTime: 1000,
+        maxMemory: 128,
+        fileId: '',
+      }
+      testcaseInfo.value = {};
+    }
+
+  }
+  isEditingHomework.value = !isEditingHomework.value;
+}
+
+const {upload} = useUploader();
+
+const handleUploadTestcaseZipFile = async (options: any) => {
+  const {file, onSuccess, onError} = options;
+
+  try {
+    const response = await upload(file);
+    if (response.status === 200) {
+      ElMessage.success("上传成功");
+      testcaseForm.value.fileId = (response.data as FileMeta).id;
+      testcaseZipFileName.value = (response.data as FileMeta).filename;
+      onSuccess(response.data);
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+      onError(response)
+    }
+  } catch (err) {
+    ElMessage.error("上传失败，未知错误");
+    onError(err);
+  }
+};
+
+const handleUploadTestcase = async () => {
+  const response = testcaseForm.value.id === 0 ?
+          await createTestcase(testcaseForm.value):
+          await editTestcase(testcaseForm.value);
+  if (response.status === 200) {
+    ElMessage.success("更新测试数据成功！")
+    testcaseInfo.value = response.data.info?.testCases ?? testcaseInfo.value ?? {};
+  } else {
+    ElMessage.error("更新测试数据失败！")
+  }
+}
+
+/*
+ * 提交作业
+ */
+
+const isEditing = ref(false);
+const currentFeedback = ref<Feedback | null>(null);
+const selectedLanguage = ref<string>("cpp");
+const code = ref<string>('');
+const content = ref<string>("");
+const fileList = ref<FileMeta[]>([]);
+
+const beginNewSubmission = () => {
+  code.value = '';
+  selectedLanguage.value = 'cpp';
+  content.value = '';
+  contentEditor.value?.updateContent(content.value);
+  fileList.value = [];
+  currentFeedback.value = null;
   isEditing.value = true;
 }
 
-// 提交作业
-const uploadFile = (file: FileMeta) => {
-
+const editSubmittedAssignment = (record: SubmittedRecord) => {
+  if (props.data.submitType === 'code') {
+    code.value = JSON.parse(JSON.stringify(record.code?.code ?? ''));
+    selectedLanguage.value = JSON.parse(JSON.stringify(record.code?.language ?? 'cpp'));
+    selectedLanguage.value = languages.find(l => l.backend === selectedLanguage.value)?.value;
+  } else if (props.data.submitType === 'file') {
+    content.value = JSON.parse(JSON.stringify(record.content ?? ''));
+    contentEditor.value?.updateContent(content.value);
+    fileList.value = JSON.parse(JSON.stringify(record.attachments ?? []));
+  } else {
+    ElMessage.error("加载提交记录失败：未知作业类型")
+  }
+  currentFeedback.value = record.feedback;
+  isEditing.value = true;
 }
 
-const submit = () => {
-
-  // TODO
-  if (codeEditor.value) {
-    const code = codeEditor.value.getCode();
-    console.log(code);
+const handleSubmissionAttachmentUpload = async (file: FileMeta) => {
+  const index = fileList.value.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    fileList.value.push(file);
   }
-  if (contentEditor.value) {
-    const content = contentEditor.value.getContent();
-    console.log(content);
-    const fileList = contentEditor.value.getFileList();
-    console.log(fileList);
+}
+
+const handleSubmissionAttachmentRemove = async (file: FileMeta) => {
+  const index = fileList.value.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    fileList.value.splice(index, 1);
+  }
+}
+
+const submit = async () => {
+  let submission: Submission = {
+    widgetId: props.data.id
+  };
+  let submissionAttachments: FileMeta[] = [];
+  if (props.data.submitType === 'code') {
+    if (codeEditor.value) {
+      submission.code = {
+        code: codeEditor.value.getCode(),
+        language: languages.find(l => l.value === selectedLanguage.value)?.backend,
+      }
+    } else {
+      ElMessage.error("提交失败：未找到代码编辑框")
+    }
+  } else if (props.data.submitType === 'file') {
+    if (contentEditor.value) {
+      submission.content = contentEditor.value.getContent();
+      submissionAttachments = fileList.value;
+    } else {
+      ElMessage.error("提交失败：未找到文本编辑框")
+    }
+  } else {
+    ElMessage.error("提交失败：未知作业类型")
+  }
+  const response = await createSubmission(submission)
+  if (response.status === 200) {
+    let failed = false;
+    for (const attachment of submissionAttachments) {
+      const response2 = await createSubmissionAttachment(response.data.id, attachment.id);
+      if (response2.status !== 200) {
+        ElMessage.error("提交失败：附件 " + attachment.filename + " 上传失败");
+        failed = true;
+        break;
+      }
+    }
+    if (!failed) {
+      ElMessage.success("提交成功！");
+      window.location.reload();
+    }
+  } else {
+    ElMessage.error("提交失败：未能创建提交，请稍后再试");
   }
 }
 
@@ -311,17 +640,6 @@ const postArgue = () => {
   }
 }
 
-// 教师编辑当前作业信息
-const toggleEditingSituation = async () => {
-  if (isEditingHomework.value) {  // 点保存：上传至后端
-    form.value.content = homeworkContentEditor.value?.getContent()
-    console.log(form.value)
-    await editAssignmentWidget(form.value as AssignmentWidget)
-  } else {  // 点编辑：将现有信息填入表单
-    form.value = JSON.parse(JSON.stringify(props.data))
-  }
-  isEditingHomework.value = !isEditingHomework.value;
-}
 
 defineExpose({
   init: () => {

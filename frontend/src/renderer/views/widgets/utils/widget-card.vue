@@ -8,7 +8,7 @@
           </el-icon>
           <span>{{ title }}</span>
         </div>
-        <el-button style="color: white" :color="headerColor" @click="callback" v-if="callback">
+        <el-button style="color: white" :color="headerColor" @click="handleClick" v-if="buttonVisible">
           <slot name="button" />
         </el-button>
       </div>
@@ -50,11 +50,19 @@ const props = defineProps({
     type: String,
     default: '',
   },
-  callback: {
-    type: Function,
-    default: undefined,
+  buttonVisible: {
+    type: Boolean,
+    default: false,
   }
 })
+
+const emit = defineEmits<{
+  (e: "click"): void;
+}>();
+
+const handleClick = () => {
+  emit("click")
+}
 
 const resolvedColor = computed(() => {
   return props.type ? getWidgetStyle(props.type).color : props.color

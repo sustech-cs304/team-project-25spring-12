@@ -1,8 +1,8 @@
 <template>
-  <widget-card :title="computedTitle" type="notepdf" :callback="authenticated ? handleUploadFile : undefined">
+  <widget-card :title="computedTitle" type="notepdf" :button-visible="props.editable" @click="handleClick">
     <div class="card-content">
       <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
-      <el-button type="primary" :icon="Download" @click="handleDownloadFile">下载原课件</el-button>
+      <el-button type="primary" :icon="Download" @click="handleDownload">下载原课件</el-button>
     </div>
 
     <el-scrollbar class="pdf-scroll-container">
@@ -37,7 +37,6 @@
     <!-- 添加笔记弹窗 -->
     <el-popover
         v-model:visible="contextMenu.visible"
-        trigger="manual"
         placement="bottom-start"
         teleported
         popper-class="custom-popover"
@@ -64,6 +63,13 @@
       <span>上传</span>
     </template>
   </widget-card>
+  <el-upload
+      ref="uploadRef"
+      style="display: none"
+      :show-file-list="false"
+      :http-request="handleUpload"
+      :auto-upload="true"
+  />
 </template>
 
 <script setup lang="ts">
@@ -74,34 +80,42 @@ import {Download} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import type {Note, NotePdfWidget} from '@/types/widgets';
 import {Upload} from "@element-plus/icons-vue";
-import {createNote} from "@/api/courseMaterial";
+import {createNote, editNotePdfWidget} from "@/api/courseMaterial";
 import {useDownloader} from "@/composables/useDownloader";
+import {useUploader} from "@/composables/useUploader";
+import {ElMessage} from "element-plus";
+import {FileMeta} from "@/types/fileMeta";
+import {WidgetUnion} from "@/types/widgets";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
+const {getFile, download} = useDownloader()
+const {upload} = useUploader()
+
 const props = defineProps<{
   data: NotePdfWidget;
+  editable: boolean;
 }>();
 
 const computedTitle = computed(() => props.data.title || "互动式课件");
 
 // refs
-const authenticated = ref<boolean>(true); // TODO: 鉴权
 const pages = ref<number[]>([]);
 const canvasRefs = ref<(HTMLCanvasElement | undefined)[]>([]);
 const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
 const bottomObserver = ref<HTMLElement | null>(null);
 const pdfContainer = ref<HTMLElement | null>(null);
 
-const notes = ref<Note[]>(props.data.notes);
+const notes = ref<Note[]>(JSON.parse(JSON.stringify(props.data.notes)));
 const contextMenuRef = ref<HTMLElement | null>(null);
 const activeNote = ref<Note | null>(null);
-const contextMenu = ref({
-  visible: false,
-  x: 0,
-  y: 0,
-  page: 1,
-});
+interface ContextMenu {
+  visible: boolean,
+  x: number,
+  y: number,
+  page: number
+}
+const contextMenu = ref<ContextMenu>({visible: false, x: 0, y: 0, page: 0});
 const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref('');
 let totalPages = 0;
@@ -153,7 +167,9 @@ const loadMorePages = async () => {
 
 const loadPDF = async () => {
   try {
-    const loadingTask = pdfjsLib.getDocument(props.data.pdfFile.url);
+    const blob = await getFile(props.data.pdfFile);
+    const arrayBuffer = await blob.arrayBuffer();
+    const loadingTask = pdfjsLib.getDocument({data: arrayBuffer});
     pdfInstance.value = await loadingTask.promise;
 
     totalPages = pdfInstance.value.numPages;
@@ -194,19 +210,19 @@ const openContextMenu = (event, page) => {
   });
 };
 
-const addNote = () => {
+const addNote = async () => {
   const text = newNoteText.value.trim();
   if (!text) return;
 
   const newNote: Note = {
-    page: contextMenu.value.page,
-    x: contextMenu.value.x,
-    y: contextMenu.value.y,
+    ...contextMenu.value,
     text,
-  } as Note;
+  };
 
   notes.value.push(newNote);
-  createNote(newNote, props.data.id);
+  // 上传后端
+  const response = await createNote(newNote, props.data.id);
+  // emit 至父组件：父组件完全不需要 note 信息，这里选择不做额外处理
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
@@ -228,18 +244,58 @@ const observeBottom = () => {
   observer.observe(bottomObserver.value);
 };
 
-const {download} = useDownloader()
+const emit = defineEmits<{
+  (e: "update", data: WidgetUnion): void;
+}>();
 
-const handleDownloadFile = async () => {
+const uploadRef = ref()
+
+const handleUpload = async (options: any) => {
+  const {file, onSuccess, onError} = options;
+
   try {
-    await download(props.data.pdfFile);
-  } catch (error) {
-    console.error('下载失败：', error);
+    const response = await upload(file);
+    if (response.status === 200) {
+      const newPdfFile = response.data as FileMeta;
+      const newData = JSON.parse(JSON.stringify(props.data));
+      newData.pdfFile = newPdfFile;
+      const response2 = await editNotePdfWidget(newData);
+      if (response2.status === 200) {
+        ElMessage.success("上传成功");
+        emit("update", newData);
+        await nextTick();
+        // 重新加载 pdf
+        pages.value = [];
+        pdfInstance.value = null;
+        canvasRefs.value = [];
+        await loadPDF();
+        onSuccess(newData);
+      } else {
+        ElMessage.error("上传失败，请稍后再试");
+        onError(response2);
+      }
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+      onError(response);
+    }
+  } catch (err) {
+    ElMessage.error("上传失败，未知错误");
+    onError(err);
   }
 };
 
-const handleUploadFile = () => {
-  // TODO: 上传新文件
+const handleDownload = async () => {
+  try {
+    await download(props.data.pdfFile);
+  } catch (error) {
+    ElMessage.error("下载失败！");
+    console.error(error);
+  }
+};
+
+const handleClick = () => {
+  const input = uploadRef.value?.$el?.querySelector('input[type=file]')
+  if (input) input.click()
 }
 
 onMounted(() => {
