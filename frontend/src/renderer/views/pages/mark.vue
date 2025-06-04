@@ -90,7 +90,7 @@ const hoveredSubmissionId = ref<string | null>(null);
 const activeSubmission = computed(() => submissions.value.find(s => s.id === activeSubmissionId.value));
 const activeFeedback = computed(() => feedbacks.value[Number(activeSubmissionId.value)]);
 const assignmentWidget = ref<AssignmentWidget>();
-const onlyShowLatest = ref(false);
+const onlyShowLatest = ref(true);
 
 const lastSubmissionMap = computed(() => {
   const map = new Map<string, SubmittedRecord>();
