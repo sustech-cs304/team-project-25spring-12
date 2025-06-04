@@ -35,6 +35,14 @@ export interface Feedback {
     score: number;
 }
 
+export interface Testcase {
+    id: number,
+    widgetId: number,
+    maxCpuTime: number,
+    maxMemory: number,
+    fileId: string,
+}
+
 export interface AssignmentWidget extends BaseWidget {
     type: 'assignment';
     content: string;
@@ -47,6 +55,7 @@ export interface AssignmentWidget extends BaseWidget {
     maxScore: number;
     feedback?: Feedback;
     argueId?: number;
+    testCase?: Testcase;
 }
 
 export type WidgetUnion = NotePdfWidget | DocWidget | AssignmentWidget;

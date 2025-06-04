@@ -1,5 +1,5 @@
 import request from '../utils/request'
-import {AssignmentWidget, DocWidget, Note, NotePdfWidget, WidgetUnion} from "../types/widgets";
+import {AssignmentWidget, DocWidget, Note, NotePdfWidget, Testcase, WidgetUnion} from "../types/widgets";
 import {Page} from "../types/page";
 
 export function getPage(id: number) {
@@ -98,4 +98,28 @@ export function editNotePdfWidget(widget: NotePdfWidget) {
     }
 
     return request.patch('/class/widget/notepdf', payload)
+}
+
+export function createTestcase(testcase: Testcase) {
+    const payload: Testcase = {
+        ...testcase,
+        id: null,
+        maxMemory: testcase.maxMemory * 1048576,
+    }
+
+    return request.post('/class/widget/testcase', payload);
+}
+
+export function editTestcase(testcase: Testcase) {
+    const payload: Testcase = {
+        ...testcase,
+        widgetId: null,
+        maxMemory: testcase.maxMemory * 1048576,
+    }
+
+    return request.patch('/class/widget/testcase', payload);
+}
+
+export function getTestcase(widgetId: number) {
+    return request.get('/class/widget/' + widgetId + '/testcase')
 }
