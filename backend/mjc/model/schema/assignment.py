@@ -81,3 +81,16 @@ class AIFeedbackCreate(BaseModel):
 class AIFeedback(BaseModel):
     score: float | None = None
     feedback: str
+
+
+class Assignment(BaseModel):
+    id: int
+    widget_id: int
+    title: str
+    submit_type: str
+    content: str | None = None
+    test_code_id: int | None = None
+    max_score: float | None = None
+    create_time: datetime | None = None
+    update_time: datetime | None = None
+    submissions: list[SubmittedAssignment] | None = None

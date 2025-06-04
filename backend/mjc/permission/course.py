@@ -52,3 +52,12 @@ async def verify_class_delete(db: SessionDep,
     verify_class_exist(db, class_id)
     if not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not system admin")
+
+
+async def verify_grade_center_get(db: SessionDep,
+                                  class_id: int,
+                                  current_user: UserInDB = Depends(get_current_user)):
+    verify_class_exist(db, class_id)
+    role = course_service.get_user_class_role(db, current_user.username, class_id)
+    if (role is None and not current_user.is_admin) or role is ClassRole.STUDENT:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You have no permission")

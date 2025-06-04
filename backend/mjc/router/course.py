@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from mjc.model.schema.common import Message
-from mjc.model.schema.assignment import DDL
+from mjc.model.schema.assignment import DDL, Assignment
 from mjc.model.schema.course import Class, Semester, ClassCreate, ClassUpdate, SemesterCreate, SemesterUpdate, ClassCard,\
     ClassUserEnroll, ClassUserRoleName, ClassUserUpdate
 from mjc.model.schema.user import UserInDB
 from mjc.model.schema.widget import AssignmentWidget
-from mjc.service import course as course_service, widget as widget_service
+from mjc.service import course as course_service, widget as widget_service, assignment as assignment_service
 from mjc.permission import course as course_permission, common as common_permission
 from mjc.service.user import get_current_user
 from mjc.utils.database import SessionDep
@@ -130,3 +130,9 @@ def get_class_assignments(db: SessionDep, class_id: int,
             dependencies=[Depends(course_permission.verify_semester_class_get)])
 def get_semester_classes(db: SessionDep, semester_id: int) -> list[ClassCard]:
     return course_service.get_semester_classes(db, semester_id)
+
+
+@router.get(path="/class/{class_id}/grade", response_model=list[Assignment],
+            dependencies=[Depends(course_permission.verify_grade_center_get)])
+def get_students_grades(db: SessionDep, class_id: int):
+    return  assignment_service.get_students_grades(db, class_id)
