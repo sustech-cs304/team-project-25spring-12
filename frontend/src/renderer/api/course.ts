@@ -5,12 +5,12 @@ export function getCourses() {
     return request.get('/class')
 }
 
-export function getCourse(id: number) {
-    return request.get("/class/" + id);
+export function getCourseInfo(courseId: number) {
+    return request.get('/class/' + courseId)
 }
 
-export function getFolders(classId: number) {
-    return request.get('/class/' + classId + '/folder')
+export function getFolders(courseId: number) {
+    return request.get('/class/' + courseId + '/folder')
 }
 
 interface FolderCreate extends Folder {

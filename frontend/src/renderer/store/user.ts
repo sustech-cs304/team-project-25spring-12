@@ -30,6 +30,8 @@ export const useUserStore = defineStore('user', {
         clearToken() {
             this.accessToken = ''
             this.username = ''
+            this.courses = null
+            this.deadlines = null
             localStorage.removeItem('access_token')
             localStorage.removeItem('username')
         },

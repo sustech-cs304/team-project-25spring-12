@@ -54,6 +54,7 @@ const handleRemoveFile = (file: FileMeta) => {
 
 defineExpose({
   getContent: (): string => content.value,
+  updateContent: (data: string): void => {content.value = data},
 });
 </script>
 

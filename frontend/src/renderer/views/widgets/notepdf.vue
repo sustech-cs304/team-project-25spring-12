@@ -57,18 +57,19 @@
       </div>
     </el-popover>
     <template #button>
-      <el-upload
-          ref="uploadRef"
-          :show-file-list="false"
-          :http-request="handleUpload"
-      >
-        <el-icon>
-          <Upload/>
-        </el-icon>
-        <span>上传</span>
-      </el-upload>
+      <el-icon>
+        <Upload/>
+      </el-icon>
+      <span>上传</span>
     </template>
   </widget-card>
+  <el-upload
+      ref="uploadRef"
+      style="display: none"
+      :show-file-list="false"
+      :http-request="handleUpload"
+      :auto-upload="true"
+  />
 </template>
 
 <script setup lang="ts">
@@ -105,15 +106,16 @@ const pdfInstance = ref<pdfjsLib.PDFDocumentProxy | null>(null);
 const bottomObserver = ref<HTMLElement | null>(null);
 const pdfContainer = ref<HTMLElement | null>(null);
 
-const notes = ref<Note[]>(props.data.notes);
+const notes = ref<Note[]>(JSON.parse(JSON.stringify(props.data.notes)));
 const contextMenuRef = ref<HTMLElement | null>(null);
 const activeNote = ref<Note | null>(null);
-const contextMenu = ref({
-  visible: false,
-  x: 0,
-  y: 0,
-  page: 1,
-});
+interface ContextMenu {
+  visible: boolean,
+  x: number,
+  y: number,
+  page: number
+}
+const contextMenu = ref<ContextMenu>({visible: false, x: 0, y: 0, page: 0});
 const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref('');
 let totalPages = 0;
@@ -208,19 +210,19 @@ const openContextMenu = (event, page) => {
   });
 };
 
-const addNote = () => {
+const addNote = async () => {
   const text = newNoteText.value.trim();
   if (!text) return;
 
   const newNote: Note = {
-    page: contextMenu.value.page,
-    x: contextMenu.value.x,
-    y: contextMenu.value.y,
+    ...contextMenu.value,
     text,
-  } as Note;
+  };
 
   notes.value.push(newNote);
-  createNote(newNote, props.data.id);
+  // 上传后端
+  const response = await createNote(newNote, props.data.id);
+  // emit 至父组件：父组件完全不需要 note 信息，这里选择不做额外处理
 
   newNoteText.value = "";
   contextMenu.value.visible = false;
@@ -246,19 +248,27 @@ const emit = defineEmits<{
   (e: "update", data: WidgetUnion): void;
 }>();
 
+const uploadRef = ref()
+
 const handleUpload = async (options: any) => {
   const {file, onSuccess, onError} = options;
 
   try {
     const response = await upload(file);
     if (response.status === 200) {
-      const uuid = (response.data as FileMeta).id;
+      const newPdfFile = response.data as FileMeta;
       const newData = JSON.parse(JSON.stringify(props.data));
-      newData.pdfFile = uuid;
+      newData.pdfFile = newPdfFile;
       const response2 = await editNotePdfWidget(newData);
       if (response2.status === 200) {
         ElMessage.success("上传成功");
         emit("update", newData);
+        await nextTick();
+        // 重新加载 pdf
+        pages.value = [];
+        pdfInstance.value = null;
+        canvasRefs.value = [];
+        await loadPDF();
         onSuccess(newData);
       } else {
         ElMessage.error("上传失败，请稍后再试");
@@ -278,12 +288,14 @@ const handleDownload = async () => {
   try {
     await download(props.data.pdfFile);
   } catch (error) {
-    console.error('下载失败：', error);
+    ElMessage.error("下载失败！");
+    console.error(error);
   }
 };
 
 const handleClick = () => {
-  upload()
+  const input = uploadRef.value?.$el?.querySelector('input[type=file]')
+  if (input) input.click()
 }
 
 onMounted(() => {

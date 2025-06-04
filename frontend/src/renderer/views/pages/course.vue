@@ -4,7 +4,16 @@
     <div class="widget-menu-wrapper">
       <!-- 标题 -->
       <div class="menu-toggle">
-        <span class="menu-title">课程内容</span>
+        <el-button
+            class="back-button"
+            @click="goBackToHomepage"
+        >
+          <el-icon>
+            <ArrowLeft/>
+          </el-icon>
+          <span>返回</span>
+        </el-button>
+        <span class="menu-title">{{ title }}</span>
       </div>
 
       <!-- 文件夹菜单 -->
@@ -17,7 +26,7 @@
         <el-menu-item
             v-for="folder in foldersSorted"
             :key="folder.id"
-            :index="folder.id.toString()"
+            :index="String(folder.id)"
             class="hoverable-item"
             :style="getMenuItemStyle(folder)"
             @mouseenter="hoveredFolderId = folder.id"
@@ -31,7 +40,7 @@
           :visible="dialogVisible"
           placement="top"
           :width="180"
-          v-if="canEdit"
+          v-if="editable"
       >
         <p>
           <el-input v-model="newFolderTitle" placeholder="请输入标题"></el-input>
@@ -57,7 +66,7 @@
         <folder-widget
             :folder="activeFolder"
             v-if="activeFolder"
-            :can-edit="canEdit"
+            :editable="editable"
             :course-id="courseId"
             @create-page="handleCreatePage"
         />
@@ -68,19 +77,27 @@
 
 <script setup lang="ts">
 import {computed, ComputedRef, onMounted, ref} from 'vue'
-import {useRoute} from 'vue-router'
+import {useRoute, useRouter} from 'vue-router'
 import FolderWidget from '@/views/widgets/folder.vue'
 import type {Folder, FolderPageItem} from '@/types/folder'
-import {createFolder, getFolders} from "@/api/course";
+import {createFolder, getCourseInfo, getFolders} from "@/api/course";
 import {getRoleByCourseId} from "@/composables/useUserData"
 import type {Page} from "@/types/page";
+import {ArrowLeft} from "@element-plus/icons-vue";
+import {Course} from "@/types/course";
 
 const route = useRoute()
+const router = useRouter()
+
+const goBackToHomepage = () => {
+  router.push('/homepage')
+}
 
 const folders = ref<Folder[]>([])
+const title = ref<string>('')
 const role = ref<string>('')
 const courseId = ref<number>(0)
-const canEdit = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
+const editable = computed(() => role.value == 'teaching assistant' || role.value == 'teacher')
 
 const numberOrNull = (num: number | null) => num ?? 0;
 
@@ -89,6 +106,9 @@ onMounted(async () => {
 
   const response = await getFolders(courseId.value)
   folders.value = response.data as Folder[]
+
+  const response2 = await getCourseInfo(courseId.value)
+  title.value = (response2.data as Course).name
 
   // 有一个 id 为 null 的文件夹，收录未分类的页面
   folders.value = (response.data as Folder[]).map(folder => ({
@@ -109,8 +129,8 @@ onMounted(async () => {
 const hoveredFolderId = ref<string>('')
 
 const getMenuItemStyle = (folder: Folder) => {
-  const isActive = folder.id.toString() == activeFolderId.value
-  const isHovered = folder.id.toString() == hoveredFolderId.value
+  const isActive = String(folder.id) === activeFolderId.value
+  const isHovered = String(folder.id) === hoveredFolderId.value
 
   const baseColor = '#f9f9f9'
   const hoverColor = '#e6f0ff'
@@ -176,6 +196,28 @@ const handleCreatePage = (page: Page) => {
 </script>
 
 <style scoped>
+.back-button {
+  width: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 0 16px;
+  margin: 0;
+  height: 100%;
+  color: var(--el-color-primary);
+}
+
+.back-button span {
+  margin-left: 8px;
+}
+
+.menu-toggle {
+  height: 56px;
+  border-bottom: 1px solid #ebeef5;
+  display: flex;
+  align-items: center;
+}
+
 .widget-layout {
   display: flex;
   height: 100%;
@@ -205,21 +247,12 @@ const handleCreatePage = (page: Page) => {
   width: 64px;
 }
 
-.menu-toggle {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 16px;
-  cursor: pointer;
-  border-bottom: 1px solid #ebeef5;
-  transition: padding 0.3s ease-in-out;
-}
-
 .menu-title {
   font-weight: bold;
   font-size: 16px;
   transition: opacity 0.3s ease;
   white-space: nowrap;
+  margin-left: 15px;
 }
 
 .hoverable-item:hover {

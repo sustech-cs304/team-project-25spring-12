@@ -1,5 +1,5 @@
 <template>
-  <div class="attachments">
+  <div class="attachments" v-show="fileList.length !== 0 || editable">
     <el-row justify="space-between">
       <el-text size="large" class="attachment-title">{{ title }}</el-text>
       <el-upload
