@@ -131,10 +131,18 @@
           />
         </el-select>
       </el-form-item>
+      <el-form-item prop="prompt" label="额外 Prompt">
+        <el-input
+            type="textarea"
+            v-model="dialogForm.prompt"
+            placeholder="请输入额外 prompt"
+            :rows="3"
+        />
+      </el-form-item>
     </el-form>
     <template #footer>
       <el-button @click="dialogVisible = false">取消</el-button>
-      <el-button type="primary" @click="handleAISubmit">确认</el-button>
+      <el-button type="primary" @click="handleAISubmit" :disabled="isAISubmitting">确认</el-button>
     </template>
   </el-dialog>
 </template>
@@ -156,7 +164,6 @@ import {
   UploadRequestOptions
 } from "element-plus";
 import {useUploader} from "@/composables/useUploader";
-import {FileMeta} from "@/types/fileMeta";
 import {AIFeedbackCreate, postAIFeedback} from "@/api/feedback";
 
 const props = defineProps<{
@@ -192,8 +199,11 @@ const dialogForm = reactive<AIFeedbackCreate>({
   questionFileId: "",
   answerFileId: "",
   studentAnswerFileId: "",
+  maxScore: 100,
+  prompt: "",
 });
 const uploadContainer = ref<UploadInstance>();
+const isAISubmitting = ref(false);
 
 const notEmpty = (rule: any, value: any, callback: any) => {
   if (dialogForm.type === "text" || !!value) {
@@ -245,7 +255,7 @@ const handleExceed: UploadProps['onExceed'] = (files) => {
   uploadContainer.value!.submit();
 };
 
-const handleRemove: UploadProps['onRemove'] = (file) => {
+const handleRemove: UploadProps['onRemove'] = () => {
   dialogForm.answerFileId = "";
 }
 
@@ -268,12 +278,15 @@ const handleAISubmit = () => {
   formEl.value.validate(async (valid, fields) => {
     if (valid) {
       try {
+        isAISubmitting.value = true;
         const response = await postAIFeedback(dialogForm);
         score.value = response.data.score;
         content.value = response.data.feedback;
         dialogVisible.value = false;
       } catch (e) {
         ElMessage.error("提交失败，请稍后重试");
+      } finally {
+        isAISubmitting.value = false;
       }
     }
   });
@@ -300,6 +313,7 @@ watch([() => props.submission, () => props.feedback], ([newSubmission, newFeedba
   score.value = newFeedback.score;
   content.value = newFeedback.content || "";
   dialogForm.question = props.assignmentWidget.content;
+  dialogForm.maxScore = props.assignmentWidget.maxScore;
 }, {immediate: true});
 </script>
 

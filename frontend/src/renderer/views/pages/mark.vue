@@ -10,6 +10,12 @@
         <span v-if="showTitle" class="menu-title">提交记录</span>
       </div>
 
+      <div v-if="!collapsed" class="menu-filter-row">
+        <el-checkbox v-model="onlyShowLatest" size="small" class="latest-checkbox">
+          <span class="checkbox-label">仅显示每位学生最后一次提交</span>
+        </el-checkbox>
+      </div>
+
       <!-- 文件夹菜单 -->
       <el-menu
           class="widget-menu"
@@ -65,7 +71,7 @@ import {computed, nextTick, onMounted, ref, watch} from "vue";
 import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
 import {useRoute} from "vue-router";
 import {useUserStore} from "@/store/user";
-import {getAllAssignments, getAllSubmissions} from "@/api/feedback";
+import {getAllSubmissions, getWidget} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
 import {AssignmentWidget} from "@/types/widgets";
@@ -75,9 +81,6 @@ const userStore = useUserStore();
 const {createFeedback, updateFeedback} = useFeedback();
 
 const submissions = ref<SubmissionForMark[]>([]);
-const submissionsSorted = computed(() => [...submissions.value].sort((a, b) => {
-  return a.id > b.id ? -1 : 1;
-}));
 const feedbacks = ref<Record<number, FeedbackForm>>({});
 const blobs = ref<Record<string, Blob>>({});
 const patch = ref<Record<string, Uint8Array>>({});
@@ -87,6 +90,25 @@ const hoveredSubmissionId = ref<string | null>(null);
 const activeSubmission = computed(() => submissions.value.find(s => s.id === activeSubmissionId.value));
 const activeFeedback = computed(() => feedbacks.value[Number(activeSubmissionId.value)]);
 const assignmentWidget = ref<AssignmentWidget>();
+const onlyShowLatest = ref(false);
+
+const lastSubmissionMap = computed(() => {
+  const map = new Map<string, SubmissionForMark>();
+  const sorted = [...submissions.value].sort((a, b) => b.id - a.id);
+  for (const submission of sorted) {
+    if (submission.student && !map.has(submission.student.username)) {
+      map.set(submission.student.username, submission);
+    }
+  }
+  return map;
+});
+const submissionsSorted = computed(() => {
+  if (onlyShowLatest.value) {
+    return Array.from(lastSubmissionMap.value.values()).sort((a, b) => b.id - a.id);
+  } else {
+    return [...submissions.value].sort((a, b) => b.id - a.id);
+  }
+});
 
 const collapsed = ref(false);
 const showTitle = ref(true);
@@ -197,10 +219,8 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 onMounted(async () => {
   const courseId = Number(route.params.courseId);
   const widgetId = Number(route.params.widgetId);
-  const response = await getAllAssignments(courseId);
-  const assignments = response.data as AssignmentWidget[];
-  assignmentWidget.value = assignments.find(a => a.id === widgetId);
-  console.log(assignmentWidget.value);
+  const response = await getWidget(widgetId);
+  assignmentWidget.value = response.data;
   const submissionsResponse = await getAllSubmissions(widgetId);
   submissions.value = submissionsResponse.data as SubmissionForMark[];
   submissions.value.forEach(submission => {
@@ -299,5 +319,33 @@ onMounted(async () => {
 
 .el-menu-item.is-active .submission-info .submission-time {
   color: white;
+}
+
+.menu-filter-row {
+  padding: 4px 18px 4px 42px;
+  margin-bottom: 2px;
+  margin-top: 2px;
+  background: #f7f8fa;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  min-height: 28px;
+}
+
+.latest-checkbox {
+  margin: 0;
+  padding: 0;
+}
+
+.latest-checkbox :deep(.el-checkbox__input) {
+  margin-right: 2px;
+}
+
+.checkbox-label {
+  color: #909399;
+  font-size: 13px;
+  font-weight: 400;
+  padding-left: 0px;
+  user-select: none;
 }
 </style>

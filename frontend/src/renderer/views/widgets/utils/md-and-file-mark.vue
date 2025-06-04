@@ -76,7 +76,7 @@ const textContent = computed(() => typeof(content.value) === "string" ? content.
 const pdfViewer = ref();
 
 const isDirty = () => {
-  return FileType.PDF === selectedFileType.value && pdfViewer.value.isDirty();
+  return FileType.PDF === selectedFileType.value && pdfViewer.value?.isDirty();
 };
 
 const handleSave = () => {
