@@ -242,8 +242,9 @@ import {useUploader} from "@/composables/useUploader";
 import {getRoleByCourseId} from "@/composables/useUserData";
 import router from "../../router";
 import { FileMeta } from "../../types/fileMeta";
-import service from "../../utils/request";
+import request from "../../utils/request";
 import { Feedback } from "../../types/widgets";
+import { useUserStore } from "../../store/user";
 
 const props = defineProps({
   data: {
@@ -269,11 +270,11 @@ const revisedScore = ref<number | null>(null);
 const toggleFollow = () => {
   try {
     if (isFollowed.value) {
-      service.post('/argue/watch', {
+      request.post('/argue/watch', {
         arguePostId: props.data.id,
       });
   } else {
-    service.delete(`/argue/${argueId}/watch`);
+    request.delete(`/argue/${argueId}/watch`);
   }
     isFollowed.value = !isFollowed.value;
     followCount.value += isFollowed.value ? 1 : -1;
@@ -361,6 +362,7 @@ const handleArgueFeedbackAttachmentRemove = async (file: FileMeta) => {
 const voteSupport = ref(props.data.voteSupport)
 const voteTotal = ref(props.data.voteTotal)
 const hasVoted = ref(false)
+const userStore = useUserStore();
 
 const votePercentage = computed(() => {
   return voteTotal.value === 0 ?
@@ -390,7 +392,7 @@ const tableVote: VoteResult[] = [
 const vote = async (isSupport: boolean) => {
   // try {
   //   模拟发送投票请求到后端
-  //   const response = await service.post('/argue/vote', {
+  //   const response = await request.post('/argue/vote', {
   //     isSupport: isSupport,
   //   })
 
@@ -414,7 +416,7 @@ const vote = async (isSupport: boolean) => {
 
 const submitArgue = async () => {
   try {
-    let response = await service.post('/argue', {
+    let response = await request.post('/argue', {
       widgetId: props.data.widgetId,
       submitted_assignment_id: props.data.submitted_assignment_id,
       title: props.data.title,
@@ -460,19 +462,18 @@ const handleReply = (author: string) => {
 };
 
 onMounted(async () => {
-  argueContent.value = '';
-  argueFileList.value = [];
+  argueContent.value = props.data.argueContent || '';
+  argueFileList.value = props.data.argueFileList || [];
   argueEditor.value?.updateContent(argueContent.value);
-  argueFeedbackContent.value = '';
-  argueFeedbackFileList.value = [];
-  argueEditor.value?.updateContent(argueContent.value);
-  isEditing.value = true;
-
+  argueFeedbackContent.value = props.data.argueFeedbackContent || '';
+  argueFeedbackFileList.value = props.data.argueFeedbackFileList || [];
+  argueEditor.value?.updateContent(argueFeedbackContent.value);
+  
   const role = getRoleByCourseId(props.data.courseId);
-  // isTeacher.value = role === 'teacher' || role === 'admin';
-  // isEditing.value = props.data.status === 'pending' &&
-  //                   props.data.starter === localStorage.getItem('username');
-  isEditing.value = true;
+  isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
+  isEditing.value = (props.data.status === 'pending' &&
+                    props.data.starter === userStore.username) ||
+                    userStore.isAdmin === true;
 });
 </script>
 

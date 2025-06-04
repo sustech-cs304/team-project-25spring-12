@@ -333,7 +333,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue';
 import { ElMessage } from 'element-plus';
-import service from '../../utils/request';
+import request from '../../utils/request';
 
 // 用户管理相关
 const activeTab = ref('users');
@@ -387,7 +387,7 @@ const filterUsers = async () => {
       params.department = departmentSearch.value.trim();
     if (emailSearch.value.trim())
       params.email = emailSearch.value.trim();
-    const response = await service.get('/user', { params });
+    const response = await request.get('/user', { params });
     filteredUsers.value = response.data;
   } catch (error) {
     console.error('搜索用户失败:', error);
@@ -439,14 +439,14 @@ const saveUser = async () => {
       if (userDialogTitle.value === '编辑用户') {
         // 编辑时仅发送非空密码
         if (!userData.password) delete userData.password;
-        await service.put(`/users/${userForm.value.username}`, userData);
+        await request.put(`/users/${userForm.value.username}`, userData);
         const index = filteredUsers.value.findIndex((u) => u.username === userForm.value.username);
         if (index !== -1) {
           filteredUsers.value[index] = { ...userData };
         }
         ElMessage.success('用户更新成功');
       } else {
-        const response = await service.post('/user/register', userData);
+        const response = await request.post('/user/register', userData);
         filteredUsers.value.push(response.data);
         ElMessage.success('用户添加成功');
       }
@@ -459,7 +459,7 @@ const saveUser = async () => {
 };
 
 const deleteUser = (username) => {
-  service
+  request
     .delete(`/users/${username}`)
     .then(() => {
       filteredUsers.value = filteredUsers.value.filter((user) => user.username !== username);
@@ -505,12 +505,12 @@ const fetchCourses = async (semester_id) => {
     return;
   }
   try {
-    const response = await service.get(`/admin/semester/${semester_id}`);
+    const response = await request.get(`/admin/semester/${semester_id}`);
     const semesterCourses = response.data;
     const enrichedCourses = await Promise.all(
       semesterCourses.map(async (course) => {
         try {
-          const userResponse = await service.get(`/class/${course.id}/user`);
+          const userResponse = await request.get(`/class/${course.id}/user`);
           const users = userResponse.data;
           const teacher = users.find((user) => user.role === 'teacher')?.username || '';
           const assistants = users
@@ -575,7 +575,7 @@ const filterUsersForCourse = async (query) => {
       filteredUsersForCourse.value = [];
       return;
     }
-    const response = await service.get('/user', {
+    const response = await request.get('/user', {
       params: {
         username: query.trim(),
       },
@@ -614,7 +614,7 @@ const openEditCourseDialog = async (course) => {
   ].filter(Boolean);
   if (usernames.length > 0) {
     try {
-      const response = await service.get('/user', {
+      const response = await request.get('/user', {
         params: {
           username: usernames.join(','),
         },
@@ -661,8 +661,8 @@ const saveCourse = async () => {
         courseData.id = courseId;
         console.log("patch coursedata: ", courseData);
         
-        await service.patch(`/class`, courseData);
-        const userResponse = await service.get(`/class/${courseId}/user`);
+        await request.patch(`/class`, courseData);
+        const userResponse = await request.get(`/class/${courseId}/user`);
         const existingUsers = userResponse.data;
         const existingUsersByRole = {
           teacher: existingUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
@@ -684,7 +684,7 @@ const saveCourse = async () => {
             (username) => !existingUsersByRole[role].includes(username)
           );
           if (usersToAdd.length > 0) {
-            await service.post(`/class/user`, {
+            await request.post(`/class/user`, {
               class_id: courseId,
               usernames: usersToAdd,
               role,
@@ -696,7 +696,7 @@ const saveCourse = async () => {
             (username) => !newUsersByRole[role].includes(username)
           );
           for (const username of usersToRemove) {
-            await service.delete(`/class/${courseId}/user/${username}`);
+            await request.delete(`/class/${courseId}/user/${username}`);
           }
         }
         const index = courses.value.findIndex((c) => c.id === courseId);
@@ -711,7 +711,7 @@ const saveCourse = async () => {
         }
         ElMessage.success('课程更新成功');
       } else {
-        const response = await service.post('/class', courseData);
+        const response = await request.post('/class', courseData);
         courseId = response.data.id;
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
@@ -731,7 +731,7 @@ const saveCourse = async () => {
               usernames: usersByRole[role],
               role: role,
             };
-            await service.post(`/class/user`, params);
+            await request.post(`/class/user`, params);
           }
         }
         courses.value.push({
@@ -752,7 +752,7 @@ const saveCourse = async () => {
 };
 
 const deleteCourse = (id) => {
-  service.delete(`/class/${id}`)
+  request.delete(`/class/${id}`)
     .then(() => {
       courses.value = courses.value.filter((course) => course.id !== id);
       ElMessage.success('课程删除成功');
@@ -785,7 +785,7 @@ const semesters = ref([
 
 const fetchSemesters = async () => {
   try {
-    const response = await service.get('/class/semester');
+    const response = await request.get('/class/semester');
     semesters.value = response.data;
     console.log('Loaded semesters:', semesters.value);
     ElMessage.success('学期数据加载成功');
@@ -867,14 +867,14 @@ const saveSemester = async () => {
         end_time: semesterForm.value.end_time,
       };
       if (semesterForm.value.id) {
-        await service.patch(`/class/semester/${semesterForm.value.id}`, semesterData);
+        await request.patch(`/class/semester/${semesterForm.value.id}`, semesterData);
         const index = semesters.value.findIndex((s) => s.id === semesterForm.value.id);
         if (index !== -1) {
           semesters.value[index] = { ...semesterForm.value };
         }
         ElMessage.success('学期更新成功');
       } else {
-        const response = await service.post('/class/semester', semesterData);
+        const response = await request.post('/class/semester', semesterData);
         console.log('New Semester Res: ', response);
         const newSemester = {
           id: response.data.id,
@@ -898,7 +898,7 @@ const deleteSemester = (id) => {
   //   ElMessage.error('无法删除正在被课程使用的学期');
   //   return;
   // }
-  service.delete(`/class/semester/${id}`)
+  request.delete(`/class/semester/${id}`)
     .then(() => {
       semesters.value = semesters.value.filter((semester) => semester.id !== id);
       ElMessage.success('学期删除成功');

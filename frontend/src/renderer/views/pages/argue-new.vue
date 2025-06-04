@@ -6,10 +6,11 @@
 
 
 <script setup lang="ts">
+import { onMounted } from "vue"
 import argue from "../widgets/argue.vue"
 import {useRoute} from "vue-router"
 
-const { widgetId, submittedAssignmentId } = useRoute().query
+const { widgetId } = useRoute().query
 
 const argueDataPending = {
   title: 'ArguePending',
@@ -25,6 +26,10 @@ const argueDataPending = {
   voteTotal: 0,
   voteSupport: 0,
 }
+
+onMounted(() => {
+
+})
 </script>
 
 

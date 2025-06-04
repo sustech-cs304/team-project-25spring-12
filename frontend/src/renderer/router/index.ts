@@ -39,13 +39,13 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'argue/:argueId',
-                name: 'create-argue',
+                name: 'argue-post',
                 meta: {title: '辩驳'},
                 component: () => import('../views/pages/argue-post.vue'),
             },
             {
                 path: 'argue/new',
-                name: 'argue',
+                name: 'argue-new',
                 meta: {title: '创建辩驳'},
                 component: () => import('../views/pages/argue-new.vue'),
             },

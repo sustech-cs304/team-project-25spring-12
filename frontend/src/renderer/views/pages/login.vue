@@ -46,7 +46,7 @@ import {useTabsStore} from '@/store/tabs';
 import {useUserStore} from '@/store/user';
 import {useLogin} from "@/composables/useLogin";
 import {LoginRequest} from "@/types/auth";
-import service from "@/utils/request";
+import request from "@/utils/request";
 import { assert } from 'pdfjs-dist/types/src/shared/util';
 
 const router = useRouter();
@@ -73,11 +73,12 @@ const submitForm = () => {
         const result = await login(loginFormData);
         userStore.setToken(result.accessToken);
         userStore.setUsername(loginFormData.username);
-        const resp = service.get(`/user/${loginFormData.username}`);
-        if (!resp.data.is_active) {
+        const resp = await request.get(`/user/${loginFormData.username}`);
+        console.log(resp.data);
+        if (!resp.data.isActive) {
           throw new Error('Inactive');
         }
-        userStore.setAdmin(resp.data.is_admin);
+        userStore.setAdmin(resp.data.isAdmin);
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {

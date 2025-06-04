@@ -63,12 +63,12 @@ const argueDataReturned = ref({
 })
 
 onMounted(async () => {
-  try {
-    argueId.value = Number(useRoute().params.argueId);
-    const response = await service.get(`/argue/${argueId}`);
-  } catch (error) {
-    ElMessage.error("加载争辩数据失败，请稍后重试")
-  }
+  // try {
+  //   argueId.value = Number(useRoute().params.argueId);
+  //   const response = await service.get(`/argue/${argueId}`);
+  // } catch (error) {
+  //   ElMessage.error("加载争辩数据失败，请稍后重试")
+  // }
 })
 </script>
 

@@ -633,17 +633,15 @@ const submit = async () => {
 
 // 发起 argue
 const postArgue = () => {
-  // TODO
   if ('argue_id' in props.data && Number.isInteger(props.data.argue_id)) {
     // 路由到对应的Argue的页面
-    router.push({name: `argue/${props.data.argue_id}`});
+    router.push({path: `/argue/${props.data.argue_id}`});
   } else {
     // 路由到创建Argue的页面
     router.push({
-      name: `argue/new`,
+      path: `/argue/new`,
       query: {
         widgetId: props.data.id,
-        submittedAssignmentId: props.data.submittedAssignment.at(-1).id,
       }
     });
   }
