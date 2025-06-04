@@ -1,4 +1,4 @@
-import {app, BrowserWindow, ipcMain, session, Menu} from 'electron';
+import {app, BrowserWindow, ipcMain, session, Menu, shell} from 'electron';
 import {join} from 'path';
 
 function createWindow () {
@@ -14,6 +14,14 @@ function createWindow () {
   });
 
   Menu.setApplicationMenu(null);
+
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http')) {
+      shell.openExternal(url)
+      return { action: 'deny' }
+    }
+    return { action: 'allow' }
+  });
 
   if (process.env.NODE_ENV === 'development') {
     const rendererPort = process.argv[2];
