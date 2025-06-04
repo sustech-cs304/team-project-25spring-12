@@ -8,9 +8,9 @@
     <!--  编辑中：使用 form 中暂存的数据  -->
     <div v-if="isEditing">
       <el-form :model="form" :rules="rules" label-width="120px">
-        <!-- 作业标题 -->
-        <el-form-item label="作业标题" prop="title">
-          <el-input v-model="form.title" placeholder="请输入作业标题"></el-input>
+        <!-- 内容标题 -->
+        <el-form-item label="内容标题" prop="title">
+          <el-input v-model="form.title" placeholder="请输入内容标题"></el-input>
         </el-form-item>
       </el-form>
       <md-and-file-editor
