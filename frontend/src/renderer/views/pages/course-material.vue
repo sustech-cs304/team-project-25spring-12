@@ -19,14 +19,14 @@
       <!-- 菜单栏 -->
       <el-menu
           class="widget-menu"
-          :default-active="activeWidgetId"
+          :default-active="activeWidgetIndex"
           mode="vertical"
           @select="handleMenuSelect"
       >
         <el-menu-item
             v-for="widget in widgetsSortedByIndex"
             :key="widget.id"
-            :index="String(widget.id)"
+            :index="String(widget.index)"
             :style="getMenuItemStyle(widget)"
             class="hoverable-item"
         >
@@ -75,6 +75,7 @@
             :key="activeWidget.id"
             :data="activeWidget"
             :editable="editable"
+            :page-id="pageId"
             :ref="el => setWidgetRef(activeWidget.id, el)"
             @update="handleWidgetUpdate"
         />
@@ -89,10 +90,11 @@ import type {Page} from "@/types/page"
 import type {WidgetUnion} from '@/types/widgets'
 import DynamicWidget from '@/views/widgets/dynamic-widget.vue'
 import {getBodyColor, getHeaderColor, getWidgetStyle} from '@/utils/widgetColorIconManager'
-import {createWidget, getPage} from "@/api/courseMaterial"
+import {getPage} from "@/api/courseMaterial"
 import {getRoleByCourseId} from "@/composables/useUserData";
 import { useRoute, useRouter } from 'vue-router'
 import { ArrowLeft } from '@element-plus/icons-vue'
+import {widgetFactory} from "@/types/widgets";
 
 const WidgetTypes = [
     { value: 'notepdf', label: "互动式课件" },
@@ -107,7 +109,7 @@ const goBackToCourse = () => {
   router.push({ name: 'course', params: { courseId: courseId.value } })
 }
 
-const activeWidgetId = ref<string>('')
+const activeWidgetIndex = ref<string>('')
 const widgetRefs = new Map<string, any>()
 
 const widgets = ref<WidgetUnion[]>([])
@@ -125,10 +127,15 @@ onMounted(async () => {
   console.log(data)
   title.value = data.name
   widgets.value = data.widgets
+  for (const widget of widgets.value) {
+    if (!widget.content) {
+      widget.content = ''
+    }
+  }
 
   initActiveWidget()
   setTimeout(() => {
-    widgetRefs.get(activeWidgetId.value)?.init?.()
+    widgetRefs.get(activeWidgetIndex.value)?.init?.()
   }, 50)
 
   courseId.value = Number(route.params.courseId)
@@ -140,14 +147,14 @@ const widgetsSortedByIndex = computed(() => {
 })
 
 const activeWidget = computed(() => {
-  return widgets.value.find(w => w.id.toString() === activeWidgetId.value)
+  return widgets.value.find(w => w.index.toString() === activeWidgetIndex.value) ?? widgets.value[0]
 })
 
 const getMenuItemStyle = (widget: WidgetUnion) => {
   const color = getWidgetStyle(widget.type).color
   return {
-    backgroundColor: widget.id.toString() === activeWidgetId.value ? getHeaderColor(color) : getBodyColor(color),
-    color: widget.id.toString() === activeWidgetId.value ? 'white' : 'black',
+    backgroundColor: widget.index.toString() === activeWidgetIndex.value ? getHeaderColor(color) : getBodyColor(color),
+    color: widget.index.toString() === activeWidgetIndex.value ? 'white' : 'black',
     fontWeight: 'bold',
     borderRadius: '6px',
     margin: '4px 8px',
@@ -172,15 +179,15 @@ const initActiveWidget = () => {
   const widgetId = route.query.widget as string
   const matched = widgets.value.find(w => w.id.toString() === widgetId)
   if (matched) {
-    activeWidgetId.value = matched.id.toString()
+    activeWidgetIndex.value = matched.index.toString()
   } else if (widgets.value.length > 0) {
     const minWidget = widgetsSortedByIndex.value[0]
-    activeWidgetId.value = minWidget.id.toString()
+    activeWidgetIndex.value = minWidget.index.toString()
   }
 }
 
 const handleMenuSelect = (widgetId: number) => {
-  activeWidgetId.value = widgetId.toString()
+  activeWidgetIndex.value = widgetId.toString()
   setTimeout(() => {
     widgetRefs.get(widgetId.toString())?.init?.()
   }, 50)
@@ -194,35 +201,21 @@ const handleShowCreateWidgetPopover = () => {
   newWidgetType.value = ''
 }
 
-const handleCreateWidget = async () => {
+const handleCreateWidget = () => {
   showCreateWidgetPopover.value = false
-
-  if (newWidgetType.value.length) {
-    let newWidget: WidgetUnion = {
-      index: widgets.value.length,
-      type: newWidgetType.value,
-      visible: true,
-      page_id: pageId.value,
-      title: WidgetTypes.find(item => item.value === newWidgetType.value)?.label,
-    }
-    switch (newWidgetType.value) {
-      case "notepdf":
-        break
-      case "doc":
-        break
-      case "assignment":
-        break
-    }
-    const response = await createWidget(newWidget)
-    widgets.value.push(response.data)
-  }
+  const newWidget = widgetFactory(newWidgetType.value, widgets.value.length)
+  widgets.value.push(newWidget)
+  activeWidgetIndex.value = newWidget.index.toString()
 }
 
 const handleWidgetUpdate = (data: WidgetUnion) => {
-  const index = widgets.value.findIndex(w => w.id === data.id);
+  console.log("update")
+  console.log(data)
+  const index = widgets.value.findIndex(w => w.index === data.index);
   if (index !== -1) {
     widgets.value.splice(index, 1, data);
   }
+  console.log(widgets)
 }
 </script>
 

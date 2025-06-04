@@ -117,7 +117,7 @@ import {Check, Download, Edit} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import type {Note, NotePdfWidget} from '@/types/widgets';
 import {WidgetUnion} from "@/types/widgets";
-import {createNote, editNotePdfWidget} from "@/api/courseMaterial";
+import {createNote, createNotePdfWidget, editNotePdfWidget} from "@/api/courseMaterial";
 import {useDownloader} from "@/composables/useDownloader";
 import {useUploader} from "@/composables/useUploader";
 import {ElMessage} from "element-plus";
@@ -129,6 +129,7 @@ const {getFile, download} = useDownloader()
 const {upload} = useUploader()
 
 const props = defineProps<{
+  pageId: number;
   data: NotePdfWidget;
   editable: boolean;
 }>();
@@ -283,9 +284,9 @@ const observeBottom = () => {
   observer.observe(bottomObserver.value);
 };
 
-const emit = defineEmits<{
-  (e: "update", data: WidgetUnion): void;
-}>();
+// const emit = defineEmits<{
+//   (e: "update", data: WidgetUnion): void;
+// }>();
 
 // const uploadRef = ref()
 
@@ -331,8 +332,13 @@ const handleClick = async () => {
   if (isEditing.value) { // 点保存
     if (uploadedPdfFile.value !== null) {
       form.value.pdfFile = uploadedPdfFile.value;
+    } else if (!form.value.pdfFile) {  // undefined
+      ElMessage.error("请先上传pdf课件！");
+      return;
     }
-    const response = await editNotePdfWidget(form.value, removeNotes.value);
+    const response = props.data.id === 0 ?
+        await createNotePdfWidget(form.value, props.pageId):
+        await editNotePdfWidget(form.value, removeNotes.value);
     if (response.status === 200) {
       ElMessage.success("上传成功");
       window.location.reload();
@@ -354,9 +360,12 @@ const handleClick = async () => {
   isEditing.value = !isEditing.value;
 }
 
-onMounted(() => {
-  loadPDF();
-  observeBottom();
+onMounted(async () => {
+  if (props.data.id === 0) await handleClick();
+  else {
+    await loadPDF();
+    observeBottom();
+  }
 });
 
 defineExpose({

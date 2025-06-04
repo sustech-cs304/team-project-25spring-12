@@ -25,10 +25,6 @@ export function createPage(page: Page, classId: number, folderId: number) {
     return request.post('/class/page', payload)
 }
 
-export function createWidget(widget: WidgetUnion) {
-    return request.post('/class/widget/' + widget.type, widget)
-}
-
 export interface Code {
     code: string,
     language: string,
@@ -66,33 +62,46 @@ export function removeWidgetAttachment(fileId: string) {
     return request.delete('/class/widget/attachment/' + fileId)
 }
 
-export function createAssignmentWidget(widget: AssignmentWidget) {
-    return request.post('/class/widget/assignment', widget)
+export function createAssignmentWidget(widget: AssignmentWidget, pageId: number) {
+    const payload: Omit<AssignmentWidget, 'id'> & {pageId: number} = {
+        ...widget,
+        pageId
+    }
+
+    return request.post('/class/widget/assignment', payload)
 }
 
 export function editAssignmentWidget(widget: AssignmentWidget) {
     return request.patch('/class/widget/assignment', widget)
 }
 
-export function createDocWidget(widget: DocWidget) {
-    return request.post('/class/widget/doc', widget)
+export function createDocWidget(widget: DocWidget, pageId: number) {
+    const payload: Omit<DocWidget, 'id'> & {pageId: number}  = {
+        ...widget,
+        pageId
+    }
+
+    return request.post('/class/widget/doc', payload)
 }
 
 export function editDocWidget(widget: DocWidget) {
     return request.patch('/class/widget/doc', widget)
 }
 
-export function createNotePdfWidget(widget: NotePdfWidget) {
-    const uuid = widget.pdfFile.id, payload = {
+export function createNotePdfWidget(widget: NotePdfWidget, pageId: number) {
+    const uuid = widget.pdfFile?.id ?? null;
+    const payload: Omit<Omit<NotePdfWidget, 'id'>, 'pdfFile'> & {pageId: number, pdfFile: string | null} = {
         ...widget,
-        pdfFile: uuid
+        pdfFile: uuid,
+        pageId
     }
 
     return request.post('/class/widget/notepdf', payload)
 }
 
 export function editNotePdfWidget(widget: NotePdfWidget, removeNotes: boolean) {
-    const uuid = widget.pdfFile.id, payload = {
+    const uuid = widget.pdfFile?.id ?? null;
+    const payload: Omit<NotePdfWidget, 'pdfFile'> & {pdfFile: string | null, removeNotes: boolean}  = {
         ...widget,
         pdfFile: uuid,
         removeNotes
@@ -102,9 +111,8 @@ export function editNotePdfWidget(widget: NotePdfWidget, removeNotes: boolean) {
 }
 
 export function createTestcase(testcase: Testcase) {
-    const payload: Testcase = {
+    const payload: Omit<Testcase, 'id'> = {
         ...testcase,
-        id: null,
         maxMemory: testcase.maxMemory * 1048576,
     }
 
@@ -112,9 +120,8 @@ export function createTestcase(testcase: Testcase) {
 }
 
 export function editTestcase(testcase: Testcase) {
-    const payload: Testcase = {
+    const payload: Omit<Testcase, 'widgetId'> = {
         ...testcase,
-        widgetId: null,
         maxMemory: testcase.maxMemory * 1048576,
     }
 

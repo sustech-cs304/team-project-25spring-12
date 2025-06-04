@@ -1,7 +1,7 @@
 <template>
   <component
       :is="Component"
-      v-bind="{ data, editable }"
+      v-bind="{ data, editable, pageId }"
       ref="innerWidgetRef"
       @update="handleUpdate"
   />
@@ -18,6 +18,7 @@ import Assignment from '@/views/widgets/assignment.vue'
 const props = defineProps<{
   data: WidgetUnion;
   editable: boolean;
+  pageId: number,
 }>()
 
 const emit = defineEmits<{

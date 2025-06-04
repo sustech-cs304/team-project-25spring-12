@@ -55,7 +55,7 @@
         />
       </div>
       <!--   测试设置   -->
-      <div v-if="props.data.submitType === 'code'">
+      <div v-if="form.submitType === 'code'">
         <el-text class="section-title">测试用例</el-text>
         <el-form :model="testcaseForm" label-width="100px">
           <el-form-item label="时间限制">
@@ -100,7 +100,7 @@
         </el-button>
       </div>
 
-      <div v-if="props.data.submitType === 'code'">
+      <div v-if="form.submitType === 'code'">
         <el-text class="section-title">测试点信息</el-text>
         <el-table :data="formattedTestcaseInfo" border style="width: 100%" v-if="formattedTestcaseInfo.length !== 0">
           <el-table-column prop="key" label="测试点编号" width="120" />
@@ -145,10 +145,10 @@
         <el-text class="section-title">作业信息</el-text>
         <el-descriptions :column="2" size="small" border v-if="props.data.submitType === 'code'">
           <el-descriptions-item label="时间限制">
-            {{ props.data.testCase.maxCpuTime }} ms
+            {{ props.data.testCase?.maxCpuTime ?? '--' }} ms
           </el-descriptions-item>
           <el-descriptions-item label="空间限制">
-            {{ formatSize(props.data.testCase.maxMemory) }}
+            {{ formatSize(props.data.testCase?.maxMemory ?? 0) }}
           </el-descriptions-item>
         </el-descriptions>
       </div>
@@ -297,7 +297,7 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import CodeEditor from "./utils/code-editor.vue";
-import {computed, ref} from "vue";
+import {computed, onMounted, ref} from "vue";
 import {ChatRound, Checked, Edit, Finished, Memo, Timer, Upload, Check, EditPen} from "@element-plus/icons-vue";
 import type {AssignmentWidget, Feedback, SubmittedRecord, Testcase} from "@/types/widgets";
 import {FileMeta} from "@/types/fileMeta";
@@ -308,10 +308,10 @@ import {
   createSubmissionAttachment,
   editAssignmentWidget,
   Submission,
-  getTestcase, createTestcase, editTestcase
+  getTestcase, createTestcase, editTestcase, createAssignmentWidget
 } from "@/api/courseMaterial";
 import {ElMessage} from "element-plus";
-import {DocWidget, WidgetUnion} from "@/types/widgets";
+import {WidgetUnion} from "@/types/widgets";
 import {useUploader} from "@/composables/useUploader";
 
 /*
@@ -319,9 +319,14 @@ import {useUploader} from "@/composables/useUploader";
 * */
 
 const props = defineProps<{
+  pageId: number;
   data: AssignmentWidget;
   editable: boolean;
 }>();
+
+onMounted(async () => {
+  if (props.data.id === 0) await handleClick();
+})
 
 const AssignmentType = [
   {label: "文本及附件", value: "file"},
@@ -375,6 +380,7 @@ const scoreColor = computed(() => {
   return `rgb(${red}, ${green}, 0)`;
 });
 const timestampToString = (timestamp: string) => {
+  if (timestamp.length === 0) return '';
   return new Intl.DateTimeFormat(undefined, {
     dateStyle: 'medium',
     timeStyle: 'short'
@@ -419,10 +425,11 @@ const handleHomeworkContentEditorRemove = async (file: FileMeta) => {
 }
 
 const testcaseForm = ref<Testcase>({})
-const testcaseInfo = ref(null)
+const testcaseInfo = ref({})
 const testcaseZipFileName = ref('')
 
 function formatSize(bytes: number): string {
+  if (bytes === 0) return '--'
   if (bytes >= 1048576) return (bytes / 1048576).toFixed(2) + ' MB'
   if (bytes >= 1024) return (bytes / 1024).toFixed(2) + ' KB'
   return bytes + ' B'
@@ -443,6 +450,10 @@ const formattedTestcaseInfo = computed(() =>
 const handleClick = async () => {
   if (isEditingHomework.value) {  // 点保存：上传至后端
     form.value.content = homeworkContentEditor.value?.getContent()
+    if (!(form.value.ddl?.length ?? 0)) {
+      ElMessage.error("请选择截止时间")
+      return
+    }
     let message = "";
 
     const oldAttachments = props.data.attachments || [];
@@ -451,7 +462,9 @@ const handleClick = async () => {
     const addedFiles = newAttachments.filter(f => !oldAttachments.some(o => o.id === f.id));
     const removedFiles = oldAttachments.filter(f => !newAttachments.some(n => n.id === f.id));
 
-    const editResponse = await editAssignmentWidget(form.value as DocWidget);
+    const editResponse = props.data.id === 0 ?
+        await createAssignmentWidget(form.value as AssignmentWidget, props.pageId):
+        await editAssignmentWidget(form.value as AssignmentWidget);
     if (editResponse.status !== 200) {
       message += "保存文本失败\n";
     }
@@ -470,7 +483,8 @@ const handleClick = async () => {
       ElMessage.error(message);
     } else {
       ElMessage.success("保存成功");
-      emit("update", form.value);
+      console.log(editResponse.data);
+      emit("update", editResponse.data);
     }
 
   } else {  // 点编辑：将现有信息填入表单

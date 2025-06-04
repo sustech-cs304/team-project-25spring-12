@@ -38,20 +38,25 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed, onMounted, ref} from 'vue';
 import widgetCard from './utils/widget-card.vue';
 import MdAndFile from './utils/md-and-file.vue';
 import MdAndFileEditor from './utils/md-and-file-editor.vue';
 import type {DocWidget, WidgetUnion} from '@/types/widgets';
 import {Check, Edit} from "@element-plus/icons-vue";
 import {FileMeta} from "@/types/fileMeta";
-import {addWidgetAttachment, editDocWidget, removeWidgetAttachment} from "@/api/courseMaterial";
+import {addWidgetAttachment, createDocWidget, editDocWidget, removeWidgetAttachment} from "@/api/courseMaterial";
 import {ElMessage} from "element-plus";
 
 const props = defineProps<{
+  pageId: number;
   data: DocWidget;
   editable: boolean;
 }>();
+
+onMounted(async () => {
+  if (props.data.id === 0) await handleClick();
+})
 
 const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
 const computedTitle = computed(() => props.data?.title || "文档");
@@ -77,7 +82,9 @@ const handleClick = async () => {
     const addedFiles = newAttachments.filter(f => !oldAttachments.some(o => o.id === f.id));
     const removedFiles = oldAttachments.filter(f => !newAttachments.some(n => n.id === f.id));
 
-    const editResponse = await editDocWidget(form.value as DocWidget);
+    const editResponse = props.data.id === 0 ?
+        await createDocWidget(form.value as DocWidget, props.pageId):
+        await editDocWidget(form.value as DocWidget);
     if (editResponse.status !== 200) {
       message += "保存文本失败\n";
     }
@@ -96,7 +103,7 @@ const handleClick = async () => {
       ElMessage.error(message);
     } else {
       ElMessage.success("保存成功");
-      emit("update", form.value);
+      emit("update", editResponse.data);
     }
 
   } else { // 点编辑
