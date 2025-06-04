@@ -148,5 +148,6 @@ def update_class_user(db: Session, assign: ClassUserUpdate) -> ClassUserLink:
 
 def unroll_class_user(db: Session, class_id: int, username: str):
     link = get_class_user_link(db, username, class_id)
-    db.delete(link)
+    if link:
+        db.delete(link)
     db.commit()

@@ -58,7 +58,7 @@ async def verify_add_note(db: SessionDep, note: NoteCreate,
 
 async def verify_update_note(db: SessionDep, note: NoteUpdate,
                              current_user: UserInDB = Depends(get_current_user)):
-    note = crud_widget.get_note(db, note.note_id)
+    note = crud_widget.get_note(db, note.id)
     verify_user_in_class(db, note.class_id, current_user)
 
 

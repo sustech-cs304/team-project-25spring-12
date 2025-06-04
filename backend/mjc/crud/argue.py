@@ -160,7 +160,7 @@ def create_comment(db: Session, comment: ArguePostCommentCreate, editor: UserInD
 
 
 def get_feedback_attachment(db: Session, file_id: uuid.UUID) -> ArguePostFeedbackAttachment:
-    stmt = select(ArguePostFeedbackAttachment).where(ArguePostFeedback.file_id == file_id) \
+    stmt = select(ArguePostFeedbackAttachment).where(ArguePostFeedbackAttachment.file_id == file_id) \
                                               .where(ArguePostFeedbackAttachment.is_deleted == False)
     attach = db.exec(stmt).first()
     return attach

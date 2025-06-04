@@ -36,6 +36,7 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
         submitted_assignment=[
             SubmittedAssignment(
                 id=argue.submitted_assignment_id,
+                student=Profile.model_validate(argue.submitted_assignment.profile.model_dump()),
                 content=argue.submitted_assignment.content,
                 attachments=attachments2files(argue.submitted_assignment.attachments),
                 code=argue.submitted_assignment.code,
@@ -47,7 +48,7 @@ def argue2assignment(argue: ArguePostEntity) -> AssignmentWidget:
         visible=argue.widget.visible,
         type=argue.widget.type,
         submit_type=argue.widget.assignment_widget.submit_type,
-        status=' ',  # TODO: 批改状态
+        status="returned",
         ddl=argue.widget.assignment_widget.ddl,
         max_score=argue.widget.assignment_widget.max_score,
         create_time=argue.widget.create_time,
@@ -61,7 +62,7 @@ def argue2feedback(argue: ArguePostEntity) -> ArguePostFeedback:
     feedback = None
     if argue.feedback:
         feedback = ArguePostFeedback(
-            id=argue.id,
+            id=argue.feedback.id,
             argue_post_id=argue.id,
             content=argue.feedback.content,
             score=argue.feedback.score,

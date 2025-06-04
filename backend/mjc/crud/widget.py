@@ -70,7 +70,8 @@ def delete_widget_attachment(db: Session, file_id: uuid.UUID) -> WidgetAttachmen
     if attachment:
         attachment.is_deleted = True
     db.commit()
-    db.refresh(attachment)
+    if attachment:
+        db.refresh(attachment)
     return attachment
 
 
