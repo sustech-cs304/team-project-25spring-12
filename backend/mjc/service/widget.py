@@ -122,7 +122,7 @@ def entity2notepdf(entity: WidgetEntity) -> NotePdfWidget:
             visibility=entity.note_pdf_widget.pdf_file.visibility,
             url=None
         ) if entity.note_pdf_widget else None,
-        notes=[entity2note(note) for note in entity.note_pdf_widget.notes],
+        notes=[entity2note(note) for note in entity.note_pdf_widget.notes if not note.is_deleted],
     )
     return note_pdf_widget
 
@@ -204,6 +204,8 @@ def update_note_pdf_widget(db: Session, editor:UserInDB, note_pdf_widget_update:
         widget_entity = crud_widget.update_widget(db, note_pdf_widget_update, editor)
         widget_entity.note_pdf_widget.pdf_file_id = note_pdf_widget_update.pdf_file
         db.commit()
+        if note_pdf_widget_update.remove_notes:
+            crud_widget.delete_widget_note(db, note_pdf_widget_update.id)
         if widget_entity:
             note_pdf_widget = entity2widget(widget_entity)
             return note_pdf_widget

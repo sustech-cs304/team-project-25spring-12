@@ -193,3 +193,11 @@ def delete_note(db: Session, note_id: int) -> Note:
         note_entity.is_deleted = True
     db.commit()
     return note_entity
+
+
+def delete_widget_note(db: Session, widget_id: int) -> None:
+    stmt = select(Note).join(Note.note_pdf_widget).join(NotePDFWidget.widget).where(Widget.id == widget_id)
+    notes: list[Note] = db.exec(stmt).all()
+    for note in notes:
+        note.is_deleted = True
+    db.commit()
