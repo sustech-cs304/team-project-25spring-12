@@ -144,7 +144,7 @@
       </div>
 
       <!-- 辩驳反馈 -->
-      <div v-if="props.data.status === 'returned' && !isTeacher">
+      <div v-if="props.data.status === 'processed' && !isTeacher">
         <el-text class="section-title">辩驳反馈</el-text>
         <div class="container">
           <md-and-file
@@ -249,9 +249,7 @@ import {useUploader} from "@/composables/useUploader";
 import router from "../../router";
 import {FileMeta} from "../../types/fileMeta";
 import request from "../../utils/request";
-import {Feedback} from "../../types/widgets";
 import {useUserStore} from "../../store/user";
-import { aW } from "@fullcalendar/core/internal-common";
 
 const props = defineProps({
   data: {
@@ -299,15 +297,15 @@ const computedTitle = computed(() => props.data?.title || "辩驳");
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
-  if (props.data.status === "returned") return Checked;
+  if (props.data.status === "processed") return Checked;
 });
 const statusColor = computed(() => {
   if (props.data.status === "pending") return "red";
   if (props.data.status === "submitted") return "orange";
-  if (props.data.status === "returned") return "green";
+  if (props.data.status === "processed") return "green";
 });
 const originalScoreColor = computed(() => {
-  if (props.data.status === "returned") return "#999";
+  if (props.data.status === "processed") return "#999";
   const ratio = props.data.originalScore / props.data.maxScore;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
@@ -323,11 +321,11 @@ const revisedScoreColor = computed(() => {
 const statusText = computed(() => {
   if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
-  if (props.data.status === "returned") return "已反馈";
+  if (props.data.status === "processed") return "已反馈";
 });
 const displayOriginalScore = props.data.originalScore;
 const displayRevisedScore = computed(() =>
-  (props.data.status === "returned" ? props.data.revisedScore : "--")
+  (props.data.status === "processed" ? props.data.revisedScore : "--")
 );
 const displayMaxScore = props.data.maxScore;
 
@@ -463,18 +461,21 @@ const submitArgueFeedback = async () => {
     console.log("argue feedback response", response);
     
     const fileList = argueFeedbackFileList.value || []
+    console.log("feedback filelist", fileList);
+    
     for (const file of fileList) {
       const fileResponse = await request.post(`/argue/feedback/attachment`, {
-        arguePostId: argueId,
+        arguePostFeedbackId: response.data.id,
         fileId: file.id,
       })
     }
     
-    await router.push({path: `argue/${argueId}`});
+    ElMessage.success("成功反馈")
+    // await router.push({path: `argue/${argueId}`});
     // window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
-    ElMessage.error("提交辩驳失败，请稍后重试");
+    ElMessage.error("辩驳反馈失败，请稍后重试");
   }
 }
 

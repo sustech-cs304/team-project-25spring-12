@@ -31,7 +31,7 @@ onMounted(async () => {
         content: "",
         fileList: [],
       }
-    if (response.data.feadback) {
+    if (response.data.feedback) {
       argueFeedback = {
         score: response.data.feedback.score,
         content: response.data.feedback.content,

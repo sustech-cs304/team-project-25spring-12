@@ -21,13 +21,9 @@ const argueNew = ref({})
 onMounted(async () => {
   try {
     const response = await request.get(`/class/widget/${widgetId}/submission/student`);
-    // const assignmentContent = response.data.content;
-    // const assignmentFileList = response.data.attachments;
+    console.log("new response", response);
+    
     const submission = response.data.submittedAssignment.at(-1);
-    // const submissionContent = submission.content;
-    // const submissionFileList = submission.attachments;
-    // const feedbackContent = submission.feedback.content;
-    // const feedbackFileList = submission.feedback.attachments;
 
     argueNew.value = {
       argueId: -1,
@@ -58,6 +54,7 @@ onMounted(async () => {
       voteSupport: 0,
       voteTotal: 0,
       
+      comments: []
     }
     console.log("newdata: ", argueNew.value);
     childready.value = true;
