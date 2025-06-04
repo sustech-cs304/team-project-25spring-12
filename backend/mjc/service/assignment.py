@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import uuid
 import requests
 
@@ -279,9 +280,12 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File not found")
         try:
             old_test_case_path = os.path.join(config.OJ_TESTCASE_URL, str(test_case.id))
-            os.rename(old_test_case_path, old_test_case_path + '_old')
+            try:
+                os.rename(old_test_case_path, old_test_case_path + '_old')
+            except Exception as e:
+                print(e)
             _, info = oj.extract_test_cases(file_entity.system_path, test_case.id)
-            os.removedirs(old_test_case_path + '_old')
+            shutil.rmtree(old_test_case_path + '_old')
             test_case_entity.info = json.dumps(info)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
