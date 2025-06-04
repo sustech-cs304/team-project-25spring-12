@@ -206,6 +206,7 @@ def create_feedback(db: Session, feedback: ArguePostFeedbackCreate, marker: User
     )
     db.add(feedback_entity)
     submission_feedback.score = feedback.score
+    argue_post.status = ArguePostStatus.PROCESSED
     db.commit()
     db.refresh(feedback_entity)
     return feedback_entity
