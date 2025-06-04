@@ -155,6 +155,7 @@ import {Check, MagicStick, Upload} from "@element-plus/icons-vue";
 import {FeedbackForm} from "@/types/feedback";
 import {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
 import {
+  ElLoading,
   ElMessage,
   FormInstance, FormRules,
   genFileId,
@@ -283,6 +284,7 @@ const handleAISubmit = () => {
   }
   formEl.value.validate(async (valid, fields) => {
     if (valid) {
+      const loadingInstance = ElLoading.service({ fullscreen: true, text: 'AI正在评分，请稍候...' });
       try {
         isAISubmitting.value = true;
         const response = await postAIFeedback(dialogForm);
@@ -294,6 +296,7 @@ const handleAISubmit = () => {
       } finally {
         isAISubmitting.value = false;
       }
+      loadingInstance.close();
     }
   });
 };
