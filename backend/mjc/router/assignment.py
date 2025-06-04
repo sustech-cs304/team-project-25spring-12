@@ -108,5 +108,5 @@ async def create_testcase(db: SessionDep, test_case: TestCaseCreate):
 @router.patch(path="/class/widget/testcase",
               dependencies=[Depends(assignment_permission.verify_test_case_update)],
               response_model=TestCase)
-async def update_testcase(db: SessionDep, testcase: TestCaseUpdate):
-    return assignment_service.update_test_case(db, testcase)
+async def update_testcase(db: SessionDep, test_case: TestCaseUpdate):
+    return assignment_service.update_test_case(db, testc_ase)
