@@ -1,6 +1,7 @@
 import uuid
 from fastapi import APIRouter, Depends
 
+from mjc.model.schema.user import UserInDB
 from mjc.utils.database import SessionDep
 from mjc.service.user import get_current_user
 from mjc.service import argue as argue_service
@@ -24,13 +25,13 @@ async def create_argue(db: SessionDep, argue: ArguePostCreate,
 
 
 @router.get('/argue/{argue_id}', response_model=ArguePost)
-async def get_argue(db: SessionDep, argue_id: int):
-    return argue_service.get_argue(db, argue_id)
+async def get_argue(db: SessionDep, argue_id: int, user: UserInDB = Depends(get_current_user)):
+    return argue_service.get_argue(db, argue_id, user)
 
 
 @router.patch('/argue', response_model=ArguePost)
-async def update_argue(db: SessionDep, argue: ArguePostUpdate):
-    return argue_service.update_argue(db, argue)
+async def update_argue(db: SessionDep, argue: ArguePostUpdate, user: UserInDB = Depends(get_current_user)):
+    return argue_service.update_argue(db, argue, user)
 
 
 @router.delete('/argue/{argue_id}', response_model=Message)
