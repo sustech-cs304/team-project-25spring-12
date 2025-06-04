@@ -280,7 +280,7 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
         try:
             old_test_case_path = os.path.join(config.OJ_TESTCASE_URL, str(test_case.id))
             os.rename(old_test_case_path, old_test_case_path + '_old')
-            _, info = oj.extract_test_cases(file_entity.path, test_case.id)
+            _, info = oj.extract_test_cases(file_entity.system_path, test_case.id)
             os.removedirs(old_test_case_path + '_old')
             test_case_entity.info = json.dumps(info)
         except Exception as e:
