@@ -1,6 +1,34 @@
 <template>
   <widget-card :title="computedTitle" color="orange" icon="Opportunity">
     <div class="overall_container">
+      <!-- 工具栏：关注按钮和打分框 -->
+      <div class="toolbar">
+        <!-- 关注按钮 -->
+        <div class="follow-section">
+          <el-button
+            :type="isFollowed ? 'primary' : 'default'"
+            @click="toggleFollow"
+            :icon="isFollowed ? 'StarFilled' : 'Star'"
+          >
+            {{ isFollowed ? '已关注' : '关注' }} ({{ followCount }})
+          </el-button>
+        </div>
+        <!-- 打分框（仅教师可见） -->
+        <div class="score-section" v-if="isTeacher">
+          <el-input-number
+            v-model="teacherScore"
+            :min="0"
+            :max="props.data.maxScore"
+            placeholder="输入评分"
+            size="small"
+            style="width: 120px; margin-right: 10px;"
+          />
+          <el-button type="primary" @click="submitTeacherScore" :disabled="teacherScore === null">
+            提交评分
+          </el-button>
+        </div>
+      </div>
+
       <!-- 辩驳状态 -->
       <div>
         <el-text class="section-title">辩驳状态</el-text>
@@ -168,6 +196,30 @@ const props = defineProps({
 
 const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
 
+// 关注状态和人数
+const isFollowed = ref(false);
+const followCount = ref(0); // 假设初始关注人数为0
+
+// 教师评分
+const isTeacher = ref(true); // 假设当前用户是教师，实际应从用户角色权限中获取
+const teacherScore = ref<number | null>(null);
+
+// 切换关注状态
+const toggleFollow = () => {
+  isFollowed.value = !isFollowed.value;
+  followCount.value += isFollowed.value ? 1 : -1;
+  // TODO: 调用后端API保存关注状态
+};
+
+// 提交教师评分
+const submitTeacherScore = () => {
+  if (teacherScore.value !== null) {
+    console.log(`提交评分: ${teacherScore.value}`);
+    // TODO: 调用后端API提交评分
+    teacherScore.value = null; // 提交后清空输入框
+  }
+};
+
 // 本卡片的标题
 const computedTitle = computed(() => props.data?.title || "辩驳");
 
@@ -275,13 +327,44 @@ const submitComment = () => {
 };
 
 // 处理回复
-const handleReply = (author) => {
+const handleReply = (author: string) => {
   newComment.value = `@${author} `;
 };
 </script>
 
 
 <style scoped>
+.overall_container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background-color: transparent;
+  border-radius: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+  background-color: transparent;
+  padding: 10px 0;
+  border-radius: 12px;
+}
+
+.follow-section, .score-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.score-section .el-input-number {
+  width: 120px;
+}
+
 .overall_container {
   display: flex;
   flex-direction: column;
