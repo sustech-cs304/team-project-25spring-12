@@ -296,7 +296,7 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
 
 
 def get_widget_test_case(db: Session, widget_id: int) -> TestCase:
-    test_case = crud_assignment.get_test_case(db, widget_id)
+    test_case = crud_assignment.get_widget_test_case(db, widget_id)
     if not test_case:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Test case not found")
     return TestCase(

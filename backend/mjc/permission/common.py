@@ -13,7 +13,7 @@ async def verify_admin(current_user: UserInDB = Depends(get_current_user)):
 
 
 def verify_class_admin(db: Session, class_id: int, current_user: UserInDB):
-    if  current_user.is_admin:
+    if current_user.is_admin:
         return
     role = verify_user_in_class(db, class_id, current_user)
     if role is None or ClassRole.STUDENT:
