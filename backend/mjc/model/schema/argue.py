@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 from mjc.model.schema.common import File
+from mjc.model.entity.course import ClassRole
 from mjc.model.schema.widget import AssignmentWidget
 from mjc.model.schema.user import Profile
 from mjc.model.entity.argue import ArguePostStatus
@@ -68,6 +69,7 @@ class ArguePost(ArguePostBase):
     old_score: float
     assignment: AssignmentWidget
     status: ArguePostStatus = ArguePostStatus.SUBMITTED
+    role: ClassRole | None = None
 
 
 class ArguePostCard(ArguePostBase):
@@ -82,6 +84,7 @@ class ArguePostCard(ArguePostBase):
     editor: Profile
     comments: int | None = 0
     status: ArguePostStatus = ArguePostStatus.SUBMITTED
+    role: ClassRole | None = None
 
 
 class ArguePostCreate(ArguePostBase):

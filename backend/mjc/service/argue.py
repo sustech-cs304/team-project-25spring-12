@@ -3,7 +3,7 @@ import uuid
 from sqlmodel import Session
 from fastapi import HTTPException
 
-from mjc.crud import argue as crud_argue
+from mjc.crud import argue as crud_argue, course as crud_course
 from mjc.crud import assignment as crud_assignment
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.widget import AssignmentWidget
@@ -94,6 +94,8 @@ def get_argues(db: Session, user: UserInDB) -> list[ArguePostCard]:
     cards: list[ArguePostCard] = []
     for argue in argues:
         support, not_support = count_argue_votes(db, argue.id)
+        role_link = crud_course.get_class_user_link(db, user.username,
+                                                    argue.submitted_assignment.assignment_widget.widget.page.class_id)
         cards.append(ArguePostCard(
             id=argue.id,
             widget_id=argue.widget_id,
@@ -109,7 +111,8 @@ def get_argues(db: Session, user: UserInDB) -> list[ArguePostCard]:
             editor=Profile.model_validate(argue.editor.model_dump()),
             status=argue.status,
             is_watched=crud_argue.get_user_watch(db, user.username, argue.id) is not None,
-            is_voted=crud_argue.get_user_vote(db, user.username, argue.id) is not None
+            is_voted=crud_argue.get_user_vote(db, user.username, argue.id) is not None,
+            role = role_link.role if role_link else None
         ))
     return cards
 
@@ -119,6 +122,8 @@ def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
     if argue is None:
         raise HTTPException(status_code=404, detail="Argue not found")
     support, not_support = count_argue_votes(db, argue.id)
+    role_link = crud_course.get_class_user_link(db, user.username,
+                                                argue.submitted_assignment.assignment_widget.widget.page.class_id)
     post = ArguePost(
         id=argue.id,
         widget_id=argue.widget_id,
@@ -137,8 +142,9 @@ def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
         attachments=attachments2files(argue.attachments),
         old_score=argue.old_score,
         assignment=argue2assignment(argue),
-        is_watched = crud_argue.get_user_watch(db, user.username, argue.id) is not None,
-        is_voted = crud_argue.get_user_vote(db, user.username, argue.id) is not None
+        is_watched=crud_argue.get_user_watch(db, user.username, argue.id) is not None,
+        is_voted=crud_argue.get_user_vote(db, user.username, argue.id) is not None,
+        role=role_link.role if role_link else None,
     )
     return post
 
