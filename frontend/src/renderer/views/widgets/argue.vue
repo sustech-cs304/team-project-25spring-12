@@ -241,7 +241,7 @@
 
 
 <style scoped>
-    .overall_container {
+  .overall_container {
     display: flex;
     flex-direction: column;
     gap: 24px;

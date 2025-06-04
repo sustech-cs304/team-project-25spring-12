@@ -377,7 +377,10 @@ const filterUsers = async () => {
       filteredUsers.value = [];
       return;
     }
-    const params = {};
+    const params = {
+      limit: 100,
+      offset: 0,
+    };
     if (usernameSearch.value.trim())
       params.username = usernameSearch.value.trim();
     if (departmentSearch.value.trim())
@@ -574,9 +577,9 @@ const filterUsersForCourse = async (query) => {
       filteredUsersForCourse.value = [];
       return;
     }
-    const response = await service.get('/admin/user', {
+    const response = await service.get('/user', {
       params: {
-        name: query.trim(),
+        username: query.trim(),
       },
     });
     filteredUsersForCourse.value = response.data;
