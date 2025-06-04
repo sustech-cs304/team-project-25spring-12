@@ -1,106 +1,47 @@
-export interface GetArgue {
+export interface Argue {
     assignment: Widget;
     attachments: File[];
     comments: Comment[];
     content: string;
     create_time: string;
-    /**
-     * 发起人
-     */
     editor: Profile;
-    /**
-     * ID
-     */
     id: number;
     not_support: number;
     old_score: number;
-    /**
-     * =submitted, processed, closed
-     */
     status: string;
     submitted_assignment_id: number;
     support: number;
     title: string;
     update_time: string;
-    /**
-     * 在看
-     */
     watch: number;
     widget_id: number;
     [property: string]: any;
 }
 
-/**
- * Widget
- */
 export interface Widget {
-    /**
-     * 对应argue的id
-     */
     argue_id: number;
-    /**
-     * document, 或者 assignment 的附件
-     */
     attachments?: File[];
-    /**
-     * 对应 document 的内容
-     */
     content?: string;
     create_time: string;
-    /**
-     * assignment 的 DDL
-     */
     ddl?: string;
     editor: Profile;
-    /**
-     * assignment 的文字反馈
-     */
     feedback?: Feedback;
     id: string;
     index: number;
-    /**
-     * assignment 的总分
-     */
     max_score?: number;
-    /**
-     * notepdf 的笔记
-     */
     notes?: Note[];
-    /**
-     * notepdf / pdf 批改的文件
-     */
     pdf_file?: File;
-    /**
-     * assignment 的分数
-     */
     score?: number;
-    /**
-     * assignment 的状态
-     */
     status?: string;
-    /**
-     * 提交类型file或code
-     */
     submit_type?: string;
-    /**
-     * 如果没交过就是 null
-     */
     submitted_assignment: SubmittedAssignment[];
     title: string;
-    /**
-     * notepdf, doc, assignment
-     */
     type: string;
     update_time: string;
     visible: boolean;
     [property: string]: any;
 }
 
-/**
- * File
- *
- * notepdf / pdf 批改的文件
- */
 export interface File {
     filename: string;
     id: string;
@@ -142,9 +83,6 @@ export interface Feedback {
     [property: string]: any;
 }
 
-/**
- * Note
- */
 export interface Note {
     editor: Profile;
     id: number;
@@ -155,9 +93,6 @@ export interface Note {
     [property: string]: any;
 }
 
-/**
- * SubmittedAssignment
- */
 export interface SubmittedAssignment {
     attachments?: File[];
     code?: Code;
@@ -169,9 +104,6 @@ export interface SubmittedAssignment {
     [property: string]: any;
 }
 
-/**
- * Code
- */
 export interface Code {
     code: string;
     language: string;

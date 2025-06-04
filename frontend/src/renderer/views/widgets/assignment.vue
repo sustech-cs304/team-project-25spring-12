@@ -313,6 +313,7 @@ import {
 import {ElMessage} from "element-plus";
 import {DocWidget, WidgetUnion} from "@/types/widgets";
 import {useUploader} from "@/composables/useUploader";
+import router from "../../router";
 
 /*
 * 数据和常量
@@ -635,8 +636,18 @@ const postArgue = () => {
   // TODO
   if ('argue_id' in props.data && Number.isInteger(props.data.argue_id)) {
     // 路由到对应的Argue的页面
+    router.push({
+      name: `argue/${props.data.argue_id}`,
+    });
   } else {
     // 路由到创建Argue的页面
+    router.push({
+      name: `argue/new`,
+      state: {
+        widgetId: props.data.id,
+        submittedAssignmentId: props.data.submittedAssignment.at(-1).id,
+      }
+    });
   }
 }
 

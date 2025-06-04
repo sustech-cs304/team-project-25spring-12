@@ -723,8 +723,9 @@ const saveCourse = async () => {
           assistant: newUsers.filter((u) => u.role === 'teaching assistant').map((u) => u.username),
           student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
+        
         for (const role of ['teacher', 'teaching assistant', 'student']) {
-          if (usersByRole[role].length > 0) {
+          if (usersByRole[role]) {
             const params = {
               class_id: courseId,
               usernames: usersByRole[role],
