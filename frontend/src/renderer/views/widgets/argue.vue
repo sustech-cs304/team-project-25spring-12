@@ -267,7 +267,7 @@ const isFollowed = ref(false);
 const followCount = ref(0); // 假设初始关注人数为0
 
 // 教师评分
-const isTeacher = ref(true); // 假设当前用户是教师，实际应从用户角色权限中获取
+const isTeacher = ref(false); // 假设当前用户是教师，实际应从用户角色权限中获取
 const revisedScore = ref<number | null>(null);
 
 // 切换关注状态
