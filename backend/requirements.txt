@@ -13,3 +13,6 @@ aiofiles
 requests
 baidu-aip
 chardet
+flake8
+lizard
+faker

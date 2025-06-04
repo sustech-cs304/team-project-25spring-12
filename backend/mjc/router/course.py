@@ -95,7 +95,7 @@ async def create_user_roll(db: SessionDep, enroll: ClassUserEnroll):
     return course_service.enroll_class_users(db, enroll)
 
 
-@router.patch(path="/class/user", response_model=ClassUserRoleName,
+@router.patch(path="/class/user", response_model=ClassUserRoleName | None,
               dependencies=[Depends(common_permission.verify_admin)])
 async def update_user_roll(db: SessionDep, update: ClassUserUpdate):
     return course_service.update_class_user(db, update)
