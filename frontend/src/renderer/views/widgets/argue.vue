@@ -122,10 +122,10 @@
           </el-col>
         </el-row>
         <div class="container">
-          <!-- <md-and-file
+          <md-and-file
             :fileList="argueFileList"
             :content="argueContent"
-          /> -->
+          />
         </div>
       </div>
 
@@ -133,24 +133,24 @@
       <div v-if="isTeacher">
         <el-text class="section-title">编辑辩驳反馈</el-text>
         <div class="container">
-          <!-- <md-and-file-editor
+          <md-and-file-editor
             :fileList="argueFeedbackFileList"
             :content="argueFeedbackContent"
             ref="argueFeedbackEditor"
             @upload="handleArgueFeedbackAttachmentUpload"
             @remove="handleArgueFeedbackAttachmentRemove"
-          /> -->
+          />
         </div>
       </div>
 
       <!-- 辩驳反馈 -->
-      <div v-if="props.data.status === 'returned' && !isTeacher">
+      <div v-if="props.data.status === 'processed' && !isTeacher">
         <el-text class="section-title">辩驳反馈</el-text>
         <div class="container">
-          <!-- <md-and-file
+          <md-and-file
             :fileList="props.data.argueFeedbackFilelist"
             :content="props.data.argueFeedbackContent"
-          /> -->
+          />
         </div>
       </div>
 
@@ -175,14 +175,14 @@
               <div style="display: flex; align-items: center">
                 <!-- <el-button-group> -->
                   <el-button
-                    :disabled="hasVoted"
+                    :disabled="isVoted"
                     @click="vote(true)"
                     type="success"
                   >
                     支持
                   </el-button>
                   <el-button
-                    :disabled="hasVoted"
+                    :disabled="isVoted"
                     @click="vote(false)"
                     type="warning"
                   >
@@ -204,7 +204,13 @@
               resize="none"
             ></el-input>
             <div class="input-actions">
-              <el-button type="primary" @click="submitComment" :disabled="!newComment.trim()">发布评论</el-button>
+              <el-button
+                type="primary"
+                :disabled="!newComment.trim()"
+                @click="submitComment"
+              >
+                发布评论
+              </el-button>
             </div>
           </div>
 
@@ -239,12 +245,11 @@ import {computed, onMounted, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
 import {ElMessage} from "element-plus";
 import {useUploader} from "@/composables/useUploader";
-import {getRoleByCourseId} from "@/composables/useUserData";
+// import {getRoleByCourseId} from "@/composables/useUserData";
 import router from "../../router";
-import { FileMeta } from "../../types/fileMeta";
+import {FileMeta} from "../../types/fileMeta";
 import request from "../../utils/request";
-import { Feedback } from "../../types/widgets";
-import { useUserStore } from "../../store/user";
+import {useUserStore} from "../../store/user";
 
 const props = defineProps({
   data: {
@@ -256,25 +261,26 @@ const props = defineProps({
 const argueEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
 const argueFeedbackEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
 
-const argueId = ref(-1);
 
 // 关注状态和人数
 const isFollowed = ref(false);
 const followCount = ref(0); // 假设初始关注人数为0
 
 // 教师评分
-const isTeacher = ref(true); // 假设当前用户是教师，实际应从用户角色权限中获取
+const isTeacher = ref(false); // 假设当前用户是教师，实际应从用户角色权限中获取
 const revisedScore = ref<number | null>(null);
 
 // 切换关注状态
 const toggleFollow = () => {
   try {
     if (isFollowed.value) {
-      request.post('/argue/watch', {
-        arguePostId: props.data.widgetId,
-      });
+      request.delete(`/argue/${props.data.argueId}/watch`);
   } else {
-    request.delete(`/argue/${argueId}/watch`);
+      console.log("argueId", props.data.argueId);
+      
+      request.post('/argue/watch', {
+        arguePostId: props.data.argueId,
+      });
   }
     isFollowed.value = !isFollowed.value;
     followCount.value += isFollowed.value ? 1 : -1;
@@ -291,15 +297,15 @@ const computedTitle = computed(() => props.data?.title || "辩驳");
 const statusIcon = computed(() => {
   if (props.data.status === "pending") return Timer;
   if (props.data.status === "submitted") return Finished;
-  if (props.data.status === "returned") return Checked;
+  if (props.data.status === "processed") return Checked;
 });
 const statusColor = computed(() => {
   if (props.data.status === "pending") return "red";
   if (props.data.status === "submitted") return "orange";
-  if (props.data.status === "returned") return "green";
+  if (props.data.status === "processed") return "green";
 });
 const originalScoreColor = computed(() => {
-  if (props.data.status === "returned") return "#999";
+  if (props.data.status === "processed") return "#999";
   const ratio = props.data.originalScore / props.data.maxScore;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
@@ -315,11 +321,11 @@ const revisedScoreColor = computed(() => {
 const statusText = computed(() => {
   if (props.data.status === "pending") return "未提交";
   if (props.data.status === "submitted") return "已提交";
-  if (props.data.status === "returned") return "已反馈";
+  if (props.data.status === "processed") return "已反馈";
 });
 const displayOriginalScore = props.data.originalScore;
 const displayRevisedScore = computed(() =>
-  (props.data.status === "returned" ? props.data.revisedScore : "--")
+  (props.data.status === "processed" ? props.data.revisedScore : "--")
 );
 const displayMaxScore = props.data.maxScore;
 
@@ -347,21 +353,21 @@ const handleArgueAttachmentRemove = async (file: FileMeta) => {
 const handleArgueFeedbackAttachmentUpload = async (file: FileMeta) => {
   const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
   if (index === -1) {
-    argueFileList.value.push(file);
+    argueFeedbackFileList.value.push(file);
   }
 }
 
 const handleArgueFeedbackAttachmentRemove = async (file: FileMeta) => {
   const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
   if (index !== -1) {
-    argueFileList.value.splice(index, 1);
+    argueFeedbackFileList.value.splice(index, 1);
   }
 }
 
 // 投票区
 const voteSupport = ref(props.data.voteSupport)
 const voteTotal = ref(props.data.voteTotal)
-const hasVoted = ref(false)
+const isVoted = ref(false)
 const userStore = useUserStore();
 
 const votePercentage = computed(() => {
@@ -390,69 +396,130 @@ const tableVote: VoteResult[] = [
 ]
 
 const vote = async (isSupport: boolean) => {
-  // try {
-  //   模拟发送投票请求到后端
-  //   const response = await request.post('/argue/vote', {
-  //     isSupport: isSupport,
-  //   })
-
-  //   if (response.data.success) {
-  //     更新前端数据
-      voteTotal.value += 1
-      if (isSupport) {
-        voteSupport.value += 1
-      }
-      hasVoted.value = true // 锁定投票
-      ElMessage.success('投票成功！')
-  //   } else {
-  //     ElMessage.error('投票失败，请重试')
-  //   }
-  // } catch (error) {
-  //   ElMessage.error('投票请求失败')
-  //   console.error(error)
-  // }
+  try {
+    // 模拟发送投票请求到后端
+    const response = await request.post('/argue/vote', {
+      arguePostId: props.data.argueId,
+      isSupport: isSupport,
+    })
+    console.log("vote resp", response);
+    voteTotal.value += 1
+    if (isSupport) {
+      voteSupport.value += 1
+    }
+    isVoted.value = true // 锁定投票
+    ElMessage.success('投票成功！')
+    } catch (error) {
+    ElMessage.error('投票请求失败')
+    console.error(error)
+  }
 }
 
 
 const submitArgue = async () => {
   try {
-    let response = await request.post('/argue', {
+    const params = {
       widgetId: props.data.widgetId,
       submitted_assignment_id: props.data.submittedAssignmentId,
       title: props.data.title,
-      content: argueContent.value,
-    });
-    router.push({name: `argue/${props.data.argueId}`});
+      content: argueEditor.value?.getContent(),
+    }
+    console.log("argue submit", params);
+    
+    const response = await request.post('/argue', params);
+    console.log("argue submit response", response);
+    const argueId = response.data.id;
+    
+    const fileList = argueFileList.value || []
+    for (const file of fileList) {
+      const fileResponse = await request.post(`/argue/attachment`, {
+        arguePostId: argueId,
+        fileId: file.id,
+      })
+    }
+    
+    await router.push({path: `argue/${argueId}`});
+    // window.location.reload();
   } catch (error) {
+    console.log((<Error>error).message);
     ElMessage.error("提交辩驳失败，请稍后重试");
   }
 }
 
-const submitArgueFeedback = () => {
-
+const submitArgueFeedback = async () => {
+  try {
+    const argueId = props.data.argueId;
+    
+    const params = {
+      arguePostId: argueId,
+      content: argueFeedbackEditor.value?.getContent(),
+      score: revisedScore.value,
+    }
+    console.log("arguefeedback submit", params);
+    
+    const response = await request.post('/argue/feedback', params);
+    console.log("argue feedback response", response);
+    
+    const fileList = argueFeedbackFileList.value || []
+    console.log("feedback filelist", fileList);
+    
+    for (const file of fileList) {
+      const fileResponse = await request.post(`/argue/feedback/attachment`, {
+        arguePostFeedbackId: response.data.id,
+        fileId: file.id,
+      })
+    }
+    
+    ElMessage.success("成功反馈")
+    // await router.push({path: `argue/${argueId}`});
+    // window.location.reload();
+  } catch (error) {
+    console.log((<Error>error).message);
+    ElMessage.error("辩驳反馈失败，请稍后重试");
+  }
 }
 
 // 评论数据
-const comments = ref([
-  {
-    content: '这是一条示例评论！',
-    author: '用户1',
-  }
-]);
+// const comments = ref([
+//   {
+//     content: '请老师明察！',
+//     author: '广告商招租',
+//   }
+// ]);
+const comments = ref(props.data.comments.map((comment) => ({
+  content: comment.content,
+  username: comment.editor.username,
+  create_time: comment.create_time, 
+})))
 
 // 新评论内容
 const newComment = ref('');
 
 // 发布新评论
-const submitComment = () => {
+const submitComment = async () => {
   if (!newComment.value.trim()) return;
   
   const comment = {
     content: newComment.value,
-    author: '当前用户',
+    author: userStore.username,
   };
+
+  const params = {
+    arguePostId: props.data.argueId,
+    content: newComment.value,
+    replyTo: null,
+  }
   
-  comments.value.unshift(comment);
+  try {
+    console.log("comment", params);
+    
+    const response = await request.post('/argue/comment', params)
+    comments.value.unshift(comment);
+    ElMessage.success("评论发表成功")
+  } catch (error) {
+    console.log((<Error>error).message);
+    ElMessage.error("评论发表失败")
+  }
   newComment.value = '';
 };
 
@@ -465,15 +532,17 @@ onMounted(async () => {
   argueEditor.value?.updateContent(argueContent.value);
   argueFeedbackEditor.value?.updateContent(argueFeedbackContent.value);
   
-  const role = await getRoleByCourseId(props.data.courseId);
-  isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
+  // const role = await getRoleByCourseId(props.data.courseId);
+  // isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
   console.log("editing", props.data.status, userStore.username);
   
-  isEditing.value = (props.data.status === 'pending' &&
-                    props.data.starter === userStore.username) ||
+  isEditing.value = props.data.status === 'pending' ||
                     userStore.isAdmin === true;
-  console.log("role", role, isTeacher.value, isEditing.value);
   
+  isVoted.value = props.data.isVoted;
+  isFollowed.value = props.data.isFollowed;
+
+  isTeacher.value = props.data.role === "Teacher";
 });
 </script>
 

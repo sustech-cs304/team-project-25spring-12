@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div class="page" v-if="childready">
       <argue :data="argueNew"></argue>
     </div>
 </template>
@@ -12,6 +12,7 @@ import {useRoute} from "vue-router"
 import request from '../../utils/request';
 import { useUserStore } from "../../store/user";
 
+const childready = ref(false)
 const { widgetId } = useRoute().query
 const userStore = useUserStore();
 
@@ -20,13 +21,10 @@ const argueNew = ref({})
 onMounted(async () => {
   try {
     const response = await request.get(`/class/widget/${widgetId}/submission/student`);
-    // const assignmentContent = response.data.content;
-    // const assignmentFileList = response.data.attachments;
+    console.log("new response", response);
+    
     const submission = response.data.submittedAssignment.at(-1);
-    // const submissionContent = submission.content;
-    // const submissionFileList = submission.attachments;
-    // const feedbackContent = submission.feedback.content;
-    // const feedbackFileList = submission.feedback.attachments;
+
     argueNew.value = {
       argueId: -1,
 
@@ -46,7 +44,6 @@ onMounted(async () => {
       maxScore: response.data.maxScore,
       revisedScore: 0,
       
-      starter: userStore.username,
       submitTime: "",
 
       argueContent: "",
@@ -56,8 +53,12 @@ onMounted(async () => {
 
       voteSupport: 0,
       voteTotal: 0,
+      
+      comments: [],
+      role: response.data.role,
     }
     console.log("newdata: ", argueNew.value);
+    childready.value = true;
   } catch (error) {
     
   }
