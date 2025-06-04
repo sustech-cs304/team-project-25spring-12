@@ -271,7 +271,7 @@ const toggleFollow = () => {
   try {
     if (isFollowed.value) {
       request.post('/argue/watch', {
-        arguePostId: props.data.id,
+        arguePostId: props.data.widgetId,
       });
   } else {
     request.delete(`/argue/${argueId}/watch`);
@@ -325,10 +325,10 @@ const displayMaxScore = props.data.maxScore;
 
 // 提交作业区
 const isEditing = ref(false);
-const argueContent = ref("");
-const argueFileList = ref<FileMeta[]>([]);
-const argueFeedbackContent = ref("");
-const argueFeedbackFileList = ref<FileMeta[]>([]);
+const argueContent = ref(props.data.argueContent);
+const argueFileList = ref<FileMeta[]>(props.data.argueFileList);
+const argueFeedbackContent = ref(props.data.argueFeedbackContent);
+const argueFeedbackFileList = ref<FileMeta[]>(props.data.argueFeedbackFileList);
 
 const handleArgueAttachmentUpload = async (file: FileMeta) => {
   const index = argueFileList.value.findIndex(f => f.id === file.id);
@@ -418,11 +418,11 @@ const submitArgue = async () => {
   try {
     let response = await request.post('/argue', {
       widgetId: props.data.widgetId,
-      submitted_assignment_id: props.data.submitted_assignment_id,
+      submitted_assignment_id: props.data.submittedAssignmentId,
       title: props.data.title,
       content: argueContent.value,
     });
-    router.push({name: `argue/${props.data.argue_id}`});
+    router.push({name: `argue/${props.data.argueId}`});
   } catch (error) {
     ElMessage.error("提交辩驳失败，请稍后重试");
   }
@@ -462,17 +462,13 @@ const handleReply = (author: string) => {
 };
 
 onMounted(async () => {
-  argueContent.value = props.data.argueContent || '';
-  argueFileList.value = props.data.argueFileList || [];
   argueEditor.value?.updateContent(argueContent.value);
-  argueFeedbackContent.value = props.data.argueFeedbackContent || '';
-  argueFeedbackFileList.value = props.data.argueFeedbackFileList || [];
   argueFeedbackEditor.value?.updateContent(argueFeedbackContent.value);
-
-  console.log("onmount", argueContent, argueFileList, argueFeedbackContent, argueFeedbackFileList);
   
   const role = await getRoleByCourseId(props.data.courseId);
   isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
+  console.log("editing", props.data.status, userStore.username);
+  
   isEditing.value = (props.data.status === 'pending' &&
                     props.data.starter === userStore.username) ||
                     userStore.isAdmin === true;

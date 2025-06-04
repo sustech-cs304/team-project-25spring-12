@@ -10,24 +10,30 @@ import { onMounted, ref } from "vue"
 import argue from "../widgets/argue.vue"
 import {useRoute} from "vue-router"
 import request from '../../utils/request';
+import { useUserStore } from "../../store/user";
 
 const { widgetId } = useRoute().query
+const userStore = useUserStore();
 
 const argueNew = ref({})
 
 onMounted(async () => {
   try {
     const response = await request.get(`/class/widget/${widgetId}/submission/student`);
-    console.log("newdata: ", response.data);
     // const assignmentContent = response.data.content;
     // const assignmentFileList = response.data.attachments;
     const submission = response.data.submittedAssignment.at(-1);
-    console.log("sub: ", submission);
     // const submissionContent = submission.content;
     // const submissionFileList = submission.attachments;
     // const feedbackContent = submission.feedback.content;
     // const feedbackFileList = submission.feedback.attachments;
     argueNew.value = {
+      argueId: -1,
+
+      widgetId: widgetId,
+      submittedAssignmentId: submission.id,
+      title: "",
+
       status: "pending",
       assignmentContent: response.data.content || "",
       assignmentFileList: response.data.attachments || [],
@@ -35,11 +41,21 @@ onMounted(async () => {
       submissionFileList: submission.attachments || [],
       feedbackContent: submission.feedback.content || "",
       feedbackFileList: submission.feedback.attachments || [],
+
+      originalScore: submission.feedback.score,
+      maxScore: response.data.maxScore,
+      revisedScore: 0,
+      
+      starter: userStore.username,
+      submitTime: "",
+
       argueContent: "",
       argueFileList: [],
       argueFeedbackContent: "",
       argueFeedbackFileList: [],
-      submitTime: "",
+
+      voteSupport: 0,
+      voteTotal: 0,
     }
     console.log("newdata: ", argueNew.value);
   } catch (error) {
