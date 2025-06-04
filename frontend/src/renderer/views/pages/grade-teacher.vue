@@ -210,7 +210,8 @@ usage: generate a draft, modified based on data format
             </div>
             <div v-if="fileDetailRecord.content">
               <b>内容：</b>
-              <div style="white-space: pre-wrap; background: #f5f7fa; padding: 8px; border-radius: 4px;">{{ fileDetailRecord.content }}</div>
+              <md-preview v-if="fileDetailAssignment && fileDetailAssignment.submitType === 'file'" :model-value="fileDetailRecord.content" />
+              <div v-else style="white-space: pre-wrap; background: #f5f7fa; padding: 8px; border-radius: 4px;">{{ fileDetailRecord.content }}</div>
             </div>
             <div v-if="fileDetailRecord.feedback">
               <hr />
@@ -233,7 +234,7 @@ usage: generate a draft, modified based on data format
             <div style="text-align: right; margin-top: 16px;">
               <el-button
                 type="primary"
-                @click="handleFileJump(fileDetailRecord)"
+                @click="handleFileJump()"
                 size="small"
               >前往批改页面</el-button>
             </div>

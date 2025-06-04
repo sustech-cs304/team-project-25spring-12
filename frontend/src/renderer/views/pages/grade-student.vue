@@ -155,7 +155,7 @@ usage: generate a draft, modified based on data format
             >
               <template #default="{ row }">
                 <span v-if="row.status === 'returned'">
-                  {{ row.submitType === 'file' ? row.feedback?.content || '无评语' : '无评语' }}
+                  {{ row.submitType === 'file' ? row.feedback?.content || '无评语' : '--' }}
                 </span>
                 <span v-else>--</span>
               </template>
@@ -197,15 +197,6 @@ usage: generate a draft, modified based on data format
         >
           <div v-if="currentSubmission && currentFeedback">
             <p><b>提交时间：</b>{{ timestampToString(currentSubmission.submittedTime) }}</p>
-            <div v-if="currentSubmission.code">
-              <b>代码：</b>
-              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
-              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">{{ currentSubmission.code.code }}</pre>
-            </div>
-            <div v-else>
-              <b>内容：</b>
-              <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
-            </div>
             <div v-if="currentSubmission.attachments?.length">
               <b>附件：</b>
               <el-link
@@ -217,10 +208,16 @@ usage: generate a draft, modified based on data format
                 style="margin-right: 10px"
               >{{ file.filename }}</el-link>
             </div>
+            <div v-if="currentSubmission.code">
+              <b>代码：</b>
+              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
+              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">{{ currentSubmission.code.code }}</pre>
+            </div>
+            <div v-else>
+              <b>内容：</b>
+              <md-preview :model-value="currentSubmission.content" />
+            </div>
             <hr />
-            <p><b>评分：</b>{{ currentFeedback.score }}</p>
-            <p><b>评语：</b></p>
-            <md-preview :model-value="currentFeedback.content"/>
             <p><b>批改时间：</b>{{ timestampToString(currentFeedback.createTime) }}</p>
             <div v-if="currentFeedback.attachments?.length">
               <b>批改附件：</b>
@@ -233,6 +230,9 @@ usage: generate a draft, modified based on data format
                 style="margin-right: 10px"
               >{{ file.filename }}</el-link>
             </div>
+            <p><b>评分：</b>{{ currentFeedback.score }}</p>
+            <p><b>评语：</b></p>
+            <md-preview :model-value="currentFeedback.content"/>
           </div>
         </el-dialog>
 
@@ -244,16 +244,6 @@ usage: generate a draft, modified based on data format
         >
           <div v-if="currentSubmission">
             <p><b>提交时间：</b>{{ timestampToString(currentSubmission.submittedTime) }}</p>
-            <div v-if="currentSubmission.code">
-              <b>代码：</b>
-              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
-              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">
-        {{ currentSubmission.code.code }}</pre>
-            </div>
-            <div v-else>
-              <b>内容：</b>
-              <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
-            </div>
             <div v-if="currentSubmission.attachments?.length">
               <b>附件：</b>
               <el-link
@@ -264,6 +254,16 @@ usage: generate a draft, modified based on data format
                 type="primary"
                 style="margin-right: 10px"
               >{{ file.filename }}</el-link>
+            </div>
+            <div v-if="currentSubmission.code">
+              <b>代码：</b>
+              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
+              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">
+        {{ currentSubmission.code.code }}</pre>
+            </div>
+            <div v-else>
+              <b>内容：</b>
+              <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
             </div>
           </div>
         </el-dialog>
