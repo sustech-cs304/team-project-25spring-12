@@ -241,7 +241,7 @@
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
-import {computed, onMounted, ref} from "vue";
+import {computed, nextTick, onMounted, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
 import {ElMessage} from "element-plus";
 import {useUploader} from "@/composables/useUploader";
@@ -437,9 +437,11 @@ const submitArgue = async () => {
         fileId: file.id,
       })
     }
-    
-    await router.push({path: `argue/${argueId}`});
-    // window.location.reload();
+
+    await nextTick();
+    console.log(argueId);
+    router.push('argue/' + argueId);
+    window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
     ElMessage.error("提交辩驳失败，请稍后重试");
