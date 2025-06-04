@@ -1,91 +1,127 @@
 <template>
   <widget-card :title="computedTitle" type="notepdf" :button-visible="props.editable" @click="handleClick">
-    <div class="card-content">
-      <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
-      <el-button type="primary" :icon="Download" @click="handleDownload">下载原课件</el-button>
+    <!--  编辑  -->
+    <div v-if="isEditing">
+      <el-form :model="form" :rules="rules" label-width="120px">
+        <el-form-item label="课件标题" prop="title">
+          <el-input v-model="form.title" placeholder="请输入课件标题"></el-input>
+        </el-form-item>
+
+        <el-form-item label="课件文件">
+          <el-upload
+              :show-file-list="false"
+              :http-request="handleUploadPdfFile"
+          >
+            <el-button type="primary">上传文件</el-button>
+          </el-upload>
+          <el-text style="margin-left: 10px" v-if="uploadedPdfFile">
+            已上传文件名：{{uploadedPdfFile.filename}}
+          </el-text>
+        </el-form-item>
+
+        <el-form-item label="移除旧课件笔记">
+          <el-switch v-model="removeNotes" />
+        </el-form-item>
+      </el-form>
     </div>
 
-    <el-scrollbar class="pdf-scroll-container">
-      <div class="pdf-container" ref="pdfContainer">
-        <div
-            v-for="(page, index) in pages"
-            :key="page"
-            class="pdf-page"
-            @contextmenu.prevent="openContextMenu($event, page)"
-        >
-          <canvas :ref="el => setCanvasRef(el, index)"></canvas>
-
-          <el-tooltip
-              v-for="note in getNotesForPage(page)"
-              :key="note.id"
-              effect="dark"
-              :content="note.text"
-              placement="top"
-          >
-            <div
-                class="note-button"
-                :style="{ left: `${note.x}px`, top: `${note.y}px` }"
-                @click="toggleNote(note)"
-            ></div>
-          </el-tooltip>
-        </div>
-
-        <div ref="bottomObserver" class="observer"></div>
+    <!--  展示  -->
+    <div v-else>
+      <div class="card-content">
+        <el-text>提示：在课件任意位置右键，创建一条笔记！</el-text>
+        <el-button type="primary" :icon="Download" @click="handleDownload">下载原课件</el-button>
       </div>
-    </el-scrollbar>
 
-    <!-- 添加笔记弹窗 -->
-    <el-popover
-        v-model:visible="contextMenu.visible"
-        placement="bottom-start"
-        teleported
-        popper-class="custom-popover"
-        :popper-style="{
+      <el-scrollbar class="pdf-scroll-container">
+        <div class="pdf-container" ref="pdfContainer">
+          <div
+              v-for="(page, index) in pages"
+              :key="page"
+              class="pdf-page"
+              @contextmenu.prevent="openContextMenu($event, page)"
+          >
+            <canvas :ref="el => setCanvasRef(el, index)"></canvas>
+
+            <el-tooltip
+                v-for="note in getNotesForPage(page)"
+                :key="note.id"
+                effect="dark"
+                :content="note.text"
+                placement="top"
+            >
+              <div
+                  class="note-button"
+                  :style="{ left: `${note.x}px`, top: `${note.y}px` }"
+                  @click="toggleNote(note)"
+              ></div>
+            </el-tooltip>
+          </div>
+
+          <div ref="bottomObserver" class="observer"></div>
+        </div>
+      </el-scrollbar>
+
+      <!-- 添加笔记弹窗 -->
+      <el-popover
+          v-model:visible="contextMenu.visible"
+          placement="bottom-start"
+          teleported
+          popper-class="custom-popover"
+          :popper-style="{
         top: `${popoverPosition.y}px`,
         left: `${popoverPosition.x}px`,
         'max-height': '90px',
         overflow: 'hidden',
       }"
-    >
-      <template #reference>
-        <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"/>
-      </template>
+      >
+        <template #reference>
+          <div v-show="contextMenu.visible" class="context-menu-placeholder" ref="contextMenuRef"/>
+        </template>
 
-      <div class="context-menu-content">
-        <el-input v-model="newNoteText" placeholder="输入笔记内容..."/>
-        <el-button type="primary" size="small" @click="addNote">添加笔记</el-button>
-      </div>
-    </el-popover>
+        <div class="context-menu-content">
+          <el-input v-model="newNoteText" placeholder="输入笔记内容..."/>
+          <el-button type="primary" size="small" @click="addNote">添加笔记</el-button>
+        </div>
+      </el-popover>
+    </div>
+
     <template #button>
-      <el-icon>
-        <Upload/>
-      </el-icon>
-      <span>上传</span>
+      <template v-if="isEditing">
+        <el-icon>
+          <Check/>
+        </el-icon>
+        <span>保存</span>
+      </template>
+      <template v-else>
+        <el-icon>
+          <Edit/>
+        </el-icon>
+        <span>编辑</span>
+      </template>
     </template>
   </widget-card>
-  <el-upload
-      ref="uploadRef"
-      style="display: none"
-      :show-file-list="false"
-      :http-request="handleUpload"
-      :auto-upload="true"
-  />
+  <!--  <el-upload-->
+  <!--      ref="uploadRef"-->
+  <!--      style="display: none"-->
+  <!--      :show-file-list="false"-->
+  <!--      :http-request="handleUpload"-->
+  <!--      :auto-upload="true"-->
+  <!--  />-->
 </template>
 
 <script setup lang="ts">
 import {computed, nextTick, onMounted, ref, toRaw} from 'vue';
 import * as pdfjsLib from 'pdfjs-dist';
 import pdfWorker from 'pdfjs-dist/build/pdf.worker?url';
-import {Download} from '@element-plus/icons-vue';
+import {Check, Download, Edit} from '@element-plus/icons-vue';
 import widgetCard from './utils/widget-card.vue';
 import type {Note, NotePdfWidget} from '@/types/widgets';
-import {Upload} from "@element-plus/icons-vue";
+import {WidgetUnion} from "@/types/widgets";
 import {createNote, editNotePdfWidget} from "@/api/courseMaterial";
 import {useDownloader} from "@/composables/useDownloader";
 import {useUploader} from "@/composables/useUploader";
 import {ElMessage} from "element-plus";
 import {FileMeta} from "@/types/fileMeta";
-import {WidgetUnion} from "@/types/widgets";
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorker;
 
@@ -98,6 +134,7 @@ const props = defineProps<{
 }>();
 
 const computedTitle = computed(() => props.data.title || "互动式课件");
+const isEditing = ref(false);
 
 // refs
 const pages = ref<number[]>([]);
@@ -109,12 +146,14 @@ const pdfContainer = ref<HTMLElement | null>(null);
 const notes = ref<Note[]>(JSON.parse(JSON.stringify(props.data.notes)));
 const contextMenuRef = ref<HTMLElement | null>(null);
 const activeNote = ref<Note | null>(null);
+
 interface ContextMenu {
   visible: boolean,
   x: number,
   y: number,
   page: number
 }
+
 const contextMenu = ref<ContextMenu>({visible: false, x: 0, y: 0, page: 0});
 const popoverPosition = ref({x: 0, y: 0});
 const newNoteText = ref('');
@@ -248,35 +287,28 @@ const emit = defineEmits<{
   (e: "update", data: WidgetUnion): void;
 }>();
 
-const uploadRef = ref()
+// const uploadRef = ref()
 
-const handleUpload = async (options: any) => {
+const form = ref<NotePdfWidget | null>(null)
+const uploadedPdfFile = ref<FileMeta | null>(null)
+const removeNotes = ref(false)
+const rules = {
+  title: [{required: true, message: '请输入课件标题', trigger: 'blur'}],
+};
+
+const handleUploadPdfFile = async (options: any) => {
   const {file, onSuccess, onError} = options;
 
   try {
     const response = await upload(file);
     if (response.status === 200) {
-      const newPdfFile = response.data as FileMeta;
-      const newData = JSON.parse(JSON.stringify(props.data));
-      newData.pdfFile = newPdfFile;
-      const response2 = await editNotePdfWidget(newData);
-      if (response2.status === 200) {
-        ElMessage.success("上传成功");
-        emit("update", newData);
-        await nextTick();
-        // 重新加载 pdf
-        pages.value = [];
-        pdfInstance.value = null;
-        canvasRefs.value = [];
-        await loadPDF();
-        onSuccess(newData);
-      } else {
-        ElMessage.error("上传失败，请稍后再试");
-        onError(response2);
-      }
+      ElMessage.success("上传成功");
+      form.value.pdfFile = response.data as FileMeta;
+      uploadedPdfFile.value = response.data as FileMeta;
+      onSuccess(response.data);
     } else {
       ElMessage.error("上传失败，请稍后再试");
-      onError(response);
+      onError(response)
     }
   } catch (err) {
     ElMessage.error("上传失败，未知错误");
@@ -293,9 +325,33 @@ const handleDownload = async () => {
   }
 };
 
-const handleClick = () => {
-  const input = uploadRef.value?.$el?.querySelector('input[type=file]')
-  if (input) input.click()
+const handleClick = async () => {
+  // const input = uploadRef.value?.$el?.querySelector('input[type=file]')
+  // if (input) input.click()
+  if (isEditing.value) { // 点保存
+    if (uploadedPdfFile.value !== null) {
+      form.value.pdfFile = uploadedPdfFile.value;
+    }
+    const response = await editNotePdfWidget(form.value, removeNotes.value);
+    if (response.status === 200) {
+      ElMessage.success("上传成功");
+      window.location.reload();
+      // emit("update", form);
+      // await nextTick();
+      // // 重新加载 pdf
+      // pages.value = [];
+      // pdfInstance.value = null;
+      // canvasRefs.value = [];
+      // await loadPDF();
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+    }
+  } else { //点编辑
+    form.value = JSON.parse(JSON.stringify(props.data))
+    removeNotes.value = false
+    uploadedPdfFile.value = null
+  }
+  isEditing.value = !isEditing.value;
 }
 
 onMounted(() => {

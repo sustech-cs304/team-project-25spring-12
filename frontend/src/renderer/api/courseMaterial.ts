@@ -91,10 +91,11 @@ export function createNotePdfWidget(widget: NotePdfWidget) {
     return request.post('/class/widget/notepdf', payload)
 }
 
-export function editNotePdfWidget(widget: NotePdfWidget) {
+export function editNotePdfWidget(widget: NotePdfWidget, removeNotes: boolean) {
     const uuid = widget.pdfFile.id, payload = {
         ...widget,
-        pdfFile: uuid
+        pdfFile: uuid,
+        removeNotes
     }
 
     return request.patch('/class/widget/notepdf', payload)
