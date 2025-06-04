@@ -538,10 +538,11 @@ onMounted(async () => {
   
   isEditing.value = props.data.status === 'pending' ||
                     userStore.isAdmin === true;
-  // console.log("role", role, isTeacher.value, isEditing.value);
   
-  isVoted.value = props.data.isVoted
-  isFollowed.value = props.data.isFollowed
+  isVoted.value = props.data.isVoted;
+  isFollowed.value = props.data.isFollowed;
+
+  isTeacher.value = props.data.role === "Teacher";
 });
 </script>
 

@@ -54,7 +54,8 @@ onMounted(async () => {
       voteSupport: 0,
       voteTotal: 0,
       
-      comments: []
+      comments: [],
+      role: response.data.role,
     }
     console.log("newdata: ", argueNew.value);
     childready.value = true;
