@@ -55,8 +55,9 @@ Our tests covered all of our APIs.
 ### Backend
 
 Our FastAPI project uses the following build tools and technologies:
+
 - **Python venv**: For project environment isolation
-- **Flake8**: For static code analysis
+- **Flake8 & lizard**: For static code analysis
 - **APIfox**: For API testing
 - **Swagger UI**: Built-in API documentation generation with FastAPI
 - **Docker**: For containerization
@@ -66,33 +67,44 @@ Our FastAPI project uses the following build tools and technologies:
 Our automated build process executes the following tasks:
 
 1. **Environment Setup**:
+
    - Create Python virtual environment
    - Install project dependencies (`pip install -r requirements.txt`)
-
 2. **Code Quality Checks**:
-   - Run Flake8 for code style validation
 
+   - Run Flake8 for code style validation
 3. **API Testing**:
+
    - Execute API tests using APIfox
    - Generate test reports
-
 4. **Documentation Generation**:
-   - Auto-generate Swagger UI documentation (built-in FastAPI feature)
 
+   - Auto-generate Swagger UI documentation (built-in FastAPI feature)
 5. **Containerization**:
+
    - Build Docker image from Dockerfile
    - Package application into container
 
 #### Build Artifacts
 
 Successful build produces:
+
 1. Configured virtual environment
 2. Flake8 analysis report
 3. APIfox test reports
 4. Swagger UI interactive API documentation (accessible via `/docs`)
 5. Docker container image
 
+```bash
+pip install -r requirements.txt
+flake8 mjc > flake8_report.txt
+liazrd mjc > liazrd_report.txt
+sudo docker build -t mjc .
+uvicorn main:app
+```
+
 #### Build Docker Image Script (`run.sh`)
+
 ```bash
 sudo docker build -t mjc .
 sudo docker stop mjc
@@ -104,6 +116,7 @@ sudo docker run mjc --env-file env.list \
 ```
 
 ### Dockerfile
+
 ```dockerfile
 FROM python:3.12
 WORKDIR /code
