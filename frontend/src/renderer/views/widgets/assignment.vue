@@ -636,9 +636,7 @@ const postArgue = () => {
   // TODO
   if ('argue_id' in props.data && Number.isInteger(props.data.argue_id)) {
     // 路由到对应的Argue的页面
-    router.push({
-      name: `argue/${props.data.argue_id}`,
-    });
+    router.push({name: `argue/${props.data.argue_id}`});
   } else {
     // 路由到创建Argue的页面
     router.push({

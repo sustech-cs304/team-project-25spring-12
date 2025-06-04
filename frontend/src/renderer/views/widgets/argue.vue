@@ -16,14 +16,18 @@
         <!-- 打分框（仅教师可见） -->
         <div class="score-section" v-if="isTeacher">
           <el-input-number
-            v-model="teacherScore"
+            v-model="revisedScore"
             :min="0"
             :max="props.data.maxScore"
             placeholder="输入评分"
             size="small"
             style="width: 120px; margin-right: 10px;"
           />
-          <el-button type="primary" @click="submitTeacherScore" :disabled="teacherScore === null">
+          <el-button
+            type="primary"
+            @click="submitArgueFeedback"
+            :disabled="revisedScore === null"
+          >
             提交评分
           </el-button>
         </div>
@@ -48,7 +52,7 @@
               <el-col :span="12" class="score-display">
                 <span class="original-score" :style="{ color: originalScoreColor }">{{ displayOriginalScore }}</span>
                 / 
-                <span class="verified-score" :style="{ color: verifiedScoreColor }">{{ displayVerifiedScore }}</span>
+                <span class="Revised-score" :style="{ color: revisedScoreColor }">{{ displayRevisedScore }}</span>
                 / 
                 <span class="max-score">{{ displayMaxScore }}</span>
               </el-col>
@@ -59,44 +63,41 @@
       <!-- 作业信息 -->
       <div>
         <el-text class="section-title">作业信息</el-text>
-        <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
+        <md-and-file
+          :fileList="props.data.assignmentFileList"
+          :content="props.data.assignmentContent"
+        />
       </div>
     
       <!-- 批改建议 -->
       <div>
         <el-text class="section-title">批改建议</el-text>
         <div class="container">
-          <md-and-file :fileList="props.data.returnedFiles" :content="props.data.feedback"/>
-        </div>
-      </div>
-
-      <!-- 辩驳反馈 -->
-      <div v-if="props.data.status === 'returned'">
-        <el-text class="section-title">辩驳反馈</el-text>
-        <div class="container">
-          <md-and-file :fileList="props.data.argueReturnedFiles" :content="props.data.argueFeedback"/>
+          <md-and-file
+            :fileList="props.data.feedbackFileList"
+            :content="props.data.feedbackContent"
+          />
         </div>
       </div>
 
       <!-- 提交争辩区 -->
-      <!--   提交作业区   -->
       <div v-if="isEditing">
-        <el-text class="section-title">提交作业</el-text>
+        <el-text class="section-title">提交辩驳</el-text>
         <div class="container">
           <!--   提交文本或文件   -->
-          <div class="homework-editor" v-if="props.data.submitType === 'file'">
+          <div class="homework-editor">
             <md-and-file-editor
-                :content="content"
-                :fileList="fileList"
+                :content="argueContent"
+                :fileList="argueFileList"
                 ref="contentEditor"
-                @upload="handleSubmissionAttachmentUpload"
-                @remove="handleSubmissionAttachmentRemove"
+                @upload="handleArgueAttachmentUpload"
+                @remove="handleArgueAttachmentRemove"
             />
           </div>
           <el-button
               type="primary"
               :icon="Upload"
-              @click="submit"
+              @click="submitArgue"
               style="width: 120px; margin-left: auto"
           >
             提交辩驳
@@ -115,11 +116,41 @@
             </el-icon>
           </el-col>
           <el-col :span="16">
-            <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
+            <el-text truncated>
+              提交时间：{{ props.data.submittedArguement.updateTime }}
+            </el-text>
           </el-col>
         </el-row>
         <div class="container">
-          <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
+          <md-and-file
+            :fileList="argueFileList"
+            :content="argueContent"
+          />
+        </div>
+      </div>
+
+      <!-- 教师编辑辩驳反馈 -->
+      <div v-if="isTeacher">
+        <el-text class="section-title">编辑辩驳反馈</el-text>
+        <div class="container">
+          <md-and-file-editor
+            :fileList="props.data.argueFeedbackFilelist"
+            :content="props.data.argueFeedbackContent"
+            ref="contentEditor"
+            @upload="handleArgueFeedbackAttachmentUpload"
+            @remove="handleArgueFeedbackAttachmentRemove"
+          />
+        </div>
+      </div>
+
+      <!-- 辩驳反馈 -->
+      <div v-if="props.data.status === 'returned' && !isTeacher">
+        <el-text class="section-title">辩驳反馈</el-text>
+        <div class="container">
+          <md-and-file
+            :fileList="props.data.argueFeedbackFilelist"
+            :content="props.data.argueFeedbackContent"
+          />
         </div>
       </div>
 
@@ -137,14 +168,26 @@
                 :status=voteStatus
                 :indeterminate=voteIndeterminate
               >
-              <el-text type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-text>
+              <el-text type="primary">{{ voteSupport }} / {{ voteTotal }}</el-text>
               </el-progress>
             </el-table-column>
             <el-table-column label="投票" width="200">
               <div style="display: flex; align-items: center">
                 <!-- <el-button-group> -->
-                  <el-button onclick="vote(true)" type="success">支持</el-button>
-                  <el-button onclick="vote(false)" type="warning">反对</el-button>
+                  <el-button
+                    :disabled="hasVoted"
+                    @click="vote(true)"
+                    type="success"
+                  >
+                    支持
+                  </el-button>
+                  <el-button
+                    :disabled="hasVoted"
+                    @click="vote(false)"
+                    type="warning"
+                  >
+                    反对
+                  </el-button>
                 <!-- </el-button-group> -->
               </div>
             </el-table-column>
@@ -194,19 +237,13 @@ import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
 import {computed, onMounted, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
-import {
-  addWidgetAttachment,
-  removeWidgetAttachment,
-  createSubmission,
-  createSubmissionAttachment,
-  editAssignmentWidget,
-  Submission,
-  getTestcase, createTestcase, editTestcase
-} from "@/api/courseMaterial";
 import {ElMessage} from "element-plus";
-import {DocWidget, WidgetUnion} from "@/types/widgets";
 import {useUploader} from "@/composables/useUploader";
 import {getRoleByCourseId} from "@/composables/useUserData";
+import router from "../../router";
+import { FileMeta } from "../../types/fileMeta";
+import service from "../../utils/request";
+import { Feedback } from "../../types/widgets";
 
 const props = defineProps({
   data: {
@@ -215,7 +252,10 @@ const props = defineProps({
   },
 });
 
-const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+const argueEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+const argueFeedbackEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+
+const argueId = ref(-1);
 
 // 关注状态和人数
 const isFollowed = ref(false);
@@ -223,21 +263,23 @@ const followCount = ref(0); // 假设初始关注人数为0
 
 // 教师评分
 const isTeacher = ref(true); // 假设当前用户是教师，实际应从用户角色权限中获取
-const teacherScore = ref<number | null>(null);
+const revisedScore = ref<number | null>(null);
 
 // 切换关注状态
 const toggleFollow = () => {
-  isFollowed.value = !isFollowed.value;
-  followCount.value += isFollowed.value ? 1 : -1;
-  // TODO: 调用后端API保存关注状态
-};
-
-// 提交教师评分
-const submitTeacherScore = () => {
-  if (teacherScore.value !== null) {
-    console.log(`提交评分: ${teacherScore.value}`);
-    // TODO: 调用后端API提交评分
-    teacherScore.value = null; // 提交后清空输入框
+  try {
+    if (isFollowed.value) {
+      service.post('/argue/watch', {
+        arguePostId: props.data.id,
+      });
+  } else {
+    service.delete(`/argue/${argueId}/watch`);
+  }
+    isFollowed.value = !isFollowed.value;
+    followCount.value += isFollowed.value ? 1 : -1;
+    ElMessage.success(isFollowed.value ? "已关注" : "已取消关注");
+  } catch (error) {
+    ElMessage.error("操作失败，请稍后再试");
   }
 };
 
@@ -262,9 +304,9 @@ const originalScoreColor = computed(() => {
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
 });
-const verifiedScoreColor = computed(() => {
+const revisedScoreColor = computed(() => {
   if (props.data.status === "pending") return "#666";
-  const ratio = props.data.verifiedScore / props.data.maxScore;
+  const ratio = props.data.revisedScore / props.data.maxScore;
   const red = Math.round(255 * (1 - ratio));
   const green = Math.round(255 * ratio);
   return `rgb(${red}, ${green}, 0)`;
@@ -275,111 +317,60 @@ const statusText = computed(() => {
   if (props.data.status === "returned") return "已反馈";
 });
 const displayOriginalScore = props.data.originalScore;
-const displayVerifiedScore = computed(() => (props.data.status === "returned" ? props.data.verifiedScore : "--"));
+const displayRevisedScore = computed(() =>
+  (props.data.status === "returned" ? props.data.revisedScore : "--")
+);
 const displayMaxScore = props.data.maxScore;
 
 // 提交作业区
 const isEditing = ref(false);
-const currentFeedback = ref<Feedback | null>(null);
-const selectedLanguage = ref<string>("cpp");
-const code = ref<string>('');
-const content = ref<string>("");
-const fileList = ref<FileMeta[]>([]);
+const argueContent = ref("");
+const argueFileList = ref<FileMeta[]>([]);
+const argueFeedbackContent = ref("");
+const argueFeedbackFileList = ref<FileMeta[]>([]);
 
-const beginNewSubmission = () => {
-  code.value = '';
-  selectedLanguage.value = 'cpp';
-  content.value = '';
-  contentEditor.value?.updateContent(content.value);
-  fileList.value = [];
-  currentFeedback.value = null;
-  isEditing.value = true;
-}
-
-const editSubmittedAssignment = (record: SubmittedRecord) => {
-  if (props.data.submitType === 'code') {
-    code.value = JSON.parse(JSON.stringify(record.code?.code ?? ''));
-    selectedLanguage.value = JSON.parse(JSON.stringify(record.code?.language ?? 'cpp'));
-    selectedLanguage.value = languages.find(l => l.backend === selectedLanguage.value)?.value;
-  } else if (props.data.submitType === 'file') {
-    content.value = JSON.parse(JSON.stringify(record.content ?? ''));
-    contentEditor.value?.updateContent(content.value);
-    fileList.value = JSON.parse(JSON.stringify(record.attachments ?? []));
-  } else {
-    ElMessage.error("加载提交记录失败：未知作业类型")
-  }
-  currentFeedback.value = record.feedback;
-  isEditing.value = true;
-}
-
-const handleSubmissionAttachmentUpload = async (file: FileMeta) => {
-  const index = fileList.value.findIndex(f => f.id === file.id);
+const handleArgueAttachmentUpload = async (file: FileMeta) => {
+  const index = argueFileList.value.findIndex(f => f.id === file.id);
   if (index === -1) {
-    fileList.value.push(file);
+    argueFileList.value.push(file);
   }
 }
 
-const handleSubmissionAttachmentRemove = async (file: FileMeta) => {
-  const index = fileList.value.findIndex(f => f.id === file.id);
+const handleArgueAttachmentRemove = async (file: FileMeta) => {
+  const index = argueFileList.value.findIndex(f => f.id === file.id);
   if (index !== -1) {
-    fileList.value.splice(index, 1);
+    argueFileList.value.splice(index, 1);
   }
 }
 
-const submit = async () => {
-  let submission: Submission = {
-    widgetId: props.data.id
-  };
-  let submissionAttachments: FileMeta[] = [];
-  if (props.data.submitType === 'code') {
-    if (codeEditor.value) {
-      submission.code = {
-        code: codeEditor.value.getCode(),
-        language: languages.find(l => l.value === selectedLanguage.value)?.backend,
-      }
-    } else {
-      ElMessage.error("提交失败：未找到代码编辑框")
-    }
-  } else if (props.data.submitType === 'file') {
-    if (contentEditor.value) {
-      submission.content = contentEditor.value.getContent();
-      submissionAttachments = fileList.value;
-    } else {
-      ElMessage.error("提交失败：未找到文本编辑框")
-    }
-  } else {
-    ElMessage.error("提交失败：未知作业类型")
+const handleArgueFeedbackAttachmentUpload = async (file: FileMeta) => {
+  const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    argueFileList.value.push(file);
   }
-  const response = await createSubmission(submission)
-  if (response.status === 200) {
-    let failed = false;
-    for (const attachment of submissionAttachments) {
-      const response2 = await createSubmissionAttachment(response.data.id, attachment.id);
-      if (response2.status !== 200) {
-        ElMessage.error("提交失败：附件 " + attachment.filename + " 上传失败");
-        failed = true;
-        break;
-      }
-    }
-    if (!failed) {
-      ElMessage.success("提交成功！");
-      window.location.reload();
-    }
-  } else {
-    ElMessage.error("提交失败：未能创建提交，请稍后再试");
+}
+
+const handleArgueFeedbackAttachmentRemove = async (file: FileMeta) => {
+  const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    argueFileList.value.splice(index, 1);
   }
 }
 
 // 投票区
+const voteSupport = ref(props.data.voteSupport)
+const voteTotal = ref(props.data.voteTotal)
+const hasVoted = ref(false)
+
 const votePercentage = computed(() => {
-  return props.data.voteTotal === 0 ?
-    0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100);
+  return voteTotal.value === 0 ?
+    0 : Math.round(voteSupport.value / voteTotal.value * 100);
 })
 const voteStatus = computed(() => {
-  return props.data.voteTotal === 0 ? "warning" : null;
+  return voteTotal.value === 0 ? "warning" : null;
 });
 const voteIndeterminate = computed(() => {
-  return props.data.voteTotal === 0 ? true : false;
+  return voteTotal.value === 0 ? true : false;
 });
 
 interface VoteResult {
@@ -396,29 +387,54 @@ const tableVote: VoteResult[] = [
   },
 ]
 
-const submitArgue = () => {
-  const content = contentEditor.value?.getContent();
+const vote = async (isSupport: boolean) => {
+  // try {
+  //   模拟发送投票请求到后端
+  //   const response = await service.post('/argue/vote', {
+  //     isSupport: isSupport,
+  //   })
+
+  //   if (response.data.success) {
+  //     更新前端数据
+      voteTotal.value += 1
+      if (isSupport) {
+        voteSupport.value += 1
+      }
+      hasVoted.value = true // 锁定投票
+      ElMessage.success('投票成功！')
+  //   } else {
+  //     ElMessage.error('投票失败，请重试')
+  //   }
+  // } catch (error) {
+  //   ElMessage.error('投票请求失败')
+  //   console.error(error)
+  // }
 }
 
-const editArgue = () =>{
 
+const submitArgue = async () => {
+  try {
+    let response = await service.post('/argue', {
+      widgetId: props.data.widgetId,
+      submitted_assignment_id: props.data.submitted_assignment_id,
+      title: props.data.title,
+      content: argueContent.value,
+    });
+    router.push({name: `argue/${props.data.argue_id}`});
+  } catch (error) {
+    ElMessage.error("提交辩驳失败，请稍后重试");
+  }
 }
 
-const reviseArgue = () => {
+const submitArgueFeedback = () => {
 
-}
-
-const vote = (isSupport) => {
-  
 }
 
 // 评论数据
 const comments = ref([
   {
-    id: 1,
     content: '这是一条示例评论！',
     author: '用户1',
-    time: '2025-06-04 16:00'
   }
 ]);
 
@@ -430,10 +446,8 @@ const submitComment = () => {
   if (!newComment.value.trim()) return;
   
   const comment = {
-    id: Date.now(),
     content: newComment.value,
     author: '当前用户',
-    time: new Date().toLocaleString()
   };
   
   comments.value.unshift(comment);
@@ -446,8 +460,16 @@ const handleReply = (author: string) => {
 };
 
 onMounted(async () => {
+  argueContent.value = '';
+  argueFileList.value = [];
+  argueEditor.value?.updateContent(argueContent.value);
+  argueFeedbackContent.value = '';
+  argueFeedbackFileList.value = [];
+  argueEditor.value?.updateContent(argueContent.value);
+  isEditing.value = true;
+
   const role = getRoleByCourseId(props.data.courseId);
-  isTeacher.value = role === 'teacher' || role === 'admin';
+  // isTeacher.value = role === 'teacher' || role === 'admin';
   // isEditing.value = props.data.status === 'pending' &&
   //                   props.data.starter === localStorage.getItem('username');
   isEditing.value = true;
@@ -579,7 +601,7 @@ onMounted(async () => {
   font-weight: 700;
 }
 
-.verified-score {
+.Revised-score {
   font-size: 24px;
   font-weight: 700;
 }

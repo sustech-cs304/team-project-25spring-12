@@ -1,7 +1,7 @@
 <template>
     <div class="page">
       <!-- <argue :data="argueDataPending"></argue> -->
-      <!-- <argue :data="argueDataSubmitted"></argue> -->
+      <argue :data="argueDataSubmitted"></argue>
       <argue :data="argueDataReturned"></argue>
     </div>
 </template>
@@ -17,16 +17,16 @@ import {useRoute} from "vue-router"
 const argueData = ref({})
 const argueId = ref(0);
 
-const argueDataReturned = ref({
-  title: 'ArgueReturned',
+const argueDataSubmitted = ref({
+  title: 'ArgueSubmitted',
   content: '# 要Argue的作业\n\n你觉得老师批改有误',
   attachments: [
     {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
   ],
-  status: 'returned',
+  status: 'submitted',
   submitType: 'file',
   originalScore: 90,
-  verifiedScore: 85,
+  revisedScore: 85,
   maxScore: 100,
 
   submittedArguement: {
@@ -45,6 +45,21 @@ const argueDataReturned = ref({
 
   comments: [],
 
+})
+
+const argueDataReturned = ref({
+  title: 'ArgueReturned',
+  content: '# 要Argue的作业\n\n你觉得老师批改有误',
+  status: 'returned',
+  submitType: 'file',
+  originalScore: 90,
+  revisedScore: 85,
+  maxScore: 100,
+
+  voteTotal: 0,
+  voteSupport: 0,
+
+  comments: [],
 })
 
 onMounted(async () => {
