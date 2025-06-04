@@ -54,4 +54,87 @@ Our tests covered all of our APIs.
 
 ### Backend
 
-Backend
+Our FastAPI project uses the following build tools and technologies:
+- **Python venv**: For project environment isolation
+- **Flake8**: For static code analysis
+- **APIfox**: For API testing
+- **Swagger UI**: Built-in API documentation generation with FastAPI
+- **Docker**: For containerization
+
+#### Build Tasks
+
+Our automated build process executes the following tasks:
+
+1. **Environment Setup**:
+   - Create Python virtual environment
+   - Install project dependencies (`pip install -r requirements.txt`)
+
+2. **Code Quality Checks**:
+   - Run Flake8 for code style validation
+
+3. **API Testing**:
+   - Execute API tests using APIfox
+   - Generate test reports
+
+4. **Documentation Generation**:
+   - Auto-generate Swagger UI documentation (built-in FastAPI feature)
+
+5. **Containerization**:
+   - Build Docker image from Dockerfile
+   - Package application into container
+
+#### Build Artifacts
+
+Successful build produces:
+1. Configured virtual environment
+2. Flake8 analysis report
+3. APIfox test reports
+4. Swagger UI interactive API documentation (accessible via `/docs`)
+5. Docker container image
+
+#### Build Docker Image Script (`run.sh`)
+```bash
+sudo docker build -t mjc .
+sudo docker stop mjc
+sudo docker remove mjc
+sudo docker run mjc --env-file env.list \
+                    --add-host=host.docker.internal:host-gateway \ 
+                    --name mjc 
+                    -p 8080:80  
+```
+
+### Dockerfile
+```dockerfile
+FROM python:3.12
+WORKDIR /code
+
+COPY ./requirements.txt /code/requirements.txt
+
+RUN pip install --no-cache-dir --upgrade -r /code/requirements.txt
+
+COPY ./mjc /code/mjc
+COPY main.py /code
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "80"]
+```
+
+This build process ensures code quality, API functionality verification, and containerized deployment while maintaining simplicity and practicality.
+
+## Deploy
+
+### Frontend
+
+### Backend
+
+We can simply use our Dockerfile for containerizing.
+
+```bash
+git clone https://github.com/sustech-cs304/team-project-25spring-12.git
+cd backend
+
+sudo docker build -t mjc .
+sudo docker run mjc --env-file env.list \
+                    --add-host=host.docker.internal:host-gateway \ 
+                    --name mjc 
+                    -p 8080:80  
+```
