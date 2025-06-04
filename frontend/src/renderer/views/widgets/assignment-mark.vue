@@ -171,8 +171,8 @@ const props = defineProps<{
   assignmentWidget: AssignmentWidget;
   submission: SubmittedRecord;
   feedback: FeedbackForm;
-  blobList: Record<string, Blob>;
-  patch: Record<string, Uint8Array>;
+  blobList: Record<string, Promise<Blob>>;
+  patch: Record<string, Promise<Uint8Array>>;
 }>();
 
 const emit = defineEmits<{
@@ -226,10 +226,10 @@ const errorMessage = computed(() => {
   return null;
 });
 
-const handleGetFile = (fileId: string) => {
+const handleGetFile = async (fileId: string) => {
   if (fileId in props.patch)
-    return new Blob([props.patch[fileId]]);
-  return props.blobList[fileId];
+    return new Blob([await props.patch[fileId]]);
+  return await props.blobList[fileId];
 };
 
 const handleUpdateFile = (fileId: string, dataPromise: Promise<Uint8Array>) => {

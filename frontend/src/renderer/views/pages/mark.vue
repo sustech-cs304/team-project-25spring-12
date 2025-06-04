@@ -82,8 +82,8 @@ const {createFeedback, updateFeedback} = useFeedback();
 
 const submissions = ref<SubmittedRecord[]>([]);
 const feedbacks = ref<Record<number, FeedbackForm>>({});
-const blobs = ref<Record<string, Blob>>({});
-const patch = ref<Record<string, Uint8Array>>({});
+const blobs = ref<Record<string, Promise<Blob>>>({});
+const patch = ref<Record<string, Promise<Uint8Array>>>({});
 
 const activeSubmissionId = ref<number | null>(null);
 const hoveredSubmissionId = ref<string | null>(null);
@@ -172,6 +172,11 @@ const handleMenuSelect = (submissionId: string) => {
   updateBlobList(Number(submissionId));
 };
 
+const getFile = async (id: string) => {
+  const response = await downloadFile(id);
+  return response.data as Blob;
+};
+
 const updateBlobList = (submissionId: number) => {
   blobs.value = {};
   const submission = submissionsSorted.value.find(s => s.id === submissionId);
@@ -182,16 +187,13 @@ const updateBlobList = (submissionId: number) => {
   const files = submission.feedback?.attachments || submission.attachments;
   if (files) {
     files.forEach(async (file) => {
-      const response = await downloadFile(file.id);
-      if (submissionId === activeSubmissionId.value) {
-        blobs.value[file.id] = response.data as Blob;
-      }
+      blobs.value[file.id] = getFile(file.id);
     });
   }
 };
 
 const handleUpdateFile = async (fileId: string, dataPromise: Promise<Uint8Array>) => {
-  patch.value[fileId] = await dataPromise;
+  patch.value[fileId] = dataPromise;
 };
 
 const handleSave = (submissionId: number, score?: number, content?: string) => {

@@ -5,7 +5,7 @@ import {FileMeta} from "../types/fileMeta";
 import {Feedback, SubmittedRecord} from "../types/widgets";
 
 export function useFeedback() {
-    const createFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
+    const createFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Promise<Uint8Array>>) => {
         const payload = {
             score: feedbackForm.score,
             content: feedbackForm.content,
@@ -17,7 +17,7 @@ export function useFeedback() {
         if (submission.attachments) {
             for (const attachment of submission.attachments) {
                 if (attachment.id in patch) {
-                    const file = new File([patch[attachment.id]], attachment.filename);
+                    const file = new File([await patch[attachment.id]], attachment.filename);
                     const formData = new FormData();
                     formData.append("file", file);
                     formData.append("visibility", "public");
@@ -36,7 +36,7 @@ export function useFeedback() {
         return feedback;
     };
 
-    const updateFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
+    const updateFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Promise<Uint8Array>>) => {
         if (!submission.feedback) {
             console.error(`no feedback found in submission ${submission.id}`);
             return;
@@ -57,7 +57,7 @@ export function useFeedback() {
             const attachments = [];
             for (const attachment of feedback.attachments) {
                 if (attachment.id in patch) {
-                    const file = new File([patch[attachment.id]], attachment.filename);
+                    const file = new File([await patch[attachment.id]], attachment.filename);
                     const formData = new FormData();
                     formData.append("file", file);
                     formData.append("visibility", "public");

@@ -5,7 +5,8 @@
       <md-preview v-bind="getEditorProps(props.mdContent)"/>
     </div>
     <div class="container" v-else>
-      <pdf-viewer ref="pdfViewer" :data="content" is-marking v-if="selectedFileType === FileType.PDF"/>
+      <div v-if="loading" v-loading="loading" class="loading-overlay"></div>
+      <pdf-viewer ref="pdfViewer" :data="content" is-marking v-else-if="selectedFileType === FileType.PDF"/>
       <pre style="white-space: pre-wrap" v-else-if="selectedFileType === FileType.PLAIN">{{ textContent }}</pre>
       <md-preview v-bind="getEditorProps(textContent)" v-else-if="selectedFileType === FileType.MARKDOWN"/>
       <ImageZoom :src="content" :alt="selectedFile.filename" v-else-if="selectedFileType === FileType.IMAGE"/>
@@ -42,7 +43,7 @@ import {FileMeta} from "@/types/fileMeta";
 const props = defineProps<{
   mdContent: string;
   fileList?: FileMeta[];
-  getFile: (fileId: string) => Blob;
+  getFile: (fileId: string) => Promise<Blob>;
 }>();
 
 const emit = defineEmits<{
@@ -75,6 +76,8 @@ const content = ref();
 const textContent = computed(() => typeof(content.value) === "string" ? content.value : "加载失败");
 const pdfViewer = ref();
 
+const loading = ref(false);
+
 const isDirty = () => {
   return FileType.PDF === selectedFileType.value && pdfViewer.value?.isDirty();
 };
@@ -101,14 +104,21 @@ const updateSelectFileId = async (fileId: string | null) => {
   handleFree();
   content.value = null;
   selectedFileId.value = fileId;
-  if (fileId !== null) {
-    const blob = props.getFile(fileId);
-    if (FileType.PDF === selectedFileType.value) {
-      content.value = blob;
-    } else if ([FileType.PLAIN, FileType.MARKDOWN].includes(selectedFileType.value)) {
-      content.value = await blob.text();
-    } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
-      content.value = URL.createObjectURL(blob);
+  if (fileId !== null && selectedFileType.value !== FileType.UNKNOWN) {
+    try {
+      loading.value = true;
+      const blob = await props.getFile(fileId);
+      if (FileType.PDF === selectedFileType.value) {
+        content.value = blob;
+      } else if ([FileType.PLAIN, FileType.MARKDOWN].includes(selectedFileType.value)) {
+        content.value = await blob.text();
+      } else if ([FileType.IMAGE, FileType.VIDEO, FileType.AUDIO].includes(selectedFileType.value)) {
+        content.value = URL.createObjectURL(blob);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      loading.value = false;
     }
   }
 };
@@ -145,10 +155,22 @@ defineExpose({
 }
 
 .container {
+  position: relative;
   flex: 1;
   padding: 15px;
   background: #ffffff;
   border-radius: 10px;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.loading-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 </style>
