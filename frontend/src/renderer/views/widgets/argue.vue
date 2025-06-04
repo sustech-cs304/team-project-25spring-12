@@ -471,7 +471,7 @@ const submitArgueFeedback = async () => {
     }
     
     ElMessage.success("成功反馈")
-    // await router.push({path: `argue/${argueId}`});
+    await router.push({path: `argue/${argueId}`});
     // window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
