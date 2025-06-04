@@ -2,7 +2,7 @@
   <div class="content">
     <!-- Markdown 预览 -->
     <div class="markdown-container">
-      <md-preview v-bind="editorProps"/>
+      <md-preview v-model="props.content"/>
     </div>
 
     <!-- 下载文件列表 -->
@@ -28,13 +28,6 @@ const props = defineProps({
     default: () => []
   },
 });
-
-const editorProps = {
-  modelValue: props.content,
-  readOnly: true,
-  toolbars: [],
-  footers: [],
-};
 </script>
 
 <style scoped>

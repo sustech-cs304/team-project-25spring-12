@@ -561,6 +561,7 @@ const editSubmittedAssignment = (record: SubmittedRecord) => {
     code.value = JSON.parse(JSON.stringify(record.code?.code ?? ''));
     selectedLanguage.value = JSON.parse(JSON.stringify(record.code?.language ?? 'cpp'));
     selectedLanguage.value = languages.find(l => l.backend === selectedLanguage.value)?.value;
+    currentFeedback.value = record.feedback;
   } else if (props.data.submitType === 'file') {
     content.value = JSON.parse(JSON.stringify(record.content ?? ''));
     contentEditor.value?.updateContent(content.value);
