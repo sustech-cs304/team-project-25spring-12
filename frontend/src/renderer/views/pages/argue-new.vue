@@ -1,5 +1,5 @@
 <template>
-    <div class="page">
+    <div class="page" v-if="childready">
       <argue :data="argueNew"></argue>
     </div>
 </template>
@@ -12,6 +12,7 @@ import {useRoute} from "vue-router"
 import request from '../../utils/request';
 import { useUserStore } from "../../store/user";
 
+const childready = ref(false)
 const { widgetId } = useRoute().query
 const userStore = useUserStore();
 
@@ -27,6 +28,7 @@ onMounted(async () => {
     // const submissionFileList = submission.attachments;
     // const feedbackContent = submission.feedback.content;
     // const feedbackFileList = submission.feedback.attachments;
+
     argueNew.value = {
       argueId: -1,
 
@@ -46,7 +48,6 @@ onMounted(async () => {
       maxScore: response.data.maxScore,
       revisedScore: 0,
       
-      starter: userStore.username,
       submitTime: "",
 
       argueContent: "",
@@ -56,8 +57,10 @@ onMounted(async () => {
 
       voteSupport: 0,
       voteTotal: 0,
+      
     }
     console.log("newdata: ", argueNew.value);
+    childready.value = true;
   } catch (error) {
     
   }
