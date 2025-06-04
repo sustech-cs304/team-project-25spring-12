@@ -32,7 +32,7 @@ async def update_page(db:SessionDep, page: PageUpdate):
     return page_service.update_page(db, page)
 
 
-@router.delete(path="/class/page/{id}", response_model=Message,
+@router.delete(path="/class/page/{page_id}", response_model=Message,
                dependencies=[Depends(page_permission.verify_page_delete)])
-async def delete_page(db:SessionDep, id:int):
-    return page_service.delete_page(db, id)
+async def delete_page(db:SessionDep, page_id: int):
+    return page_service.delete_page(db, page_id)
