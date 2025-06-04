@@ -9,6 +9,38 @@ from mjc.model.schema.common import File
 from mjc.model.schema.user import Profile
 
 
+class TestCaseBase(BaseModel):
+    max_cpu_time: int | None = 1000
+    max_memory: int | None = 134217728
+
+
+class TestPoint(BaseModel):
+    stripped_output_md5: str
+    output_size: int
+    input_name: str
+    input_size: int
+    output_name: str
+
+
+class TestCaseInfo(BaseModel):
+    spj: bool | None = False
+    test_cases: dict[str, TestPoint]
+
+
+class TestCase(TestCaseBase):
+    id: int
+    info: TestCaseInfo | None = None
+
+
+class TestCaseCreate(TestCaseBase):
+    file_id: uuid.UUID
+    widget_id: int
+
+
+class TestCaseUpdate(TestCase):
+    file_id: uuid.UUID | None = None
+
+
 class WidgetBase(BaseModel):
     title: str
     index: int
@@ -55,7 +87,7 @@ class AssignmentWidget(WidgetBase):
     score: float | None = None
     max_score: float
     feedback: Feedback | None = None
-    test_case: Type["TestCase"] | None = None
+    test_case: TestCase | None = None
 
 
 class AssignmentWidgetCreate(WidgetBase):
@@ -122,35 +154,3 @@ class NotePdfWidgetUpdate(WidgetBase):
 class WidgetAttachmentCreate(BaseModel):
     widget_id: int
     file_id: uuid.UUID
-
-
-class TestCaseBase(BaseModel):
-    max_cpu_time: int | None = 1000
-    max_memory: int | None = 134217728
-
-
-class TestPoint(BaseModel):
-    stripped_output_md5: str
-    output_size: int
-    input_name: str
-    input_size: int
-    output_name: str
-
-
-class TestCaseInfo(BaseModel):
-    spj: bool | None = False
-    test_cases: dict[str, TestPoint]
-
-
-class TestCase(TestCaseBase):
-    id: int
-    info: TestCaseInfo | None = None
-
-
-class TestCaseCreate(TestCaseBase):
-    file_id: uuid.UUID
-    widget_id: int
-
-
-class TestCaseUpdate(TestCase):
-    file_id: uuid.UUID | None = None
