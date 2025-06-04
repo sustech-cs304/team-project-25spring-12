@@ -138,3 +138,7 @@ sudo docker run mjc --env-file env.list \
                     --name mjc 
                     -p 8080:80  
 ```
+
+We have deployed the backend on our server.
+
+![](../../assets/backend-docker.png)
