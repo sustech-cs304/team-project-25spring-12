@@ -1,31 +1,35 @@
 <template>
   <div class="attachments">
     <el-row justify="space-between">
-      <el-text size="large" class="attachment-title">{{ title }}</el-text>
+      <el-text size="large" class="attachment-title">附件</el-text>
     </el-row>
-    <el-divider></el-divider>
+
+    <el-divider/>
+
     <el-row
         v-for="file in fileList"
-        :key="file.url"
+        :key="file.id"
         class="attachment-item"
+        :class="{'selected': props.selectedFileId === file.id}"
         justify="space-between"
-        :class="{selected: file === selectedFile}"
-        @click="selectFile(file)"
+        @click="handleSelectFile(file)"
     >
       <el-col :span="2">
         <el-icon :size="20">
           <component :is="getFileIcon(file.filename)"/>
         </el-icon>
       </el-col>
-      <el-col :span="16">
+
+      <el-col :span="12">
         <el-text truncated>{{ file.filename }}</el-text>
       </el-col>
-      <el-col :span="6" class="download-btn">
+
+      <el-col :span="10" class="download-btn">
         <el-button
             type="primary"
             link
             :icon="Download"
-            @click.stop="handleDownloadFile(file.url, file.filename)"
+            @click.stop="handleDownloadFile(file)"
         >
           下载
         </el-button>
@@ -35,68 +39,42 @@
 </template>
 
 <script setup lang="ts">
-import {Box, Document, Folder, Headset, Picture, Tools, VideoCamera, Download} from "@element-plus/icons-vue";
-import {ref} from "vue";
-import {downloadFile} from "@/utils/useDownloader";
+import {ElMessage} from "element-plus";
+import {Download} from "@element-plus/icons-vue";
+import {getFileIcon} from "@/utils/getIconByFileType";
+import type {FileMeta} from "@/types/fileMeta";
+import {useDownloader} from "@/composables/useDownloader";
 
-const props = defineProps({
-  fileList: {
-    type: Object,
-    required: false,
-    default: [],
-  },
-  upload: {
-    type: Boolean,
-    required: false,
-    default: false,
-  },
-  title: {
-    type: String,
-    required: true,
-  },
-});
+const props = defineProps<{
+  fileList: FileMeta[];
+  selectedFileId: string | null;
+}>();
 
-const fileList = ref(JSON.parse(JSON.stringify(props.fileList)));
+const emit = defineEmits<{
+  (e: "update:selectedFileId", id: string | null): void;
+}>();
 
-const selectedFile = ref<null | Object>(null);
+// 如果进一步解耦，这里可以变成两个 props 由用户决定上传和下载的组合逻辑
+// 但是在本项目中上传下载的逻辑是固定的，因此没有进一步解耦
+const {download} = useDownloader();
 
-// 向父组件返回选定文件
-const emit = defineEmits(["update:selectedFileUrl"]);
-
-// 根据文件后缀返回对应的 Element Plus 图标
-const getFileIcon = (filename: string) => {
-  const ext = filename.split(".").pop()?.toLowerCase();
-  if (["zip", "apk", "rar", "7z", "tar", "gz", "bz2", "xz"].includes(ext || "")) return Box;
-  if (["exe", "bat", "sh", "jar", "msi", "app", "com", "vbs"].includes(ext || "")) return Tools;
-  if (["png", "jpg", "jpeg", "gif", "svg"].includes(ext || "")) return Picture;
-  if (["mp4", "avi", "mkv", "mov"].includes(ext || "")) return VideoCamera;
-  if (["pdf", "doc", "docx", "txt", "md"].includes(ext || "")) return Document;
-  if (["mp3", "wav", "flac", "aac"].includes(ext || "")) return Headset;
-  return Folder;
+// 选择文件
+const handleSelectFile = (file: FileMeta) => {
+  if (props.selectedFileId === file.id) {
+    emit("update:selectedFileId", null);
+  } else {
+    emit("update:selectedFileId", file.id);
+  }
 };
 
 // 下载文件
-const handleDownloadFile = async (url: string, filename: string) => {
-   try {
-     await downloadFile(url, filename);
-   } catch (error) {
-     console.error('下载失败：', error);
-   }
- };
-
-const selectFile = (file: Object) => {
-  if (selectedFile.value === file) {
-    selectedFile.value = null;
-  } else {
-    selectedFile.value = file;
+const handleDownloadFile = async (file: FileMeta) => {  // 本项目中，目前 file.url 为空
+  try {
+    await download(file);
+  } catch (error) {
+    ElMessage.error("下载失败，请稍后重试");
   }
-  emit("update:selectedFileUrl", selectedFile.value === null ? "" : selectedFile.value.url);
 };
-
-// 返回文件列表
-defineExpose({
-  getFileList: () => JSON.parse(JSON.stringify(fileList.value)),
-});
 </script>
 
 <style scoped>
@@ -129,23 +107,19 @@ defineExpose({
 }
 
 .selected {
-  background: #f1f1f1;
+  background: #d9d9d9;
 }
 
 .download-btn {
   text-align: right;
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
 }
 
 .el-button {
-  padding: 8px 16px;
   font-size: 14px;
   border-radius: 8px;
-  background: #409eff;
-  color: #fff;
-}
-
-.el-button:hover {
-  background-color: #66b1ff;
 }
 
 .el-text {

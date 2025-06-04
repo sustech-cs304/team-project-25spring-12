@@ -16,6 +16,9 @@
     "linux":  {
         "target": ["snap"]
     },
+    "mac": {
+        "target": ["dmg"]
+    },
     "files": [
         {
             "from": "build/main",

@@ -11,7 +11,7 @@ const routes: RouteRecordRaw[] = [
         children: [
             {
                 path: '',
-                redirect: 'homepage',
+                redirect: { name: 'homepage' },
             },
             {
                 path: 'homepage',
@@ -46,9 +46,33 @@ const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'mark',
+                name: 'mark-center',
+                meta: {title: '批改中心'},
+                component: () => import('../views/pages/mark-center.vue'),
+            },
+            {
+                path: 'mark/:courseId',
+                name: 'mark-course',
+                meta: {title: '批改课程'},
+                component: () => import('../views/pages/mark-class.vue'),
+            },
+            {
+                path: 'mark/:courseId/widget/:widgetId',
                 name: 'mark',
-                meta: {title: '批改'},
+                meta: {title: '批改记录'},
                 component: () => import('../views/pages/mark.vue'),
+            },
+            {
+                path: 'grade/student',
+                name: 'grade-student',
+                meta: {title: '分数中心（学生）'},
+                component: () => import('../views/pages/grade-student.vue'),
+            },
+            {
+                path: 'grade/teacher',
+                name: 'grade-teacher',
+                meta: {title: '分数中心（教师）'},
+                component: () => import('../views/pages/grade-teacher.vue'),
             },
         ],
     },
