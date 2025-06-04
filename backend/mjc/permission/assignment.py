@@ -109,7 +109,7 @@ async def verify_test_case_create(db: SessionDep, test_case: TestCaseCreate,
 
 async def verify_test_case_update(db: SessionDep, test_case: TestCaseUpdate,
                                   current_user: UserInDB = Depends(get_current_user)):
-    widget = crud_widget.get_widget(db, test_case.widget_id)
-    if not widget:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Widget not found")
-    verify_class_admin(db, widget.page.class_id, current_user)
+    test_case = crud_assignment.get_test_case(db, test_case.id)
+    if not test_case:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="TestCase not found")
+    verify_class_admin(db, test_case.assignment_widget.widget.page.class_id, current_user)
