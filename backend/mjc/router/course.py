@@ -49,7 +49,7 @@ async def update_class(db: SessionDep, cls: ClassUpdate,
     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
 
 
-@router.delete(path="/class/{class_id}", response_model=Class,
+@router.delete(path="/class/{class_id}", response_model=Message,
                dependencies=[Depends(course_permission.verify_class_delete)])
 async def delete_class(db: SessionDep,
                        class_id: int,
