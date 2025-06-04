@@ -58,6 +58,7 @@ class ArguePost(ArguePostBase):
     update_time: datetime
     watch: int
     is_watched : bool | None = False
+    is_voted: bool | None = False
     support: int
     editor: Profile
     not_support: int
@@ -75,6 +76,7 @@ class ArguePostCard(ArguePostBase):
     update_time: datetime
     watch: int | None = 0
     is_watched: bool | None = False
+    is_voted: bool | None = False
     support: int | None = 0
     not_support: int | None = 0
     editor: Profile

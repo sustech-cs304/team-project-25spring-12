@@ -223,6 +223,13 @@ def create_argue_vote(db: Session, argue: ArguePostVoteCreate, voter: UserInDB) 
     return argue_vote
 
 
+def get_user_vote(db: Session, username: str, argue_id: int) -> ArguePostVote:
+    stmt = select(ArguePostVote).where(ArguePostVote.argue_post_id == argue_id) \
+                                .where(ArguePostVote.voter_username == username)
+    return db.exec(stmt).first()
+
+
+
 def get_argue_watch(db: Session, argue_post_id: int, watcher: UserInDB) -> ArguePostWatch:
     stmt = select(ArguePostWatch).where(ArguePostWatch.argue_post_id == argue_post_id) \
                                  .where(ArguePostWatch.watcher_username == watcher.username) \

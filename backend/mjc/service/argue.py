@@ -108,7 +108,8 @@ def get_argues(db: Session, user: UserInDB) -> list[ArguePostCard]:
             comments=crud_argue.count_argue_comment(db, argue.id),
             editor=Profile.model_validate(argue.editor.model_dump()),
             status=argue.status,
-            is_watched= crud_argue.get_user_watch(db, user.username, argue.id) is not None
+            is_watched=crud_argue.get_user_watch(db, user.username, argue.id) is not None,
+            is_voted=crud_argue.get_user_vote(db, user.username, argue.id) is not None
         ))
     return cards
 
@@ -136,7 +137,8 @@ def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
         attachments=attachments2files(argue.attachments),
         old_score=argue.old_score,
         assignment=argue2assignment(argue),
-        is_watched = crud_argue.get_user_watch(db, user.username, argue.id) is not None
+        is_watched = crud_argue.get_user_watch(db, user.username, argue.id) is not None,
+        is_voted = crud_argue.get_user_vote(db, user.username, argue.id) is not None
     )
     return post
 
