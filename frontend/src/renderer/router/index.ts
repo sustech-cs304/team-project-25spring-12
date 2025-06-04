@@ -65,8 +65,14 @@ const routes: RouteRecordRaw[] = [
             {
                 path: 'grade/student',
                 name: 'grade-student',
-                meta: {title: '分数中心'},
+                meta: {title: '分数中心（学生）'},
                 component: () => import('../views/pages/grade-student.vue'),
+            },
+            {
+                path: 'grade/teacher',
+                name: 'grade-teacher',
+                meta: {title: '分数中心（教师）'},
+                component: () => import('../views/pages/grade-teacher.vue'),
             },
         ],
     },

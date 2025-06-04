@@ -6,7 +6,7 @@ usage: generate a draft, modified based on data format
 -->
 
 <template>
-  <el-container style="height: 100vh;">
+  <el-container style="height: 100%;">
     <!-- 左侧菜单 -->
     <el-aside width="280px" class="course-aside">
       <!-- 学期选择 -->
@@ -191,69 +191,79 @@ usage: generate a draft, modified based on data format
 
         <!-- 反馈弹窗 -->
         <el-dialog
-            v-model="feedbackDialogVisible"
-            title="作业反馈详情"
-            width="500px"
+          v-model="feedbackDialogVisible"
+          title="作业反馈详情"
+          width="600px"
         >
           <div v-if="currentSubmission && currentFeedback">
             <p><b>提交时间：</b>{{ timestampToString(currentSubmission.submittedTime) }}</p>
-            <div v-if="!currentSubmission.code">
-              <b>内容：</b>
-              <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
-            </div>
-            <p><b>评分：</b>{{ currentFeedback.score }}</p>
-            <p v-if="!currentSubmission.code"><b>评语：</b>{{ currentFeedback.content }}</p>
-            <p><b>批改时间：</b>{{ timestampToString(currentFeedback.createTime) }}</p>
-            <div v-if="currentFeedback.attachments?.length">
-              <b>附件：</b>
-              <el-link
-                  v-for="file in currentFeedback.attachments"
-                  :key="file.id"
-                  @click="handleDownloadFile(file)"
-                  target="_blank"
-                  type="primary"
-                  style="margin-right: 10px"
-              >{{ file.filename }}
-              </el-link>
-            </div>
             <div v-if="currentSubmission.code">
               <b>代码：</b>
-              <div style="white-space: pre-wrap; background: #f5f7fa; padding: 8px; border-radius: 4px;">
-                {{ currentSubmission.code.code }}
-              </div>
+              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
+              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">{{ currentSubmission.code.code }}</pre>
             </div>
-          </div>
-        </el-dialog>
-
-        <!-- 提交记录弹窗 -->
-        <el-dialog
-            v-model="submissionDialogVisible"
-            title="作业提交详情"
-            width="500px"
-        >
-          <div v-if="currentSubmission">
-            <p><b>提交时间：</b>{{ timestampToString(currentSubmission.submittedTime) }}</p>
-            <div v-if="!currentSubmission.code">
+            <div v-else>
               <b>内容：</b>
               <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
             </div>
             <div v-if="currentSubmission.attachments?.length">
               <b>附件：</b>
               <el-link
-                  v-for="file in currentSubmission.attachments"
-                  :key="file.id"
-                  :href="file.url"
-                  target="_blank"
-                  type="primary"
-                  style="margin-right: 10px"
-              >{{ file.filename }}
-              </el-link>
+                v-for="file in currentSubmission.attachments"
+                :key="file.id"
+                @click="handleDownloadFile(file)"
+                target="_blank"
+                type="primary"
+                style="margin-right: 10px"
+              >{{ file.filename }}</el-link>
             </div>
+            <hr />
+            <p><b>评分：</b>{{ currentFeedback.score }}</p>
+            <p><b>评语：</b></p>
+            <md-preview :model-value="currentFeedback.content"/>
+            <p><b>批改时间：</b>{{ timestampToString(currentFeedback.createTime) }}</p>
+            <div v-if="currentFeedback.attachments?.length">
+              <b>批改附件：</b>
+              <el-link
+                v-for="file in currentFeedback.attachments"
+                :key="file.id"
+                @click="handleDownloadFile(file)"
+                target="_blank"
+                type="primary"
+                style="margin-right: 10px"
+              >{{ file.filename }}</el-link>
+            </div>
+          </div>
+        </el-dialog>
+
+        <!-- 提交记录弹窗 -->
+        <el-dialog
+          v-model="submissionDialogVisible"
+          title="作业提交详情"
+          width="600px"
+        >
+          <div v-if="currentSubmission">
+            <p><b>提交时间：</b>{{ timestampToString(currentSubmission.submittedTime) }}</p>
             <div v-if="currentSubmission.code">
               <b>代码：</b>
-              <div style="white-space: pre-wrap; background: #f5f7fa; padding: 8px; border-radius: 4px;">
-                {{ currentSubmission.code.code }}
-              </div>
+              <el-tag size="small" style="margin-left: 8px">{{ currentSubmission.code.language }}</el-tag>
+              <pre style="background: #f8f8f8; padding: 12px; border-radius: 6px; margin-top: 8px; white-space: pre-wrap;">
+        {{ currentSubmission.code.code }}</pre>
+            </div>
+            <div v-else>
+              <b>内容：</b>
+              <div style="white-space: pre-wrap;">{{ currentSubmission.content }}</div>
+            </div>
+            <div v-if="currentSubmission.attachments?.length">
+              <b>附件：</b>
+              <el-link
+                v-for="file in currentSubmission.attachments"
+                :key="file.id"
+                @click="handleDownloadFile(file)"
+                target="_blank"
+                type="primary"
+                style="margin-right: 10px"
+              >{{ file.filename }}</el-link>
             </div>
           </div>
         </el-dialog>
@@ -281,6 +291,8 @@ import {getAllAssignments} from "@/api/feedback";
 import {ElMessage} from "element-plus";
 import {useDownloader} from "@/composables/useDownloader";
 import {FileMeta} from "@/types/fileMeta";
+import {MdPreview} from "md-editor-v3";
+import "md-editor-v3/lib/preview.css";
 
 const route = useRoute();
 const userStore = useUserStore();
@@ -391,6 +403,7 @@ function handleViewFeedback(row: AssignmentWidget) {
   const records = row.submittedAssignment ?? [];
   if (row.feedback) {
     currentSubmission.value = records.reduce((a, b) => new Date(a.submittedTime) > new Date(b.submittedTime) ? a : b);
+    console.log(currentSubmission.value);
     currentFeedback.value = row.feedback;
     feedbackDialogVisible.value = true;
   } else {

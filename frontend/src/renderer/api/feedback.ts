@@ -57,3 +57,7 @@ export interface AIFeedbackCreate {
 export function postAIFeedback(payload: AIFeedbackCreate) {
     return request.post("/class/widget/assignment/feedback/AI", payload, {timeout: 60000});
 }
+
+export function getGradeCenter(courseId: number) {
+    return request.get("/class/" + courseId + "/grade");
+}
