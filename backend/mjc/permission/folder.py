@@ -19,7 +19,7 @@ def verify_folder_exist(db: Session, folder_id: int):
 async def verify_folders_get(db: SessionDep, class_id: int,
                             current_user: UserInDB = Depends(get_current_user)):
     role = course_service.get_user_class_role(db, current_user.username, class_id)
-    if role is None:
+    if role is None and not current_user.is_admin:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You are not in this class")
 
 
