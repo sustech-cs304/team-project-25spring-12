@@ -70,7 +70,7 @@ const routes: RouteRecordRaw[] = [
             {
                 path: 'admin',
                 name: 'admin',
-                meta: {title: '管理员中心', noAuth: true},
+                meta: {title: '管理员中心', roles: ['admin']},
                 component: () => import('../views/pages/admin.vue'),
             },
         ],

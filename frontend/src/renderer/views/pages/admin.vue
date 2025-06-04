@@ -56,7 +56,7 @@
             <el-table-column label="操作" width="200">
               <template #default="{ row }">
                 <el-button type="warning" size="small" @click="openEditUserDialog(row)">编辑</el-button>
-                <el-button type="danger" size="small" @click="deleteUser(row.username)">删除</el-button>
+                <!-- <el-button type="danger" size="small" @click="deleteUser(row.username)">删除</el-button> -->
               </template>
             </el-table-column>
           </el-table>
@@ -446,7 +446,7 @@ const saveUser = async () => {
         }
         ElMessage.success('用户更新成功');
       } else {
-        const response = await service.post('/users', userData);
+        const response = await service.post('/user/register', userData);
         filteredUsers.value.push(response.data);
         ElMessage.success('用户添加成功');
       }
@@ -505,17 +505,18 @@ const fetchCourses = async (semester_id) => {
     return;
   }
   try {
-    const response = await service.get('/admin/semester/${semester_id}');
+    const response = await service.get(`/admin/semester/${semester_id}`);
     const semesterCourses = response.data;
+    console.log('Semester Courses:', semesterCourses);
     const enrichedCourses = await Promise.all(
       semesterCourses.map(async (course) => {
         try {
           console.log('course:', course);
-          const userResponse = await service.get('/class/${course.id}/user');
+          const userResponse = await service.get(`/class/${course.id}/user`);
           const users = userResponse.data;
           const teacher = users.find((user) => user.role === 'teacher')?.username;
           const assistants = users
-            .filter((user) => user.role === 'assistant')
+            .filter((user) => user.role === 'teaching assistant')
             .map((user) => user.username);
           const students = users
             .filter((user) => user.role === 'student')
@@ -533,7 +534,7 @@ const fetchCourses = async (semester_id) => {
             time: course.time,
           };
         } catch (error) {
-          console.error('获取课程 ${course.id} 的用户数据失败:', error);
+          console.error(`获取课程 ${course.id} 的用户数据失败:`, error);
           return {
             id: course.id,
             course_code: course.courseCode,
@@ -625,30 +626,34 @@ const saveCourse = async () => {
         semester_id: courseForm.value.semester_id,
         course_code: courseForm.value.course_code,
         name: courseForm.value.name,
+        lecturer: courseForm.value.lecturer,
         location: courseForm.value.location,
         time: courseForm.value.time,
       };
+      console.log("courseData", courseData);
+      
       let courseId = courseForm.value.id;
       if (courseId) {
-        await service.patch(`/class/${courseId}`, courseData);
+        courseData.id = courseId
+        await service.patch(`/class`, courseData);
         const userResponse = await service.get(`/class/${courseId}/user`);
         const existingUsers = userResponse.data;
         const existingUsersByRole = {
           teacher: existingUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
-          assistant: existingUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          assistant: existingUsers.filter((u) => u.role === 'teaching assistant').map((u) => u.username),
           student: existingUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
-          ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
+          ...courseForm.value.assistants.map((username) => ({ username, role: 'teaching assistant' })),
           ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
         ];
         const newUsersByRole = {
           teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username).filter(Boolean),
-          assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          assistant: newUsers.filter((u) => u.role === 'teaching assistant').map((u) => u.username),
           student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
-        for (const role of ['teacher', 'assistant', 'student']) {
+        for (const role of ['teacher', 'teaching assistant', 'student']) {
           const usersToAdd = newUsersByRole[role].filter(
             (username) => !existingUsersByRole[role].includes(username)
           );
@@ -660,7 +665,7 @@ const saveCourse = async () => {
             });
           }
         }
-        for (const role of ['teacher', 'assistant', 'student']) {
+        for (const role of ['teacher', 'teaching assistant', 'student']) {
           const usersToRemove = existingUsersByRole[role].filter(
             (username) => !newUsersByRole[role].includes(username)
           );
@@ -681,24 +686,27 @@ const saveCourse = async () => {
         ElMessage.success('课程更新成功');
       } else {
         const response = await service.post('/class', courseData);
+        console.log("savecourse response:", response);
+        
         courseId = response.data.id;
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
-          ...courseForm.value.assistants.map((username) => ({ username, role: 'assistant' })),
+          ...courseForm.value.assistants.map((username) => ({ username, role: 'teaching assistant' })),
           ...courseForm.value.students.map((username) => ({ username, role: 'student' })),
         ].filter((u) => u.username);
         const usersByRole = {
           teacher: newUsers.filter((u) => u.role === 'teacher').map((u) => u.username),
-          assistant: newUsers.filter((u) => u.role === 'assistant').map((u) => u.username),
+          assistant: newUsers.filter((u) => u.role === 'teaching assistant').map((u) => u.username),
           student: newUsers.filter((u) => u.role === 'student').map((u) => u.username),
         };
-        for (const role of ['teacher', 'assistant', 'student']) {
+        for (const role of ['teacher', 'teaching assistant', 'student']) {
           if (usersByRole[role].length > 0) {
-            await service.post(`/class/user`, {
+            params = {
               class_id: courseId,
               usernames: usersByRole[role],
-              role,
-            });
+              role: role,
+            }
+            await service.post(`/class/user`, params);
           }
         }
         courses.value.push({
@@ -719,8 +727,7 @@ const saveCourse = async () => {
 };
 
 const deleteCourse = (id) => {
-  service
-    .delete(`/class/${id}`)
+  service.delete(`/class/${id}`)
     .then(() => {
       courses.value = courses.value.filter((course) => course.id !== id);
       ElMessage.success('课程删除成功');
@@ -861,13 +868,12 @@ const saveSemester = async () => {
 };
 
 const deleteSemester = (id) => {
-  const isUsed = courses.value.some((course) => course.semester === id);
-  if (isUsed) {
-    ElMessage.error('无法删除正在被课程使用的学期');
-    return;
-  }
-  service
-    .delete(`/class/semester/${id}`)
+  // const isUsed = courses.value.some((course) => course.semester === id);
+  // if (isUsed) {
+  //   ElMessage.error('无法删除正在被课程使用的学期');
+  //   return;
+  // }
+  service.delete(`/class/semester/${id}`)
     .then(() => {
       semesters.value = semesters.value.filter((semester) => semester.id !== id);
       ElMessage.success('学期删除成功');
