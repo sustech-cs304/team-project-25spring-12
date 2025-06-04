@@ -643,7 +643,7 @@ const postArgue = () => {
     // 路由到创建Argue的页面
     router.push({
       name: `argue/new`,
-      state: {
+      query: {
         widgetId: props.data.id,
         submittedAssignmentId: props.data.submittedAssignment.at(-1).id,
       }

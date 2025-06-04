@@ -41,7 +41,7 @@ const routes: RouteRecordRaw[] = [
                 path: 'argue/:argueId',
                 name: 'create-argue',
                 meta: {title: '辩驳'},
-                component: () => import('../views/pages/argue.vue'),
+                component: () => import('../views/pages/argue-post.vue'),
             },
             {
                 path: 'argue/new',

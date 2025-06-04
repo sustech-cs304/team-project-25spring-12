@@ -79,19 +79,11 @@
       </div>
 
       <!-- 提交争辩区 -->
-      <!--   提交作业区   -->
-      <div v-if="isEditing">
-        <el-text class="section-title">提交作业</el-text>
+      <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
+        <el-text class="section-title">辩驳理由</el-text>
         <div class="container">
-          <!--   提交文本或文件   -->
           <div class="homework-editor" v-if="props.data.submitType === 'file'">
-            <md-and-file-editor
-                :content="content"
-                :fileList="fileList"
-                ref="contentEditor"
-                @upload="handleSubmissionAttachmentUpload"
-                @remove="handleSubmissionAttachmentRemove"
-            />
+            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
           </div>
           <el-button
               type="primary"
@@ -192,21 +184,8 @@
 import WidgetCard from "./utils/widget-card.vue";
 import MdAndFile from "./utils/md-and-file.vue";
 import MdAndFileEditor from "./utils/md-and-file-editor.vue";
-import {computed, onMounted, ref} from "vue";
+import {computed, ref} from "vue";
 import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
-import {
-  addWidgetAttachment,
-  removeWidgetAttachment,
-  createSubmission,
-  createSubmissionAttachment,
-  editAssignmentWidget,
-  Submission,
-  getTestcase, createTestcase, editTestcase
-} from "@/api/courseMaterial";
-import {ElMessage} from "element-plus";
-import {DocWidget, WidgetUnion} from "@/types/widgets";
-import {useUploader} from "@/composables/useUploader";
-import {getRoleByCourseId} from "@/composables/useUserData";
 
 const props = defineProps({
   data: {
@@ -278,99 +257,6 @@ const displayOriginalScore = props.data.originalScore;
 const displayVerifiedScore = computed(() => (props.data.status === "returned" ? props.data.verifiedScore : "--"));
 const displayMaxScore = props.data.maxScore;
 
-// 提交作业区
-const isEditing = ref(false);
-const currentFeedback = ref<Feedback | null>(null);
-const selectedLanguage = ref<string>("cpp");
-const code = ref<string>('');
-const content = ref<string>("");
-const fileList = ref<FileMeta[]>([]);
-
-const beginNewSubmission = () => {
-  code.value = '';
-  selectedLanguage.value = 'cpp';
-  content.value = '';
-  contentEditor.value?.updateContent(content.value);
-  fileList.value = [];
-  currentFeedback.value = null;
-  isEditing.value = true;
-}
-
-const editSubmittedAssignment = (record: SubmittedRecord) => {
-  if (props.data.submitType === 'code') {
-    code.value = JSON.parse(JSON.stringify(record.code?.code ?? ''));
-    selectedLanguage.value = JSON.parse(JSON.stringify(record.code?.language ?? 'cpp'));
-    selectedLanguage.value = languages.find(l => l.backend === selectedLanguage.value)?.value;
-  } else if (props.data.submitType === 'file') {
-    content.value = JSON.parse(JSON.stringify(record.content ?? ''));
-    contentEditor.value?.updateContent(content.value);
-    fileList.value = JSON.parse(JSON.stringify(record.attachments ?? []));
-  } else {
-    ElMessage.error("加载提交记录失败：未知作业类型")
-  }
-  currentFeedback.value = record.feedback;
-  isEditing.value = true;
-}
-
-const handleSubmissionAttachmentUpload = async (file: FileMeta) => {
-  const index = fileList.value.findIndex(f => f.id === file.id);
-  if (index === -1) {
-    fileList.value.push(file);
-  }
-}
-
-const handleSubmissionAttachmentRemove = async (file: FileMeta) => {
-  const index = fileList.value.findIndex(f => f.id === file.id);
-  if (index !== -1) {
-    fileList.value.splice(index, 1);
-  }
-}
-
-const submit = async () => {
-  let submission: Submission = {
-    widgetId: props.data.id
-  };
-  let submissionAttachments: FileMeta[] = [];
-  if (props.data.submitType === 'code') {
-    if (codeEditor.value) {
-      submission.code = {
-        code: codeEditor.value.getCode(),
-        language: languages.find(l => l.value === selectedLanguage.value)?.backend,
-      }
-    } else {
-      ElMessage.error("提交失败：未找到代码编辑框")
-    }
-  } else if (props.data.submitType === 'file') {
-    if (contentEditor.value) {
-      submission.content = contentEditor.value.getContent();
-      submissionAttachments = fileList.value;
-    } else {
-      ElMessage.error("提交失败：未找到文本编辑框")
-    }
-  } else {
-    ElMessage.error("提交失败：未知作业类型")
-  }
-  const response = await createSubmission(submission)
-  if (response.status === 200) {
-    let failed = false;
-    for (const attachment of submissionAttachments) {
-      const response2 = await createSubmissionAttachment(response.data.id, attachment.id);
-      if (response2.status !== 200) {
-        ElMessage.error("提交失败：附件 " + attachment.filename + " 上传失败");
-        failed = true;
-        break;
-      }
-    }
-    if (!failed) {
-      ElMessage.success("提交成功！");
-      window.location.reload();
-    }
-  } else {
-    ElMessage.error("提交失败：未能创建提交，请稍后再试");
-  }
-}
-
-// 投票区
 const votePercentage = computed(() => {
   return props.data.voteTotal === 0 ?
     0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100);
@@ -444,14 +330,6 @@ const submitComment = () => {
 const handleReply = (author: string) => {
   newComment.value = `@${author} `;
 };
-
-onMounted(async () => {
-  const role = getRoleByCourseId(props.data.courseId);
-  isTeacher.value = role === 'teacher' || role === 'admin';
-  // isEditing.value = props.data.status === 'pending' &&
-  //                   props.data.starter === localStorage.getItem('username');
-  isEditing.value = true;
-});
 </script>
 
 

@@ -1,78 +1,39 @@
 <template>
     <div class="page">
-      <!-- <argue :data="argueDataPending"></argue> -->
-      <argue :data="argueDataSubmitted"></argue>
-      <argue :data="argueDataReturned"></argue>
+      <argue :data="argueDataPending"></argue>
     </div>
 </template>
 
 
 <script setup lang="ts">
-  import argue from "../widgets/argue.vue"
-  const argueDataSubmitted = {
-    title: 'ArgueSubmitted',
-    content: '# 要Argue的作业\n\n你觉得老师批改有误',
-    attachments: [
-      {
-        filename: '您的提交.pdf',
-        url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
-      },
-    ],
-    status: 'submitted',
-    submitType: 'file',
-    originalScore: 90,
-    verifiedScore: 85,
-    maxScore: 100,
-    
-    submittedArguement: {
-        attachments: [
-          {
-            filename: '您的争辩附件.pdf',
-            url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
-          },
-        ],
-        content: "# This is my kingdom come↑\n\nThis is my kingdom come↓",
-        time: "2025-03-14 11:45:16",
-    },
+import argue from "../widgets/argue.vue"
+import {useRoute} from "vue-router"
 
-    voteTotal: 0,
-    voteSupport: 0,
-  }
+const { widgetId, submittedAssignmentId } = useRoute().query
 
-  const argueDataReturned = {
-    title: 'ArgueReturned',
-    content: '# 要Argue的作业\n\n你觉得老师批改有误',
-    attachments: [
-      {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
-    ],
-    status: 'returned',
-    submitType: 'file',
-    originalScore: 90,
-    verifiedScore: 85,
-    maxScore: 100,
+const argueDataPending = {
+  title: 'ArguePending',
+  content: '# 要Argue的作业\n\n你觉得老师批改有误',
+  attachments: [
+    {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
+  ],
+  status: 'pending',
+  submitType: 'file',
+  originalScore: 90,
+  verifiedScore: 85,
+  maxScore: 100,
 
-    submittedArguement: {
-        attachments: [
-          {
-            filename: '您的争辩附件.pdf',
-            url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip',
-          },
-        ],
-        content: "# This is my kingdom come↑\n\nThis is my kingdom come↓",
-        time: "2025-03-14 11:45:16",
-    },
-
-    voteTotal: 3,
-    voteSupport: 1,
-  }
+  voteTotal: 0,
+  voteSupport: 0,
+}
 </script>
 
 
 <style scoped>
-  .page {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    width: 100%;
-  }
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
 </style>
