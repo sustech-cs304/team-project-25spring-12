@@ -2,7 +2,7 @@
   <widget-card :title="computedTitle" color="orange" icon="Opportunity">
     <div class="overall_container">
       <!-- 工具栏：关注按钮和打分框 -->
-      <div class="toolbar">
+      <div class="toolbar" v-if="props.data.status != 'pending'">
         <!-- 关注按钮 -->
         <div class="follow-section">
           <el-button
@@ -89,7 +89,7 @@
             <md-and-file-editor
                 :content="argueContent"
                 :fileList="argueFileList"
-                ref="contentEditor"
+                ref="argueEditor"
                 @upload="handleArgueAttachmentUpload"
                 @remove="handleArgueAttachmentRemove"
             />
@@ -117,15 +117,15 @@
           </el-col>
           <el-col :span="16">
             <el-text truncated>
-              提交时间：{{ props.data.submittedArguement.updateTime }}
+              提交时间：{{ props.data.submitTime }}
             </el-text>
           </el-col>
         </el-row>
         <div class="container">
-          <md-and-file
+          <!-- <md-and-file
             :fileList="argueFileList"
             :content="argueContent"
-          />
+          /> -->
         </div>
       </div>
 
@@ -133,13 +133,13 @@
       <div v-if="isTeacher">
         <el-text class="section-title">编辑辩驳反馈</el-text>
         <div class="container">
-          <md-and-file-editor
-            :fileList="props.data.argueFeedbackFilelist"
-            :content="props.data.argueFeedbackContent"
-            ref="contentEditor"
+          <!-- <md-and-file-editor
+            :fileList="argueFeedbackFileList"
+            :content="argueFeedbackContent"
+            ref="argueFeedbackEditor"
             @upload="handleArgueFeedbackAttachmentUpload"
             @remove="handleArgueFeedbackAttachmentRemove"
-          />
+          /> -->
         </div>
       </div>
 
@@ -147,10 +147,10 @@
       <div v-if="props.data.status === 'returned' && !isTeacher">
         <el-text class="section-title">辩驳反馈</el-text>
         <div class="container">
-          <md-and-file
+          <!-- <md-and-file
             :fileList="props.data.argueFeedbackFilelist"
             :content="props.data.argueFeedbackContent"
-          />
+          /> -->
         </div>
       </div>
 
@@ -467,13 +467,17 @@ onMounted(async () => {
   argueEditor.value?.updateContent(argueContent.value);
   argueFeedbackContent.value = props.data.argueFeedbackContent || '';
   argueFeedbackFileList.value = props.data.argueFeedbackFileList || [];
-  argueEditor.value?.updateContent(argueFeedbackContent.value);
+  argueFeedbackEditor.value?.updateContent(argueFeedbackContent.value);
+
+  console.log("onmount", argueContent, argueFileList, argueFeedbackContent, argueFeedbackFileList);
   
-  const role = getRoleByCourseId(props.data.courseId);
+  const role = await getRoleByCourseId(props.data.courseId);
   isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
   isEditing.value = (props.data.status === 'pending' &&
                     props.data.starter === userStore.username) ||
                     userStore.isAdmin === true;
+  console.log("role", role, isTeacher.value, isEditing.value);
+  
 });
 </script>
 
@@ -527,16 +531,6 @@ onMounted(async () => {
   background-color: transparent;
   border: none;
   gap: 20px;
-  /* padding: 20px; */
-}
-
-.toolbar {
-  display: flex;
-  align-items: center;
-  gap: 15px;
-  background-color: white;
-  width: 100%;
-  padding: 10px;
 }
 
 .code-editor {
@@ -551,12 +545,6 @@ onMounted(async () => {
 .code-editor :deep(.CodeMirror) {
   height: 100%;
 }
-
-/* .el-text {
-  margin-right: 8px;
-  font-size: 14px;
-  color: #606266;
-} */
 
 .el-select {
   width: 120px;
@@ -634,8 +622,6 @@ onMounted(async () => {
   padding: 8px 16px;
   font-size: 14px;
   border-radius: 8px;
-  /* background: #409eff; */
-  /* color: #fff; */
 }
 
 .el-button:hover {

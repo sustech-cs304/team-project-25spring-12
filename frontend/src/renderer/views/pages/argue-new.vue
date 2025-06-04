@@ -1,34 +1,50 @@
 <template>
     <div class="page">
-      <argue :data="argueDataPending"></argue>
+      <argue :data="argueNew"></argue>
     </div>
 </template>
 
 
 <script setup lang="ts">
-import { onMounted } from "vue"
+import { onMounted, ref } from "vue"
 import argue from "../widgets/argue.vue"
 import {useRoute} from "vue-router"
+import request from '../../utils/request';
 
 const { widgetId } = useRoute().query
 
-const argueDataPending = {
-  title: 'ArguePending',
-  content: '# 要Argue的作业\n\n你觉得老师批改有误',
-  attachments: [
-    {filename: '您的提交.pdf', url: 'https://ri-sycdn.kuwo.cn/c402c52983f7a06060cc9403927d09e1/67f66f89/resource/n2/55/73/2708435384.mp3?bitrate$128&from=vip'},
-  ],
-  status: 'pending',
-  originalScore: 90,
-  verifiedScore: 0,
-  maxScore: 100,
+const argueNew = ref({})
 
-  voteTotal: 0,
-  voteSupport: 0,
-}
-
-onMounted(() => {
-
+onMounted(async () => {
+  try {
+    const response = await request.get(`/class/widget/${widgetId}/submission/student`);
+    console.log("newdata: ", response.data);
+    // const assignmentContent = response.data.content;
+    // const assignmentFileList = response.data.attachments;
+    const submission = response.data.submittedAssignment.at(-1);
+    console.log("sub: ", submission);
+    // const submissionContent = submission.content;
+    // const submissionFileList = submission.attachments;
+    // const feedbackContent = submission.feedback.content;
+    // const feedbackFileList = submission.feedback.attachments;
+    argueNew.value = {
+      status: "pending",
+      assignmentContent: response.data.content || "",
+      assignmentFileList: response.data.attachments || [],
+      submissionContent: submission.content || "",
+      submissionFileList: submission.attachments || [],
+      feedbackContent: submission.feedback.content || "",
+      feedbackFileList: submission.feedback.attachments || [],
+      argueContent: "",
+      argueFileList: [],
+      argueFeedbackContent: "",
+      argueFeedbackFileList: [],
+      submitTime: "",
+    }
+    console.log("newdata: ", argueNew.value);
+  } catch (error) {
+    
+  }
 })
 </script>
 

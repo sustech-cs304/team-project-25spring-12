@@ -164,6 +164,7 @@
           <el-button
               type="primary"
               :icon="ChatRound"
+              :disabled="props.data.submitType === 'code'"
               @click="postArgue"
               style="width: 140px; margin-right: auto"
           >
