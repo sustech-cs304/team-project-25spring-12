@@ -151,11 +151,12 @@ def get_class_role(db:Session, cls_id: int) -> list[ClassUserRoleName] | None:
     links = crud_course.get_class_roles(db, cls_id)
     if links:
         return [entity2class_user_role(db, link) for link in links]
+    return []
 
 
-def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> [ClassUserRoleName]:
+def enroll_class_users(db: Session, enroll: ClassUserEnroll) -> list[ClassUserRoleName]:
     links = crud_course.enroll_class_users(db, enroll)
-    users: [ClassUserRoleName] = []
+    users: list[ClassUserRoleName] = []
     if links:
         users = [entity2class_user_role(db, link) for link in links]
     return users
@@ -165,6 +166,7 @@ def update_class_user(db: Session, class_user: ClassUserUpdate) -> ClassUserRole
     link = crud_course.update_class_user(db, class_user)
     if link:
         return entity2class_user_role(db, link)
+    return None
 
 
 def unroll_class_user(db: Session, class_id: int, username: str) -> Message:

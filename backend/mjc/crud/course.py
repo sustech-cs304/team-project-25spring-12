@@ -122,7 +122,7 @@ def get_class_user_link(db: Session, username: str, cls_id: int) -> ClassUserLin
     return link
 
 
-def get_class_roles(db: Session, cls_id: int) -> [ClassUserLink]:
+def get_class_roles(db: Session, cls_id: int) -> list[ClassUserLink]:
     stmt = select(ClassUserLink).where(ClassUserLink.class_id == cls_id)
     links = db.exec(stmt).all()
     return links
