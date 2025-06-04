@@ -3,7 +3,6 @@
     <!-- 左侧区域 -->
     <div class="header-left">
       <img class="logo" src="../assets/img/logo.svg" alt="Logo"/>
-      <div class="web-title">后台管理系统</div>
 
       <!-- 导航按钮 -->
       <div class="nav-buttons">
@@ -56,6 +55,14 @@
                   项目仓库
                 </el-dropdown-item>
               </a>
+              <a href="https://github.com/sustech-cs304/team-project-25spring-12/wiki" target="_blank">
+                <el-dropdown-item>
+                  <el-icon>
+                    <Compass/>
+                  </el-icon>
+                  用户指南
+                </el-dropdown-item>
+              </a>
               <el-dropdown-item divided command="logout">
                 <el-icon>
                   <SwitchButton/>
@@ -77,7 +84,7 @@ import {
   HomeFilled,
   ChatRound,
   FullScreen,
-  Bell,
+  Compass,
   ArrowDown,
   Link,
   SwitchButton

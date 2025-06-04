@@ -7,7 +7,7 @@
           :label="semester"
           :name="semester"
       >
-        <el-scrollbar max-height="800px" wrap-style="padding-right: 4px;">
+        <el-scrollbar wrap-style="padding-right: 4px; max-height: calc(100vh - 275px)">
           <div class="course-scroll">
             <el-card
                 v-for="course in coursesBySemester[semester]"

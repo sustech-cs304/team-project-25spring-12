@@ -2,8 +2,16 @@
   <div class="login-wrapper">
     <div class="login-container">
       <div class="login-header">
-        <img class="logo" src="../../assets/img/logo.svg" alt="Logo"/>
-        <h1 class="login-title">后台管理系统</h1>
+        <img class="logo" src="../../assets/img/logo.svg" alt="Logo" />
+        <h1 class="login-title">
+          <template v-for="(char, index) in typedChars" :key="index">
+            <span
+                :class="getCharClass(char)"
+                v-text="char"
+            />
+          </template>
+          <span class="cursor">|</span>
+        </h1>
       </div>
       <el-form :model="loginFormData" :rules="rules" ref="loginForm" size="large">
         <el-form-item prop="username">
@@ -38,7 +46,7 @@
 </template>
 
 <script setup lang="ts">
-import {reactive, ref} from 'vue';
+import {reactive, ref, onMounted} from 'vue';
 import {useRouter} from 'vue-router';
 import type {FormInstance, FormRules} from 'element-plus';
 import {ElMessage} from 'element-plus';
@@ -46,6 +54,27 @@ import {useTabsStore} from '@/store/tabs';
 import {useUserStore} from '@/store/user';
 import {useLogin} from "@/composables/useLogin";
 import {LoginRequest} from "@/types/auth";
+
+// 文本内容（可调）
+const fullText = 'Ave MujiClass 课程信息系统'
+const typedChars = ref<string[]>([])
+
+onMounted(() => {
+  let i = 0
+  const interval = setInterval(() => {
+    typedChars.value.push(fullText[i])
+    i++
+    if (i >= fullText.length) clearInterval(interval)
+  }, 60)
+})
+
+// 区分字符类型（英文、中文、空格）
+function getCharClass(char: string) {
+  if (char === ' ') return 'space'
+  if (/[A-Za-z]/.test(char)) return 'brand-en'
+  if (/[\u4e00-\u9fa5]/.test(char)) return 'brand-cn'
+  return ''
+}
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -96,8 +125,8 @@ useTabsStore().clearTabs();
 }
 
 .login-container {
-  width: 420px;
-  padding: 40px 50px;
+  width: 540px;
+  padding: 40px 100px;
   background-color: white;
   border-radius: 8px;
   box-sizing: border-box;
@@ -126,4 +155,61 @@ useTabsStore().clearTabs();
 .login-btn {
   width: 100%;
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&family=Noto+Serif+SC:wght@500&display=swap');
+
+.login-header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 30px;
+  white-space: nowrap;
+}
+
+.logo {
+  width: 60px;
+  height: 60px;
+  margin-right: 16px;
+  transition: margin 0.3s ease;
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  font-family: 'Montserrat', 'Noto Serif SC', sans-serif;
+}
+
+/* 字体样式 */
+.brand-en {
+  font-family: 'Montserrat', sans-serif;
+  background: linear-gradient(90deg, #2563eb, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-cn {
+  font-family: 'Noto Serif SC', serif;
+  color: #374151;
+}
+
+.space {
+  display: inline-block;
+  width: 0.5em;
+}
+
+/* 光标动画 */
+.cursor {
+  font-weight: 400;
+  margin-left: 2px;
+  color: rgba(0, 0, 0, 0.2);
+  animation: blink-caret 0.75s step-end infinite;
+}
+
+@keyframes blink-caret {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
 </style>
