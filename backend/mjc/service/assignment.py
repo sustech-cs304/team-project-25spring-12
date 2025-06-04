@@ -285,7 +285,10 @@ def update_test_case(db: Session, test_case: TestCaseUpdate) -> TestCase:
             except Exception as e:
                 print(e)
             _, info = oj.extract_test_cases(file_entity.system_path, test_case.id)
-            shutil.rmtree(old_test_case_path + '_old')
+            try:
+                shutil.rmtree(old_test_case_path + '_old')
+            except Exception as e:
+                print(e)
             test_case_entity.info = json.dumps(info)
         except Exception as e:
             raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
