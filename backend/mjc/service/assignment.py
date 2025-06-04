@@ -216,7 +216,7 @@ def judge(submission: SubmittedAssignment,
         if result.get('err') is None:
             test_points = sorted(result['data'], key=lambda x: x['test_case'])
             correct, total = 0, len(test_points)
-            content = "| # | 结果 |\n" + "| --- | --- |"
+            content = "| # | 结果 |\n" + "| --- | --- |\n"
             for test_point in test_points:
                 correct += 1 if test_point['result'] == 0 else 0
                 content += f'| {test_point["test_case"]} | {oj.translate_judge_result(test_point["result"])} |\n'
