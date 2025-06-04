@@ -12,7 +12,7 @@ import {AssignmentWidget} from "@/types/widgets";
 import {computed, onMounted, ref} from "vue";
 import {useRoute} from "vue-router";
 import {getAllAssignments} from "@/api/feedback";
-import {getCourse} from "@/api/course";
+import {getCourseInfo} from "@/api/course";
 import {Course} from "@/types/course";
 
 const route = useRoute();
@@ -24,7 +24,7 @@ const widgetsSorted = computed(() => [...widgets.value].sort((a, b) => a.id - b.
 
 onMounted(async () => {
   courseId.value = Number(route.params.courseId);
-  const courseResponse = await getCourse(courseId.value);
+  const courseResponse = await getCourseInfo(courseId.value);
   const course = courseResponse.data as Course;
   courseName.value = course.name;
   const assignmentsResponse = await getAllAssignments(courseId.value);
