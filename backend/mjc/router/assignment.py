@@ -109,4 +109,4 @@ async def create_testcase(db: SessionDep, test_case: TestCaseCreate):
               dependencies=[Depends(assignment_permission.verify_test_case_update)],
               response_model=TestCase)
 async def update_testcase(db: SessionDep, test_case: TestCaseUpdate):
-    return assignment_service.update_test_case(db, testc_ase)
+    return assignment_service.update_test_case(db, test_case)
