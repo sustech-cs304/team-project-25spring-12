@@ -9,7 +9,6 @@ import requests
 import mjc.config as mjc_config
 import mjc.utils.judger_config as judger_config
 
-md = hashlib.md5()
 judge_result = {
     -1: 'WRONG_ANSWER',
     0: 'ACCEPT',
@@ -50,7 +49,7 @@ def judge(src: str, language: str, test_case_id: str,
 def build_test_point_info(case_name: str, in_path: str, out_path: str):
     input_name = in_path.split('/')[-1]
     output_name = out_path.split('/')[-1]
-
+    md = hashlib.md5()
     with open(in_path, 'r', encoding='utf-8') as f:
         input_ = f.read()
         input_size = len(input_.encode('utf-8'))
