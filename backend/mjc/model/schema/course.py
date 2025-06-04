@@ -3,7 +3,7 @@ from datetime import datetime
 from pydantic import BaseModel
 
 from mjc.model.schema.common import File
-from mjc.model.entity import ClassRole
+from mjc.model.entity.course import ClassRole
 
 
 class ClassBase(BaseModel):
@@ -17,7 +17,7 @@ class ClassBase(BaseModel):
 
 class ClassCard(ClassBase):
     id: int
-    role: str | None = None
+    role: ClassRole | None = None
 
 
 class Class(ClassBase):
@@ -66,9 +66,17 @@ class Announcement(BaseModel):
 class DDL(BaseModel):
     class_id: int
     class_name: str
-    assignment_id: int
-    assignment_name: str
+    widget_id: int
+    widget_title: str
+    page_id: int
+    page_name: str
     ddl: datetime
+    course_code: str
+
+
+class ClassUserRole(BaseModel):
+    username: str
+    role: ClassRole
 
 
 class ClassUserEnroll(BaseModel):
@@ -80,4 +88,10 @@ class ClassUserEnroll(BaseModel):
 class ClassUserUpdate(BaseModel):
     class_id: int
     username: str
+    role: ClassRole
+
+
+class ClassUserRoleName(ClassUserRole):
+    username: str
+    name: str
     role: ClassRole

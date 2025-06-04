@@ -9,7 +9,6 @@
 
 <script setup lang="ts">
   import argue from "../widgets/argue.vue"
-  import comment from "../widgets/comment.vue"
   
   const argueDataPending = {
     title: 'ArguePending',

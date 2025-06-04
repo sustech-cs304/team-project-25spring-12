@@ -3,7 +3,7 @@ from sqlmodel import Session
 
 from mjc.utils.database import SessionDep
 from mjc.model.schema.user import UserInDB
-from mjc.model.entity import ClassRole
+from mjc.model.entity.course import ClassRole
 from mjc.service.user import get_current_user
 from mjc.service import course as course_service
 from mjc.model.schema.course import ClassUpdate

@@ -12,6 +12,7 @@ export const useUserStore = defineStore('user', {
     state: (): UserState => ({
         accessToken: '',
         username: '',
+        isAdmin: false,
         courses: null,
         deadlines: null,
     }),
@@ -25,6 +26,11 @@ export const useUserStore = defineStore('user', {
         setUsername(name: string) {
             this.username = name
             localStorage.setItem('username', name)
+        },
+
+        setAdmin(isAdmin: boolean) {
+            this.isAdmin = isAdmin
+            localStorage.setItem('is_admin', isAdmin.toString())
         },
 
         clearToken() {

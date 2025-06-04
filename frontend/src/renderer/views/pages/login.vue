@@ -54,6 +54,8 @@ import {useTabsStore} from '@/store/tabs';
 import {useUserStore} from '@/store/user';
 import {useLogin} from "@/composables/useLogin";
 import {LoginRequest} from "@/types/auth";
+import request from "@/utils/request";
+import { assert } from 'pdfjs-dist/types/src/shared/util';
 
 // 文本内容（可调）
 const fullText = 'Ave MujiClass 课程信息系统'
@@ -100,12 +102,21 @@ const submitForm = () => {
         const result = await login(loginFormData);
         userStore.setToken(result.accessToken);
         userStore.setUsername(loginFormData.username);
+        const resp = await request.get(`/user/${loginFormData.username}`);
+        console.log(resp.data);
+        if (!resp.data.isActive) {
+          throw new Error('Inactive');
+        }
+        userStore.setAdmin(resp.data.isAdmin);
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {
         const status = error?.response?.status;
         if (status === 401) {
           ElMessage.error('登录失败，请检查用户名或密码');
+        }
+        if ((<Error>error).message === 'Inactive') {
+          ElMessage.error('账号未激活，请联系管理员');
         }
       }
     }

@@ -1,6 +1,38 @@
 <template>
   <widget-card :title="computedTitle" color="orange" icon="Opportunity">
-    <div class="container">
+    <div class="overall_container">
+      <!-- 工具栏：关注按钮和打分框 -->
+      <div class="toolbar" v-if="props.data.status != 'pending'">
+        <!-- 关注按钮 -->
+        <div class="follow-section">
+          <el-button
+            :type="isFollowed ? 'primary' : 'default'"
+            @click="toggleFollow"
+            :icon="isFollowed ? 'StarFilled' : 'Star'"
+          >
+            {{ isFollowed ? '已关注' : '关注' }} ({{ followCount }})
+          </el-button>
+        </div>
+        <!-- 打分框（仅教师可见） -->
+        <div class="score-section" v-if="isTeacher">
+          <el-input-number
+            v-model="revisedScore"
+            :min="0"
+            :max="props.data.maxScore"
+            placeholder="输入评分"
+            size="small"
+            style="width: 120px; margin-right: 10px;"
+          />
+          <el-button
+            type="primary"
+            @click="submitArgueFeedback"
+            :disabled="revisedScore === null"
+          >
+            提交评分
+          </el-button>
+        </div>
+      </div>
+
       <!-- 辩驳状态 -->
       <div>
         <el-text class="section-title">辩驳状态</el-text>
@@ -20,7 +52,7 @@
               <el-col :span="12" class="score-display">
                 <span class="original-score" :style="{ color: originalScoreColor }">{{ displayOriginalScore }}</span>
                 / 
-                <span class="verified-score" :style="{ color: verifiedScoreColor }">{{ displayVerifiedScore }}</span>
+                <span class="Revised-score" :style="{ color: revisedScoreColor }">{{ displayRevisedScore }}</span>
                 / 
                 <span class="max-score">{{ displayMaxScore }}</span>
               </el-col>
@@ -31,36 +63,41 @@
       <!-- 作业信息 -->
       <div>
         <el-text class="section-title">作业信息</el-text>
-        <md-and-file :fileList="props.data.attachments" :content="props.data.content"/>
+        <md-and-file
+          :fileList="props.data.assignmentFileList"
+          :content="props.data.assignmentContent"
+        />
       </div>
     
       <!-- 批改建议 -->
       <div>
         <el-text class="section-title">批改建议</el-text>
         <div class="container">
-          <md-and-file :fileList="props.data.returnedFiles" :content="props.data.feedback"/>
-        </div>
-      </div>
-
-      <!-- 辩驳反馈 -->
-      <div v-if="props.data.status === 'returned'">
-        <el-text class="section-title">辩驳反馈</el-text>
-        <div class="container">
-          <md-and-file :fileList="props.data.argueReturnedFiles" :content="props.data.argueFeedback"/>
+          <md-and-file
+            :fileList="props.data.feedbackFileList"
+            :content="props.data.feedbackContent"
+          />
         </div>
       </div>
 
       <!-- 提交争辩区 -->
-      <div class="argue-submit" v-if="props.data.status === 'pending' || isEditing">
-        <el-text class="section-title">辩驳理由</el-text>
+      <div v-if="isEditing">
+        <el-text class="section-title">提交辩驳</el-text>
         <div class="container">
-          <div class="homework-editor" v-if="props.data.submitType === 'file'">
-            <md-and-file-editor :content="content" :fileList="fileList" ref="contentEditor"/>
+          <!--   提交文本或文件   -->
+          <div class="homework-editor">
+            <md-and-file-editor
+                :content="argueContent"
+                :fileList="argueFileList"
+                ref="argueEditor"
+                @upload="handleArgueAttachmentUpload"
+                @remove="handleArgueAttachmentRemove"
+            />
           </div>
           <el-button
               type="primary"
               :icon="Upload"
-              @click="submit"
+              @click="submitArgue"
               style="width: 120px; margin-left: auto"
           >
             提交辩驳
@@ -79,21 +116,41 @@
             </el-icon>
           </el-col>
           <el-col :span="16">
-            <el-text truncated>提交时间：{{ props.data.submittedArguement.time }}</el-text>
-          </el-col>
-          <el-col :span="6" class="edit-button">
-            <el-button
-                type="primary"
-                link
-                :icon="Edit"
-                @click="editSubmittedArguement(props.data.submittedArguement)"
-            >
-              编辑
-            </el-button>
+            <el-text truncated>
+              提交时间：{{ props.data.submitTime }}
+            </el-text>
           </el-col>
         </el-row>
         <div class="container">
-          <md-and-file :fileList="props.data.submittedArguement.attachments" :content="props.data.submittedArguement.content"/>
+          <!-- <md-and-file
+            :fileList="argueFileList"
+            :content="argueContent"
+          /> -->
+        </div>
+      </div>
+
+      <!-- 教师编辑辩驳反馈 -->
+      <div v-if="isTeacher">
+        <el-text class="section-title">编辑辩驳反馈</el-text>
+        <div class="container">
+          <!-- <md-and-file-editor
+            :fileList="argueFeedbackFileList"
+            :content="argueFeedbackContent"
+            ref="argueFeedbackEditor"
+            @upload="handleArgueFeedbackAttachmentUpload"
+            @remove="handleArgueFeedbackAttachmentRemove"
+          /> -->
+        </div>
+      </div>
+
+      <!-- 辩驳反馈 -->
+      <div v-if="props.data.status === 'returned' && !isTeacher">
+        <el-text class="section-title">辩驳反馈</el-text>
+        <div class="container">
+          <!-- <md-and-file
+            :fileList="props.data.argueFeedbackFilelist"
+            :content="props.data.argueFeedbackContent"
+          /> -->
         </div>
       </div>
 
@@ -111,290 +168,541 @@
                 :status=voteStatus
                 :indeterminate=voteIndeterminate
               >
-              <el-text type="primary">{{ props.data.voteSupport }} / {{ props.data.voteTotal }}</el-text>
+              <el-text type="primary">{{ voteSupport }} / {{ voteTotal }}</el-text>
               </el-progress>
             </el-table-column>
-            <el-table-column label="投票">
+            <el-table-column label="投票" width="200">
               <div style="display: flex; align-items: center">
                 <!-- <el-button-group> -->
-                  <el-button onclick="vote(true)" type="success">支持</el-button>
-                  <el-button onclick="vote(false)" type="warning">反对</el-button>
+                  <el-button
+                    :disabled="hasVoted"
+                    @click="vote(true)"
+                    type="success"
+                  >
+                    支持
+                  </el-button>
+                  <el-button
+                    :disabled="hasVoted"
+                    @click="vote(false)"
+                    type="warning"
+                  >
+                    反对
+                  </el-button>
                 <!-- </el-button-group> -->
               </div>
             </el-table-column>
           </el-table>
         </el-row>
+        <div class="comment-section">
+          <!-- 发布新评论 -->
+          <div class="comment-input">
+            <el-input
+              v-model="newComment"
+              type="textarea"
+              :rows="3"
+              placeholder="请输入您的评论..."
+              resize="none"
+            ></el-input>
+            <div class="input-actions">
+              <el-button type="primary" @click="submitComment" :disabled="!newComment.trim()">发布评论</el-button>
+            </div>
+          </div>
+
+          <!-- 评论列表 -->
+          <div class="comment-list">
+            <div
+              v-for="comment in comments"
+              :key="comment.id"
+              class="comment-item"
+            >
+              <div class="comment-header">
+                <span class="author">{{ comment.author }}</span>
+                <span class="time">{{ comment.time }}</span>
+              </div>
+              <div class="comment-content">{{ comment.content }}</div>
+              <div class="comment-actions">
+                <el-button type="text" @click="handleReply(comment.author)">回复</el-button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-    <comment :data="{}"></comment>
   </widget-card>
 </template>
   
 <script setup lang="ts">
-  import WidgetCard from "./utils/widget-card.vue";
-  import MdAndFile from "./utils/md-and-file.vue";
-  import MdAndFileEditor from "./utils/md-and-file-editor.vue";
-  import {computed, ref} from "vue";
-  import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
-  import comment from "./comment.vue";
+import WidgetCard from "./utils/widget-card.vue";
+import MdAndFile from "./utils/md-and-file.vue";
+import MdAndFileEditor from "./utils/md-and-file-editor.vue";
+import {computed, onMounted, ref} from "vue";
+import {Checked, Edit, Finished, Memo, Timer, Upload, ChatRound} from "@element-plus/icons-vue";
+import {ElMessage} from "element-plus";
+import {useUploader} from "@/composables/useUploader";
+import {getRoleByCourseId} from "@/composables/useUserData";
+import router from "../../router";
+import { FileMeta } from "../../types/fileMeta";
+import request from "../../utils/request";
+import { Feedback } from "../../types/widgets";
+import { useUserStore } from "../../store/user";
 
-  const props = defineProps({
-    data: {
-      type: Object,
-      required: true,
-    },
-  });
+const props = defineProps({
+  data: {
+    type: Object,
+    required: true,
+  },
+});
+
+const argueEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+const argueFeedbackEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+
+const argueId = ref(-1);
+
+// 关注状态和人数
+const isFollowed = ref(false);
+const followCount = ref(0); // 假设初始关注人数为0
+
+// 教师评分
+const isTeacher = ref(true); // 假设当前用户是教师，实际应从用户角色权限中获取
+const revisedScore = ref<number | null>(null);
+
+// 切换关注状态
+const toggleFollow = () => {
+  try {
+    if (isFollowed.value) {
+      request.post('/argue/watch', {
+        arguePostId: props.data.widgetId,
+      });
+  } else {
+    request.delete(`/argue/${argueId}/watch`);
+  }
+    isFollowed.value = !isFollowed.value;
+    followCount.value += isFollowed.value ? 1 : -1;
+    ElMessage.success(isFollowed.value ? "已关注" : "已取消关注");
+  } catch (error) {
+    ElMessage.error("操作失败，请稍后再试");
+  }
+};
+
+// 本卡片的标题
+const computedTitle = computed(() => props.data?.title || "辩驳");
+
+// 状态区的所有方法，都是外观特效
+const statusIcon = computed(() => {
+  if (props.data.status === "pending") return Timer;
+  if (props.data.status === "submitted") return Finished;
+  if (props.data.status === "returned") return Checked;
+});
+const statusColor = computed(() => {
+  if (props.data.status === "pending") return "red";
+  if (props.data.status === "submitted") return "orange";
+  if (props.data.status === "returned") return "green";
+});
+const originalScoreColor = computed(() => {
+  if (props.data.status === "returned") return "#999";
+  const ratio = props.data.originalScore / props.data.maxScore;
+  const red = Math.round(255 * (1 - ratio));
+  const green = Math.round(255 * ratio);
+  return `rgb(${red}, ${green}, 0)`;
+});
+const revisedScoreColor = computed(() => {
+  if (props.data.status === "pending") return "#666";
+  const ratio = props.data.revisedScore / props.data.maxScore;
+  const red = Math.round(255 * (1 - ratio));
+  const green = Math.round(255 * ratio);
+  return `rgb(${red}, ${green}, 0)`;
+});
+const statusText = computed(() => {
+  if (props.data.status === "pending") return "未提交";
+  if (props.data.status === "submitted") return "已提交";
+  if (props.data.status === "returned") return "已反馈";
+});
+const displayOriginalScore = props.data.originalScore;
+const displayRevisedScore = computed(() =>
+  (props.data.status === "returned" ? props.data.revisedScore : "--")
+);
+const displayMaxScore = props.data.maxScore;
+
+// 提交作业区
+const isEditing = ref(false);
+const argueContent = ref(props.data.argueContent);
+const argueFileList = ref<FileMeta[]>(props.data.argueFileList);
+const argueFeedbackContent = ref(props.data.argueFeedbackContent);
+const argueFeedbackFileList = ref<FileMeta[]>(props.data.argueFeedbackFileList);
+
+const handleArgueAttachmentUpload = async (file: FileMeta) => {
+  const index = argueFileList.value.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    argueFileList.value.push(file);
+  }
+}
+
+const handleArgueAttachmentRemove = async (file: FileMeta) => {
+  const index = argueFileList.value.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    argueFileList.value.splice(index, 1);
+  }
+}
+
+const handleArgueFeedbackAttachmentUpload = async (file: FileMeta) => {
+  const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
+  if (index === -1) {
+    argueFileList.value.push(file);
+  }
+}
+
+const handleArgueFeedbackAttachmentRemove = async (file: FileMeta) => {
+  const index = argueFeedbackFileList.value.findIndex(f => f.id === file.id);
+  if (index !== -1) {
+    argueFileList.value.splice(index, 1);
+  }
+}
+
+// 投票区
+const voteSupport = ref(props.data.voteSupport)
+const voteTotal = ref(props.data.voteTotal)
+const hasVoted = ref(false)
+const userStore = useUserStore();
+
+const votePercentage = computed(() => {
+  return voteTotal.value === 0 ?
+    0 : Math.round(voteSupport.value / voteTotal.value * 100);
+})
+const voteStatus = computed(() => {
+  return voteTotal.value === 0 ? "warning" : null;
+});
+const voteIndeterminate = computed(() => {
+  return voteTotal.value === 0 ? true : false;
+});
+
+interface VoteResult {
+  percentage: number
+  status: string
+  indeterminate: boolean
+}
+const tableVote: VoteResult[] = [
+  {
+    percentage: props.data.voteTotal === 0 ?
+      0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100),
+    status: props.data.voteTotal === 0 ? "warning" : "",
+    indeterminate: props.data.voteTotal === 0 ? true : false,
+  },
+]
+
+const vote = async (isSupport: boolean) => {
+  // try {
+  //   模拟发送投票请求到后端
+  //   const response = await request.post('/argue/vote', {
+  //     isSupport: isSupport,
+  //   })
+
+  //   if (response.data.success) {
+  //     更新前端数据
+      voteTotal.value += 1
+      if (isSupport) {
+        voteSupport.value += 1
+      }
+      hasVoted.value = true // 锁定投票
+      ElMessage.success('投票成功！')
+  //   } else {
+  //     ElMessage.error('投票失败，请重试')
+  //   }
+  // } catch (error) {
+  //   ElMessage.error('投票请求失败')
+  //   console.error(error)
+  // }
+}
+
+
+const submitArgue = async () => {
+  try {
+    let response = await request.post('/argue', {
+      widgetId: props.data.widgetId,
+      submitted_assignment_id: props.data.submittedAssignmentId,
+      title: props.data.title,
+      content: argueContent.value,
+    });
+    router.push({name: `argue/${props.data.argueId}`});
+  } catch (error) {
+    ElMessage.error("提交辩驳失败，请稍后重试");
+  }
+}
+
+const submitArgueFeedback = () => {
+
+}
+
+// 评论数据
+const comments = ref([
+  {
+    content: '这是一条示例评论！',
+    author: '用户1',
+  }
+]);
+
+// 新评论内容
+const newComment = ref('');
+
+// 发布新评论
+const submitComment = () => {
+  if (!newComment.value.trim()) return;
   
-  const contentEditor = ref<InstanceType<typeof MdAndFileEditor> | null>(null);
+  const comment = {
+    content: newComment.value,
+    author: '当前用户',
+  };
   
-  // 本卡片的标题
-  const computedTitle = computed(() => props.data?.title || "辩驳");
+  comments.value.unshift(comment);
+  newComment.value = '';
+};
+
+// 处理回复
+const handleReply = (author: string) => {
+  newComment.value = `@${author} `;
+};
+
+onMounted(async () => {
+  argueEditor.value?.updateContent(argueContent.value);
+  argueFeedbackEditor.value?.updateContent(argueFeedbackContent.value);
   
-  // 状态区的所有方法，都是外观特效
-  const statusIcon = computed(() => {
-    if (props.data.status === "pending") return Timer;
-    if (props.data.status === "submitted") return Finished;
-    if (props.data.status === "returned") return Checked;
-  });
-  const statusColor = computed(() => {
-    if (props.data.status === "pending") return "red";
-    if (props.data.status === "submitted") return "orange";
-    if (props.data.status === "returned") return "green";
-  });
-  const originalScoreColor = computed(() => {
-    if (props.data.status === "returned") return "#999";
-    const ratio = props.data.originalScore / props.data.maxScore;
-    const red = Math.round(255 * (1 - ratio));
-    const green = Math.round(255 * ratio);
-    return `rgb(${red}, ${green}, 0)`;
-  });
-  const verifiedScoreColor = computed(() => {
-    if (props.data.status === "pending") return "#666";
-    const ratio = props.data.verifiedScore / props.data.maxScore;
-    const red = Math.round(255 * (1 - ratio));
-    const green = Math.round(255 * ratio);
-    return `rgb(${red}, ${green}, 0)`;
-  });
-  const statusText = computed(() => {
-    if (props.data.status === "pending") return "未提交";
-    if (props.data.status === "submitted") return "已提交";
-    if (props.data.status === "returned") return "已反馈";
-  });
-  const displayOriginalScore = props.data.originalScore;
-  const displayVerifiedScore = computed(() => (props.data.status === "returned" ? props.data.verifiedScore : "--"));
-  const displayMaxScore = props.data.maxScore;
-
-  const votePercentage = computed(() => {
-    return props.data.voteTotal === 0 ?
-      0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100);
-  })
-  const voteStatus = computed(() => {
-    return props.data.voteTotal === 0 ? "warning" : null;
-  });
-  const voteIndeterminate = computed(() => {
-    return props.data.voteTotal === 0 ? true : false;
-  });
-
-  interface VoteResult {
-    percentage: number
-    status: string
-    indeterminate: boolean
-  }
-  const tableVote: VoteResult[] = [
-    {
-      percentage: props.data.voteTotal === 0 ?
-        0 : Math.round(props.data.voteSupport / props.data.voteTotal * 100),
-      status: props.data.voteTotal === 0 ? "warning" : "",
-      indeterminate: props.data.voteTotal === 0 ? true : false,
-    },
-  ]
-
-
+  const role = await getRoleByCourseId(props.data.courseId);
+  isTeacher.value = role === 'teacher' || userStore.isAdmin === true;
+  console.log("editing", props.data.status, userStore.username);
   
-  // 编辑提交记录
-  const isEditing = ref(false);  // if (pending || isEditing) then /*展示提交作业区域*/
-  const content = ref("");
-  const fileList = ref([]);
-  const editSubmittedArguement = (record: any) => {
-    content.value = JSON.parse(JSON.stringify(record.content));
-    fileList.value = JSON.parse(JSON.stringify(record.attachments));
-    // updateMode();
-    isEditing.value = true;
-  }
+  isEditing.value = (props.data.status === 'pending' &&
+                    props.data.starter === userStore.username) ||
+                    userStore.isAdmin === true;
+  console.log("role", role, isTeacher.value, isEditing.value);
   
-  // 提交辩驳
-  const submit = () => {
-  // TODO
-    if (contentEditor.value) {
-      const content = contentEditor.value.getContent();
-      console.log(content);
-      const fileList = contentEditor.value.getFileList();
-      console.log(fileList);
-    }
-  }
-
-  const submitArgue = () => {
-
-  }
-
-  const editArgue = () =>{
-
-  }
-
-  const reviseArgue = () => {
-
-  }
-
-  const vote = (isSupport) => {
-    
-  }
+});
 </script>
 
 
 <style scoped>
-  .container {
-    display: flex;
-    flex-direction: column;
-    padding: 0;
-    background-color: transparent;
-    border: none;
-    gap: 15px;
-  }
-  
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-    background-color: white;
-    width: 100%;
-    padding: 10px;
-  }
-  
-  .code-editor {
-    display: flex;
-    flex-direction: column;
-    height: 700px;
-    overflow: hidden;
-    border: 1px solid #ddd;
-    border-radius: 5px;
-  }
-  
-  .code-editor :deep(.CodeMirror) {
-    height: 100%;
-  }
-  
-  /* .el-text {
-    margin-right: 8px;
-    font-size: 14px;
-    color: #606266;
-  } */
-  
-  .el-select {
-    width: 120px;
-    margin-right: 20px;
-  }
-  
-  .assignment-status {
-    height: 60px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #f9fafb;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-    border-radius: 10px;
-    padding: 0 15px;
-  }
-  
-  .status-row {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .status-text {
-    display: flex;
-    align-items: center;
-    font-size: 18px;
-    font-weight: 500;
-  }
-  
-  .status-icon {
-    margin-right: 8px;
-  }
-  
-  .score-display {
-    text-align: right;
-    font-weight: bold;
-  }
-  
-  .original-score {
-    font-size: 22px;
-    font-weight: 700;
-  }
+.overall_container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background-color: transparent;
+  border-radius: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
 
-  .verified-score {
-    font-size: 24px;
-    font-weight: 700;
-  }
-  
-  .max-score {
-    font-size: 16px;
-    color: #666;
-  }
-  
-  .submit-record-item {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-    padding: 10px;
-    border-radius: 8px;
-    background: #fff;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  }
-  
-  .submit-record-item:hover {
-    background: #f1f1f1;
-  }
-  
-  .edit-button {
-    text-align: right;
-  }
-  
-  .el-button {
-    padding: 8px 16px;
-    font-size: 14px;
-    border-radius: 8px;
-    /* background: #409eff; */
-    /* color: #fff; */
-  }
-  
-  .el-button:hover {
-    background-color: #66b1ff;
-  }
+.toolbar {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 24px;
+  background-color: transparent;
+  padding: 10px 0;
+  border-radius: 12px;
+}
 
-  .section-title {
-    display: block;
-    font-size: 18px;
-    font-weight: 600;
-    margin-bottom: 10px;
-    color: #303133;
-  }
+.follow-section, .score-section {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
 
-  .section-title {
-    position: relative;
-    padding-left: 24px;
-  }
+.score-section .el-input-number {
+  width: 120px;
+}
 
-  .section-title::before {
-    content: '>';
-    position: absolute;
-    left: 0;
-    top: 0;
-    color: #409EFF;
-    font-weight: bold;
-    font-size: 22px;
-    transform: translateY(1px);
-  }
+.overall_container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  background-color: transparent;
+  border-radius: 12px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  gap: 20px;
+}
+
+.code-editor {
+  display: flex;
+  flex-direction: column;
+  height: 700px;
+  overflow: hidden;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.code-editor :deep(.CodeMirror) {
+  height: 100%;
+}
+
+.el-select {
+  width: 120px;
+  margin-right: 20px;
+}
+
+.assignment-status {
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f9fafb;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+  padding: 0 15px;
+}
+
+.status-row {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.status-text {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.status-icon {
+  margin-right: 8px;
+}
+
+.score-display {
+  text-align: right;
+  font-weight: bold;
+}
+
+.original-score {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.Revised-score {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.max-score {
+  font-size: 16px;
+  color: #666;
+}
+
+.submit-record-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px;
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.submit-record-item:hover {
+  background: #f1f1f1;
+}
+
+.edit-button {
+  text-align: right;
+}
+
+.el-button {
+  padding: 8px 16px;
+  font-size: 14px;
+  border-radius: 8px;
+}
+
+.el-button:hover {
+  background-color: #66b1ff;
+}
+
+.section-title {
+  display: block;
+  font-size: 18px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #303133;
+}
+
+.section-title {
+  position: relative;
+  padding-left: 24px;
+}
+
+.section-title::before {
+  content: '>';
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #409EFF;
+  font-weight: bold;
+  font-size: 22px;
+  transform: translateY(1px);
+}
+
+.comment-section {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.comment-input {
+  margin-bottom: 20px;
+}
+
+.comment-input .el-textarea {
+  margin-bottom: 10px;
+}
+
+.input-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.comment-item {
+  border: 1px solid #ebeef5;
+  border-radius: 4px;
+  padding: 15px;
+  background: #fff;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.author {
+  font-weight: bold;
+}
+
+.time {
+  color: #909399;
+  font-size: 12px;
+}
+
+.comment-content {
+  margin-bottom: 10px;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
 </style>
   

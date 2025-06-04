@@ -5,7 +5,7 @@ from sqlmodel import Session, select
 
 from mjc.model.schema.common import LocalResourceFileCreate
 from mjc.model.schema.user import UserInDB
-from mjc.model.entity import LocalResourceFile
+from mjc.model.entity.common import LocalResourceFile
 
 
 def create_local_resource_file(db: Session, file: LocalResourceFileCreate, uploader: UserInDB) -> LocalResourceFile:

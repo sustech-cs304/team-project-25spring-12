@@ -38,11 +38,16 @@ const routes: RouteRecordRaw[] = [
                 component: () => import('../views/pages/argue-plaza.vue'),
             },
             {
-                // path: 'argue/:argueId',
-                path: 'argue/example',
-                name: 'argue-example',
+                path: 'argue/:argueId',
+                name: 'argue-post',
                 meta: {title: '辩驳'},
-                component: () => import('../views/pages/argue-example.vue'),
+                component: () => import('../views/pages/argue-post.vue'),
+            },
+            {
+                path: 'argue/new',
+                name: 'argue-new',
+                meta: {title: '创建辩驳'},
+                component: () => import('../views/pages/argue-new.vue'),
             },
             {
                 path: 'mark',
@@ -61,6 +66,12 @@ const routes: RouteRecordRaw[] = [
                 name: 'mark',
                 meta: {title: '批改记录'},
                 component: () => import('../views/pages/mark.vue'),
+            },
+            {
+                path: 'admin',
+                name: 'admin',
+                meta: {title: '管理员中心', is_admin: true},
+                component: () => import('../views/pages/admin.vue'),
             },
             {
                 path: 'grade/student',

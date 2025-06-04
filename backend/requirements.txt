@@ -10,3 +10,6 @@ psycopg2
 python-multipart
 bcrypt
 aiofiles
+requests
+baidu-aip
+chardet

@@ -164,6 +164,7 @@
           <el-button
               type="primary"
               :icon="ChatRound"
+              :disabled="props.data.submitType === 'code'"
               @click="postArgue"
               style="width: 140px; margin-right: auto"
           >
@@ -313,6 +314,7 @@ import {
 import {ElMessage} from "element-plus";
 import {WidgetUnion} from "@/types/widgets";
 import {useUploader} from "@/composables/useUploader";
+import router from "../../router";
 
 /*
 * 数据和常量
@@ -647,11 +649,17 @@ const submit = async () => {
 
 // 发起 argue
 const postArgue = () => {
-  // TODO
   if ('argue_id' in props.data && Number.isInteger(props.data.argue_id)) {
     // 路由到对应的Argue的页面
+    router.push({path: `/argue/${props.data.argue_id}`});
   } else {
     // 路由到创建Argue的页面
+    router.push({
+      path: `/argue/new`,
+      query: {
+        widgetId: props.data.id,
+      }
+    });
   }
 }
 

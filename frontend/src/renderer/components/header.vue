@@ -139,8 +139,7 @@ const goToGradeTeacher = () => {
 
 
 const goToArguePost = () => {
-  // TODO: 跳转到反馈页面
-  // router.push('/feedback');
+  router.push('/argue')
 };
 
 const handleCommand = (command: string) => {
