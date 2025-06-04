@@ -1,10 +1,11 @@
-import {Feedback, FeedbackForm, SubmissionForMark} from "../types/feedback";
+import {FeedbackForm} from "../types/feedback";
 import {createFeedbackAttachment, deleteFeedbackAttachment, patchFeedback, postFeedback} from "../api/feedback";
 import {uploadFile} from "../api/file";
 import {FileMeta} from "../types/fileMeta";
+import {Feedback, SubmittedRecord} from "../types/widgets";
 
 export function useFeedback() {
-    const createFeedback = async (submission: SubmissionForMark, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
+    const createFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
         const payload = {
             score: feedbackForm.score,
             content: feedbackForm.content,
@@ -35,7 +36,7 @@ export function useFeedback() {
         return feedback;
     };
 
-    const updateFeedback = async (submission: SubmissionForMark, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
+    const updateFeedback = async (submission: SubmittedRecord, feedbackForm: FeedbackForm, patch: Record<string, Uint8Array>) => {
         if (!submission.feedback) {
             console.error(`no feedback found in submission ${submission.id}`);
             return;

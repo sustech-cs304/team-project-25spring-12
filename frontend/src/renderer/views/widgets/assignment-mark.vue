@@ -152,8 +152,8 @@ import WidgetCard from "./utils/widget-card.vue";
 import MdAndFileMark from "./utils/md-and-file-mark.vue";
 import {computed, reactive, ref, watch} from "vue";
 import {Check, MagicStick, Upload} from "@element-plus/icons-vue";
-import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
-import {AssignmentWidget} from "@/types/widgets";
+import {FeedbackForm} from "@/types/feedback";
+import {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
 import {
   ElMessage,
   FormInstance, FormRules,
@@ -165,10 +165,11 @@ import {
 } from "element-plus";
 import {useUploader} from "@/composables/useUploader";
 import {AIFeedbackCreate, postAIFeedback} from "@/api/feedback";
+import {FileMeta} from "@/types/fileMeta";
 
 const props = defineProps<{
   assignmentWidget: AssignmentWidget;
-  submission: SubmissionForMark;
+  submission: SubmittedRecord;
   feedback: FeedbackForm;
   blobList: Record<string, Blob>;
   patch: Record<string, Uint8Array>;
@@ -262,11 +263,16 @@ const handleRemove: UploadProps['onRemove'] = () => {
 const handleUpload = async (options: UploadRequestOptions) => {
   const {file, onSuccess, onError} = options;
   try {
-    const result = await upload(file);
-    dialogForm.answerFileId = result.id;
-    onSuccess(result);
+    const response = await upload(file);
+    if (response.status === 200) {
+      const answerFile = response.data as FileMeta;
+      dialogForm.answerFileId = answerFile.id;
+    } else {
+      ElMessage.error("上传失败，请稍后再试");
+    }
+    onSuccess(response);
   } catch (err: any) {
-    ElMessage.error("上传失败，请稍后重试");
+    ElMessage.error("上传失败，未知错误");
     onError(err);
   }
 };

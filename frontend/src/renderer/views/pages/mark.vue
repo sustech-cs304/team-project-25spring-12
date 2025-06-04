@@ -68,19 +68,19 @@
 <script setup lang="ts" name="mark">
 import assignmentMark from "../widgets/assignment-mark.vue";
 import {computed, nextTick, onMounted, ref, watch} from "vue";
-import {FeedbackForm, SubmissionForMark} from "@/types/feedback";
+import {FeedbackForm} from "@/types/feedback";
 import {useRoute} from "vue-router";
 import {useUserStore} from "@/store/user";
 import {getAllSubmissions, getWidget} from "@/api/feedback";
 import {downloadFile} from "@/api/file";
 import {useFeedback} from "@/composables/useFeedback";
-import {AssignmentWidget} from "@/types/widgets";
+import {AssignmentWidget, SubmittedRecord} from "@/types/widgets";
 
 const route = useRoute();
 const userStore = useUserStore();
 const {createFeedback, updateFeedback} = useFeedback();
 
-const submissions = ref<SubmissionForMark[]>([]);
+const submissions = ref<SubmittedRecord[]>([]);
 const feedbacks = ref<Record<number, FeedbackForm>>({});
 const blobs = ref<Record<string, Blob>>({});
 const patch = ref<Record<string, Uint8Array>>({});
@@ -93,7 +93,7 @@ const assignmentWidget = ref<AssignmentWidget>();
 const onlyShowLatest = ref(false);
 
 const lastSubmissionMap = computed(() => {
-  const map = new Map<string, SubmissionForMark>();
+  const map = new Map<string, SubmittedRecord>();
   const sorted = [...submissions.value].sort((a, b) => b.id - a.id);
   for (const submission of sorted) {
     if (submission.student && !map.has(submission.student.username)) {
@@ -126,7 +126,7 @@ watch(collapsed, (val) => {
   }
 });
 
-const getMenuItemStyle = (submission: SubmissionForMark) => {
+const getMenuItemStyle = (submission: SubmittedRecord) => {
   const isActive = submission.id === activeSubmissionId.value;
   const isHovered = submission.id.toString() === hoveredSubmissionId.value;
   const baseColor = '#f9f9f9'
@@ -217,12 +217,11 @@ const handleSubmit = async (submissionId: number, score: number, content: string
 };
 
 onMounted(async () => {
-  const courseId = Number(route.params.courseId);
   const widgetId = Number(route.params.widgetId);
   const response = await getWidget(widgetId);
   assignmentWidget.value = response.data;
   const submissionsResponse = await getAllSubmissions(widgetId);
-  submissions.value = submissionsResponse.data as SubmissionForMark[];
+  submissions.value = submissionsResponse.data as SubmittedRecord[];
   submissions.value.forEach(submission => {
     if (submission.feedback) {
       feedbacks.value[submission.id] = {
