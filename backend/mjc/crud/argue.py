@@ -75,6 +75,14 @@ def count_argue_watch(db: Session, argue_id: int) -> int:
     return watch
 
 
+def get_user_watch(db: Session, username: str, argue_id: int) -> ArguePostWatch:
+    stmt = select(ArguePostWatch).where(ArguePostWatch.argue_post_id == argue_id)  \
+                                    .where(ArguePostWatch.watcher_username == username) \
+                                    .where(ArguePostWatch.is_deleted == False)
+    watch = db.exec(stmt).first()
+    return watch
+
+
 def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
     submission = get_submitted_assignment(db, argue.submitted_assignment_id)
     argue_post = ArguePost(

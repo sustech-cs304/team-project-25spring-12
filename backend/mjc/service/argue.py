@@ -107,11 +107,12 @@ def get_argues(db: Session, user: UserInDB) -> list[ArguePostCard]:
             comments=crud_argue.count_argue_comment(db, argue.id),
             editor=Profile.model_validate(argue.editor.model_dump()),
             status=argue.status,
+            is_watched= crud_argue.get_user_watch(db, user.username, argue.id) is not None
         ))
     return cards
 
 
-def get_argue(db: Session, argue_id: int) -> ArguePost:
+def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
     argue = crud_argue.get_argue(db, argue_id)
     if argue is None:
         raise HTTPException(status_code=404, detail="Argue not found")
@@ -133,7 +134,8 @@ def get_argue(db: Session, argue_id: int) -> ArguePost:
         status=argue.status,
         attachments=attachments2files(argue.attachments),
         old_score=argue.old_score,
-        assignment=argue2assignment(argue)
+        assignment=argue2assignment(argue),
+        is_watched = crud_argue.get_user_watch(db, user.username, argue.id) is not None
     )
     return post
 
@@ -142,15 +144,15 @@ def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePo
     argue_post = crud_argue.create_argue(db, argue, user)
     if argue_post is None:
         raise HTTPException(status_code=400, detail="Create argue failed")
-    return get_argue(db, argue_post.id)
+    return get_argue(db, argue_post.id, user)
 
 
-def update_argue(db: Session, argue: ArguePostUpdate) -> ArguePost:
+def update_argue(db: Session, argue: ArguePostUpdate, user: UserInDB) -> ArguePost:
     argue_post = crud_argue.get_argue(db, argue.id)
     if argue_post is None:
         raise HTTPException(status_code=404, detail="Argue not found")
     crud_argue.update_argue(db, argue)
-    return get_argue(db, argue.id)
+    return get_argue(db, argue.id, user)
 
 
 def delete_argue(db: Session, argue_id: int) -> Message:
