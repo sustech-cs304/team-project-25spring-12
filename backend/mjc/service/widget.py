@@ -81,7 +81,7 @@ def entity2assignment(entity: WidgetEntity) -> AssignmentWidget:
         editor=Profile.model_validate(entity.editor.model_dump()),
         visible=entity.visible,
         id=entity.id,
-        content=entity.content if entity.content else None,
+        content=entity.content if entity.content is not None else None,
         submit_type=entity.assignment_widget.submit_type,
         submitted_assignment=None,
         status='pending',

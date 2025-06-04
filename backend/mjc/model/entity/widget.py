@@ -122,7 +122,7 @@ class AssignmentWidget(SQLModel, table=True):
     submit_type: SubmitType = Field(sa_column=Column(SQLEnum(SubmitType)))
     ddl: datetime
     max_score: float
-    test_case_id: int = Field(foreign_key="test_case.id")
+    test_case_id: int = Field(foreign_key="test_case.id", nullable=True)
 
     widget: "Widget" = Relationship(back_populates="assignment_widget")
     submitted_assignments: list["SubmittedAssignment"] = Relationship(back_populates="assignment_widget")
