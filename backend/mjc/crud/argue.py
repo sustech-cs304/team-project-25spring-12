@@ -205,7 +205,7 @@ def create_feedback(db: Session, feedback: ArguePostFeedbackCreate, marker: User
         marker_username=marker.username,
     )
     db.add(feedback_entity)
-    submission_feedback.score = submission_feedback.score
+    submission_feedback.score = feedback.score
     db.commit()
     db.refresh(feedback_entity)
     return feedback_entity

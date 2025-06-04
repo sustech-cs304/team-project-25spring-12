@@ -4,6 +4,7 @@ from sqlmodel import Session
 from fastapi import HTTPException
 
 from mjc.crud import argue as crud_argue
+from mjc.crud import assignment as crud_assignment
 from mjc.model.schema.common import File, Message
 from mjc.model.schema.widget import AssignmentWidget
 from mjc.model.schema.user import UserInDB, Profile
@@ -141,24 +142,33 @@ def get_argue(db: Session, argue_id: int, user: UserInDB) -> ArguePost:
 
 
 def create_argue(db: Session, argue: ArguePostCreate, user: UserInDB) -> ArguePost:
-    argue_post = crud_argue.create_argue(db, argue, user)
-    if argue_post is None:
-        raise HTTPException(status_code=400, detail="Create argue failed")
-    return get_argue(db, argue_post.id, user)
+    submission = crud_assignment.get_submitted_assignment(db, argue.submitted_assignment_id)
+    if submission:
+        if submission.username != user.username:
+            raise HTTPException(status_code=403, detail="Not allowed")
+        argue_post = crud_argue.create_argue(db, argue, user)
+        if argue_post is None:
+            raise HTTPException(status_code=400, detail="You are not the owner of submission, not allowed")
+        return get_argue(db, argue_post.id, user)
+    raise HTTPException(status_code=400, detail="Submission not found")
 
 
 def update_argue(db: Session, argue: ArguePostUpdate, user: UserInDB) -> ArguePost:
     argue_post = crud_argue.get_argue(db, argue.id)
     if argue_post is None:
         raise HTTPException(status_code=404, detail="Argue not found")
+    if argue_post.submitted_assignment.username != user.username:
+        raise HTTPException(status_code=403, detail="You are not the owner of submission, not allowed")
     crud_argue.update_argue(db, argue)
     return get_argue(db, argue.id, user)
 
 
-def delete_argue(db: Session, argue_id: int) -> Message:
+def delete_argue(db: Session, argue_id: int, user: UserInDB) -> Message:
     argue = crud_argue.get_argue(db, argue_id)
     if argue is None:
         raise HTTPException(status_code=404, detail="Argue not found")
+    if argue.submitted_assignment.username != user.username and not user.is_admin:
+        raise HTTPException(status_code=403, detail="You are not the owner of submission or admin, not allowed")
     crud_argue.delete_argue(db, argue_id)
     return Message(msg='Success')
 

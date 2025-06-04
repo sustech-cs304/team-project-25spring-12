@@ -70,20 +70,22 @@ def get_feedback_attach(db: Session, file_id: uuid.UUID) -> FeedbackAttachmentEn
     return attachment
 
 
-def create_submission(db: Session, submission: SubmittedAssignmentCreate, username: str) -> SubmittedAssignment:
+def create_submission(db: Session, submission: SubmittedAssignmentCreate, username: str) -> SubmittedAssignment | None:
     widget = get_widget(db, submission.widget_id)
-    submission_entity = SubmittedAssignment(
-        create_time=datetime.now(),
-        assignment_widget_id=widget.assignment_widget.id,
-        username=username,
-        content=submission.content,
-        code=submission.code.code if submission.code else None,
-        language=submission.code.language if submission.code else None,
-    )
-    db.add(submission_entity)
-    db.commit()
-    db.refresh(submission_entity)
-    return submission_entity
+    if widget:
+        submission_entity = SubmittedAssignment(
+            create_time=datetime.now(),
+            assignment_widget_id=widget.assignment_widget.id,
+            username=username,
+            content=submission.content,
+            code=submission.code.code if submission.code else None,
+            language=submission.code.language if submission.code else None,
+        )
+        db.add(submission_entity)
+        db.commit()
+        db.refresh(submission_entity)
+        return submission_entity
+    return None
 
 
 def create_feedback(db: Session, feedback: FeedbackCreate, username: str) -> SubmittedAssignmentFeedback:

@@ -35,8 +35,8 @@ async def update_argue(db: SessionDep, argue: ArguePostUpdate, user: UserInDB = 
 
 
 @router.delete('/argue/{argue_id}', response_model=Message)
-async def delete_argue(db: SessionDep, argue_id: int):
-    return argue_service.delete_argue(db, argue_id)
+async def delete_argue(db: SessionDep, argue_id: int, user: UserInDB = Depends(get_current_user)):
+    return argue_service.delete_argue(db, argue_id, user)
 
 
 @router.post('/argue/comment', response_model=ArguePostComment)
