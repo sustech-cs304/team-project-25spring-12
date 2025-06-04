@@ -507,31 +507,30 @@ const fetchCourses = async (semester_id) => {
   try {
     const response = await service.get(`/admin/semester/${semester_id}`);
     const semesterCourses = response.data;
-    console.log('Semester Courses:', semesterCourses);
     const enrichedCourses = await Promise.all(
       semesterCourses.map(async (course) => {
         try {
-          console.log('course:', course);
           const userResponse = await service.get(`/class/${course.id}/user`);
           const users = userResponse.data;
-          const teacher = users.find((user) => user.role === 'teacher')?.username;
+          const teacher = users.find((user) => user.role === 'teacher')?.username || '';
           const assistants = users
             .filter((user) => user.role === 'teaching assistant')
-            .map((user) => user.username);
+            .map((user) => user.username)
+            .filter(Boolean);
           const students = users
             .filter((user) => user.role === 'student')
-            .map((user) => user.username);
+            .map((user) => user.username)
+            .filter(Boolean);
           return {
             id: course.id,
             course_code: course.courseCode,
             name: course.name,
-            semester: course.semester,
-            lecturer: course.lecturer,
-            teacher,
+            semester_id: course.semester,
+            lecturer: teacher,
             assistants,
             students,
-            location: course.location,
-            time: course.time,
+            location: course.location || '',
+            time: course.time || '',
           };
         } catch (error) {
           console.error(`获取课程 ${course.id} 的用户数据失败:`, error);
@@ -539,19 +538,17 @@ const fetchCourses = async (semester_id) => {
             id: course.id,
             course_code: course.courseCode,
             name: course.name,
-            semester: course.semester,
-            lecturer: course.lecturer,
-            teacher: '',
+            semester_id: course.semester,
+            lecturer: '',
             assistants: [],
             students: [],
-            location: course.location,
-            time: course.time,
+            location: course.location || '',
+            time: course.time || '',
           };
         }
       })
     );
     courses.value = enrichedCourses;
-    console.log('Enriched Courses:', courses.value);
     ElMessage.success('已加载学期内课程信息');
   } catch (error) {
     console.error('获取课程数据失败:', error);
@@ -596,9 +593,38 @@ const openAddCourseDialog = () => {
   courseDialogVisible.value = true;
 };
 
-const openEditCourseDialog = (course) => {
+const openEditCourseDialog = async (course) => {
   courseDialogTitle.value = '编辑课程';
-  courseForm.value = { ...course };
+  courseForm.value = {
+    id: course.id,
+    semester_id: course.semester_id,
+    course_code: course.course_code,
+    name: course.name,
+    lecturer: course.lecturer,
+    assistants: course.assistants || [],
+    students: course.students || [],
+    location: course.location,
+    time: course.time,
+  };
+  // 预加载已选用户的详细信息
+  const usernames = [
+    course.lecturer,
+    ...(course.assistants || []),
+    ...(course.students || []),
+  ].filter(Boolean);
+  if (usernames.length > 0) {
+    try {
+      const response = await service.get('/user', {
+        params: {
+          username: usernames.join(','),
+        },
+      });
+      filteredUsersForCourse.value = response.data;
+    } catch (error) {
+      console.error('预加载用户数据失败:', error);
+      ElMessage.error('加载用户数据失败，请手动搜索');
+    }
+  }
   courseDialogVisible.value = true;
 };
 
@@ -630,11 +656,11 @@ const saveCourse = async () => {
         location: courseForm.value.location,
         time: courseForm.value.time,
       };
-      console.log("courseData", courseData);
-      
       let courseId = courseForm.value.id;
       if (courseId) {
-        courseData.id = courseId
+        courseData.id = courseId;
+        console.log("patch coursedata: ", courseData);
+        
         await service.patch(`/class`, courseData);
         const userResponse = await service.get(`/class/${courseId}/user`);
         const existingUsers = userResponse.data;
@@ -686,8 +712,6 @@ const saveCourse = async () => {
         ElMessage.success('课程更新成功');
       } else {
         const response = await service.post('/class', courseData);
-        console.log("savecourse response:", response);
-        
         courseId = response.data.id;
         const newUsers = [
           { username: courseForm.value.lecturer, role: 'teacher' },
@@ -701,11 +725,11 @@ const saveCourse = async () => {
         };
         for (const role of ['teacher', 'teaching assistant', 'student']) {
           if (usersByRole[role].length > 0) {
-            params = {
+            const params = {
               class_id: courseId,
               usernames: usersByRole[role],
               role: role,
-            }
+            };
             await service.post(`/class/user`, params);
           }
         }

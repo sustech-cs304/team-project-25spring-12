@@ -46,6 +46,8 @@ import {useTabsStore} from '@/store/tabs';
 import {useUserStore} from '@/store/user';
 import {useLogin} from "@/composables/useLogin";
 import {LoginRequest} from "@/types/auth";
+import service from "@/utils/request";
+import { assert } from 'pdfjs-dist/types/src/shared/util';
 
 const router = useRouter();
 const userStore = useUserStore();
@@ -71,12 +73,20 @@ const submitForm = () => {
         const result = await login(loginFormData);
         userStore.setToken(result.accessToken);
         userStore.setUsername(loginFormData.username);
+        const resp = service.get(`/user/${loginFormData.username}`);
+        if (!resp.data.is_active) {
+          throw new Error('Inactive');
+        }
+        userStore.setAdmin(resp.data.is_admin);
         ElMessage.success('登录成功');
         await router.push('/');
       } catch (error) {
         const status = error?.response?.status;
         if (status === 401) {
           ElMessage.error('登录失败，请检查用户名或密码');
+        }
+        if ((<Error>error).message === 'Inactive') {
+          ElMessage.error('账号未激活，请联系管理员');
         }
       }
     }
