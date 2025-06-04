@@ -479,12 +479,17 @@ const submitArgueFeedback = async () => {
 }
 
 // 评论数据
-const comments = ref([
-  {
-    content: '请老师明察！',
-    author: '广告商招租',
-  }
-]);
+// const comments = ref([
+//   {
+//     content: '请老师明察！',
+//     author: '广告商招租',
+//   }
+// ]);
+const comments = ref(props.data.comments.map((comment) => ({
+  content: comment.content,
+  username: comment.editor.username,
+  create_time: comment.create_time, 
+})))
 
 // 新评论内容
 const newComment = ref('');

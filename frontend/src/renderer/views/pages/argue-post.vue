@@ -69,6 +69,8 @@ onMounted(async () => {
       
       isVoted: response.data.isVoted,
       isFollowed: response.data.isFollowed,
+
+      comments: response.data.comments,
     }
     console.log("postdata: ", arguePost.value);
     childready.value = true;
