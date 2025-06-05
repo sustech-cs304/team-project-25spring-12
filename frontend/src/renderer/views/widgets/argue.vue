@@ -117,7 +117,7 @@
           </el-col>
           <el-col :span="16">
             <el-text truncated>
-              提交时间：{{ props.data.submitTime }}
+              提交时间：{{ timestampToString(props.data.submitTime) }}
             </el-text>
           </el-col>
         </el-row>
@@ -415,6 +415,12 @@ const vote = async (isSupport: boolean) => {
   }
 }
 
+const timestampToString = (timestamp: string) => {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short'
+  }).format(new Date(timestamp));
+};
 
 const submitArgue = async () => {
   try {
@@ -488,7 +494,7 @@ const submitArgueFeedback = async () => {
 // ]);
 const comments = ref(props.data.comments.map((comment) => ({
   content: comment.content,
-  username: comment.editor.username,
+  author: comment.editor.username,
   create_time: comment.create_time, 
 })))
 
@@ -497,6 +503,8 @@ const newComment = ref('');
 
 // 发布新评论
 const submitComment = async () => {
+  console.log("comments", comments.value);
+  
   if (!newComment.value.trim()) return;
   
   const comment = {
@@ -512,7 +520,6 @@ const submitComment = async () => {
   
   try {
     console.log("comment", params);
-    
     const response = await request.post('/argue/comment', params)
     comments.value.unshift(comment);
     ElMessage.success("评论发表成功")
