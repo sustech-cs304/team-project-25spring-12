@@ -68,6 +68,15 @@
           :content="props.data.assignmentContent"
         />
       </div>
+
+      <!-- 提交信息 -->
+      <div>
+        <el-text class="section-title">提交信息</el-text>
+        <md-and-file
+          :fileList="props.data.submissionFileList"
+          :content="props.data.submissionContent"
+        />
+      </div>
     
       <!-- 批改建议 -->
       <div>
