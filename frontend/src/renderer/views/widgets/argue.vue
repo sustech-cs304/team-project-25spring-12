@@ -449,7 +449,7 @@ const submitArgue = async () => {
 
     await nextTick();
     console.log(argueId);
-    router.push('argue/' + argueId);
+    // router.push('argue/' + argueId);
     window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
@@ -482,8 +482,7 @@ const submitArgueFeedback = async () => {
     }
     
     ElMessage.success("成功反馈")
-    // await router.push({path: `argue/${argueId}`});
-    // window.location.reload();
+    window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
     ElMessage.error("辩驳反馈失败，请稍后重试");
