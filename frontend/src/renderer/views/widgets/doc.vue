@@ -90,7 +90,7 @@ const handleClick = async () => {
     }
 
     for (const file of addedFiles) {
-      const res = await addWidgetAttachment(props.data.id, file.id);
+      const res = await addWidgetAttachment(editResponse.data.id, file.id);
       if (res.status !== 200) message += `附件添加失败：${file.name}\n`;
     }
 
