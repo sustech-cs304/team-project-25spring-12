@@ -1,5 +1,5 @@
 <template>
-  <widget-card :title="computedTitle" color="orange" icon="Opportunity">
+  <widget-card :title="computedTitle" color="navy" icon="Opportunity">
     <div class="overall_container">
       <!-- 工具栏：关注按钮和打分框 -->
       <div class="toolbar" v-if="props.data.status != 'pending'">
