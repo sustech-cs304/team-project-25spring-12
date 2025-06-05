@@ -15,10 +15,10 @@
 
 | Metric                       | Value |
 | ---------------------------- | ----- |
-| Lines of Code                |       |
-| Number of Source Files       |       |
-| Cyclomatic Complexity (Avg.) |       |
-| Number of Dependencies       |       |
+| Lines of Code                | 3975  |
+| Number of Source Files       | 80    |
+| Cyclomatic Complexity (Avg.) | 1.8   |
+| Number of Dependencies       | 27    |
 
 ## Documentation
 
@@ -51,6 +51,15 @@ Our tests covered all of our APIs.
 ## Build
 
 ### Frontend
+
+The frontend is built with Vue 3 + Vite and bundled for both web and Electron desktop environments. All dependencies are managed via npm, and the build process is defined in ```package.json```.
+
+To build the frontend:
+```
+npm install     # Install dependencies
+npm run build   # Build for production (web + Electron)
+```
+The build script uses vite to compile Vue components and static assets into the build/renderer directory. The resulting files are packaged with electron-builder into platform-specific executables.
 
 ### Backend
 
