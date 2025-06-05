@@ -488,7 +488,7 @@ const submitArgueFeedback = async () => {
 // ]);
 const comments = ref(props.data.comments.map((comment) => ({
   content: comment.content,
-  username: comment.editor.username,
+  author: comment.editor.username,
   create_time: comment.create_time, 
 })))
 
@@ -541,6 +541,7 @@ onMounted(async () => {
   
   isVoted.value = props.data.isVoted;
   isFollowed.value = props.data.isFollowed;
+  followCount.value = props.data.watch;
 
   isTeacher.value = props.data.role === "Teacher";
 });

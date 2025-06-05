@@ -162,11 +162,11 @@
         <div class="container">
           <md-and-file :file-list="props.data.feedback?.attachments" :content="props.data.feedback?.content"/>
           <el-button
-              type="primary"
-              :icon="ChatRound"
-              :disabled="props.data.submitType === 'code'"
-              @click="postArgue"
-              style="width: 140px; margin-right: auto"
+            v-if="props.data.submitType != 'code' && props.data.submittedAssignment"
+            type="primary"
+            :icon="ChatRound"
+            @click="postArgue"
+            style="width: 140px; margin-right: auto"
           >
             我要 Argue ！
           </el-button>

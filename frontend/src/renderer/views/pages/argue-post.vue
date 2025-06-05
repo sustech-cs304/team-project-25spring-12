@@ -69,6 +69,7 @@ onMounted(async () => {
       
       isVoted: response.data.isVoted,
       isFollowed: response.data.isWatched,
+      watch: response.data.watch,
 
       comments: response.data.comments,
     }
