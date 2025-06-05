@@ -23,7 +23,7 @@ onMounted(async () => {
     const response = await request.get(`/argue/${argueId}`);
     console.log("response", response.data);
 
-    const submission = response.data.assignment.submittedAssignment[0]
+    const submission = response.data.assignment.submittedAssignment.get(-1)
     console.log("submossion", submission)
 
     let argueFeedback = {
@@ -69,8 +69,10 @@ onMounted(async () => {
       
       isVoted: response.data.isVoted,
       isFollowed: response.data.isWatched,
+      watch: response.data.watch,
 
       comments: response.data.comments,
+      role: response.data.role,
     }
     console.log("postdata: ", arguePost.value);
     childready.value = true;
