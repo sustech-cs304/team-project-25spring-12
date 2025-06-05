@@ -119,9 +119,9 @@ sudo docker build -t mjc .
 sudo docker stop mjc
 sudo docker remove mjc
 sudo docker run mjc --env-file env.list \
-                    --add-host=host.docker.internal:host-gateway \ 
-                    --name mjc 
-                    -p 8080:80  
+                    --add-host=host.docker.internal:host-gateway \
+                    --name mjc
+                    -p 8080:80
 ```
 
 ### Dockerfile
@@ -146,6 +146,10 @@ This build process ensures code quality, API functionality verification, and con
 
 ### Frontend
 
+We use Vercel for deployment on the cloud. Meanwhile, we use GitHub Actions for CI to generate executable files.
+
+![vercel](../../assets/vercel.png)
+
 ### Backend
 
 We can simply use our Dockerfile for containerizing.
@@ -156,9 +160,9 @@ cd backend
 
 sudo docker build -t mjc .
 sudo docker run mjc --env-file env.list \
-                    --add-host=host.docker.internal:host-gateway \ 
-                    --name mjc 
-                    -p 8080:80  
+                    --add-host=host.docker.internal:host-gateway \
+                    --name mjc
+                    -p 8080:80
 ```
 
 We have deployed the backend on our server.
