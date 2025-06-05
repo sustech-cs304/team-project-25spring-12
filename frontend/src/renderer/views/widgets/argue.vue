@@ -553,7 +553,7 @@ onMounted(async () => {
   isFollowed.value = props.data.isFollowed;
   followCount.value = props.data.watch;
 
-  isTeacher.value = props.data.role === "Teacher";
+  isTeacher.value = props.data.role === "teacher";
 });
 </script>
 

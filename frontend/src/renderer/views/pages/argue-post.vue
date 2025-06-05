@@ -72,6 +72,7 @@ onMounted(async () => {
       watch: response.data.watch,
 
       comments: response.data.comments,
+      role: response.data.role,
     }
     console.log("postdata: ", arguePost.value);
     childready.value = true;
