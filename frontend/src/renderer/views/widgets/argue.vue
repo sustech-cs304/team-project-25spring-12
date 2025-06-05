@@ -68,6 +68,15 @@
           :content="props.data.assignmentContent"
         />
       </div>
+
+      <!-- 提交信息 -->
+      <div>
+        <el-text class="section-title">提交信息</el-text>
+        <md-and-file
+          :fileList="props.data.submissionFileList"
+          :content="props.data.submissionContent"
+        />
+      </div>
     
       <!-- 批改建议 -->
       <div>
@@ -444,8 +453,9 @@ const submitArgue = async () => {
       })
     }
     
+    await router.push({path: `argue-plaza`});
+    window.location.reload();
     await router.push({path: `argue/${argueId}`});
-    // window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
     ElMessage.error("提交辩驳失败，请稍后重试");
@@ -477,8 +487,8 @@ const submitArgueFeedback = async () => {
     }
     
     ElMessage.success("成功反馈")
-    await router.push({path: `argue/${argueId}`});
-    // window.location.reload();
+    // await router.push({path: `argue/${argueId}`});
+    window.location.reload();
   } catch (error) {
     console.log((<Error>error).message);
     ElMessage.error("辩驳反馈失败，请稍后重试");
@@ -548,8 +558,9 @@ onMounted(async () => {
   
   isVoted.value = props.data.isVoted;
   isFollowed.value = props.data.isFollowed;
+  followCount.value = props.data.watch;
 
-  isTeacher.value = props.data.role === "Teacher";
+  isTeacher.value = props.data.role === "teacher";
 });
 </script>
 
